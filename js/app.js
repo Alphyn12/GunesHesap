@@ -3545,6 +3545,11 @@ window.addEventListener('load', () => {
   }, 100);
   // Off-grid katalog açılır listesini ilk yüklemede doldur
   updateOffgridCatalogOptions();
+  // F1.C.6: HTML statik dinamik-pct utility'lerini CSS var'a aktar.
+  // <div class="bar-segment" data-h="26"> → --h:26% (CSS-safe direct property).
+  document.querySelectorAll('[data-h]').forEach(el => el.style.setProperty('--h', el.dataset.h + '%'));
+  document.querySelectorAll('[data-w]').forEach(el => el.style.setProperty('--w', el.dataset.w + '%'));
+  document.querySelectorAll('[data-l]').forEach(el => el.style.setProperty('--l', el.dataset.l + '%'));
 });
 
 // ═══════════════════════════════════════════════════════════
