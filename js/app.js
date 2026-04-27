@@ -3637,6 +3637,20 @@ registerActions({
   switchLanguage: (arg) => window.switchLanguage(arg),
   openDashboardFromSettings,
 });
+
+// F1.B.2 modals + heatmap grubu: 12 inline onclick.
+// saveCurrentCalculation, openComparison/closeComparison, dashboard kontrolleri,
+// heatmap month (number arg) + animasyon toggle.
+registerActions({
+  saveCurrentCalculation,
+  openComparison,
+  closeComparison,
+  compareDashboardSelected,
+  clearAllSaved,
+  closeDashboard,
+  toggleHeatmapAnimation,
+  setHeatmapMonth,
+});
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
 window.isInTurkey = isInTurkey;
