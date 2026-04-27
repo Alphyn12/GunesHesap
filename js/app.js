@@ -59,6 +59,43 @@ window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, IN
 // the structural-check branch in calc-engine.js dead code. Wire it up here.
 window.calculateStructural = calculateStructural;
 
+// ── Faz 1 / data-action delegation framework ──────────────────────────────
+// Replaces inline onclick/onchange/oninput attributes so the CSP can drop
+// 'unsafe-inline' from script-src. Markup pattern:
+//   <button data-click-action="goToStep" data-arg="2">İlerle</button>
+//   <input  data-input-action="updateConsumption" data-arg-prop="value">
+//   <input  data-change-action="onNMToggle" data-arg-prop="checked">
+// Handlers are registered via registerActions({...}); F1.B.2 fills the map
+// group-by-group as inline attributes are migrated.
+const ACTION_HANDLERS = Object.create(null);
+function registerActions(map) { Object.assign(ACTION_HANDLERS, map); }
+window.registerActions = registerActions;
+
+function dispatchAction(eventType, e) {
+  const attr = `data-${eventType}-action`;
+  const el = e.target.closest(`[${attr}]`);
+  if (!el) return;
+  const action = el.getAttribute(attr);
+  const handler = ACTION_HANDLERS[action];
+  if (!handler) {
+    if (!dispatchAction._warned) dispatchAction._warned = new Set();
+    if (!dispatchAction._warned.has(action)) {
+      console.warn('[data-action] unknown handler:', action, el);
+      dispatchAction._warned.add(action);
+    }
+    return;
+  }
+  const argProp = el.dataset.argProp;
+  const arg = argProp === 'value' ? el.value
+    : argProp === 'checked' ? el.checked
+    : el.dataset.arg !== undefined ? el.dataset.arg
+    : undefined;
+  handler(arg, el, e);
+}
+
+['click', 'change', 'input'].forEach(t =>
+  document.addEventListener(t, e => dispatchAction(t, e), false));
+
 function installThirdPartyConsoleNoiseGuard() {
   if (window.__solarRotaConsoleNoiseGuardInstalled) return;
   window.__solarRotaConsoleNoiseGuardInstalled = true;
