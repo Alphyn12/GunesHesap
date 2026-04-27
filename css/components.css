@@ -1674,3 +1674,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── F1.C.1 utility classes: display toggle ─────────────────
+   Inline style="display:none" / "display:block" yerine kullanılır.
+   CSP 'unsafe-inline' kalktığında inline style attribute çalışmaz;
+   bu utility'ler HTML'den ve JS classList.toggle()'dan erişilebilir. */
+.is-hidden  { display: none !important; }
+.is-visible { display: block; }

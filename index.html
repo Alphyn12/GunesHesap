@@ -1808,14 +1808,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 </header>
 
 <!-- SETTINGS OVERLAY + PANEL -->
-<div id="settings-overlay" class="settings-overlay" data-click-action="closeSettings" style="display:none"></div>
-<div id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-panel-title" style="display:none">
+<div id="settings-overlay" class="settings-overlay is-hidden" data-click-action="closeSettings"></div>
+<div id="settings-panel" class="settings-panel is-hidden" role="dialog" aria-modal="true" aria-labelledby="settings-panel-title">
   <div class="settings-panel-header">
     <span id="settings-panel-title" class="settings-panel-title" data-i18n="settings.title">Ayarlar</span>
     <button id="settings-close-btn" class="settings-panel-close" data-click-action="closeSettings" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
   </div>
   <div class="settings-panel-section">
-    <button class="header-icon-btn settings-panel-dashboard-btn" id="dashboard-btn" data-click-action="openDashboardFromSettings" style="display:none">
+    <button class="header-icon-btn settings-panel-dashboard-btn is-hidden" id="dashboard-btn" data-click-action="openDashboardFromSettings">
       Kayıtlı Hesaplar
     </button>
   </div>
@@ -1960,7 +1960,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       ⚠ Türkiye sınırları içinde bir konum seçin.
     </div>
     <!-- Hidden for JS compatibility -->
-    <div id="selected-location" style="display:none">
+    <div class="is-hidden" id="selected-location">
       <span class="loc-dot"></span>
       <span id="selected-loc-text">Henüz konum seçilmedi</span>
     </div>
@@ -2072,7 +2072,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
         </div>
       </div>
-      <button class="roof-tool-legend-toggle" id="roof-tool-legend-toggle" type="button" data-click-action="openRoofToolLegend" style="display:none">
+      <button class="roof-tool-legend-toggle is-hidden" id="roof-tool-legend-toggle" type="button" data-click-action="openRoofToolLegend">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
         Araç rehberi
       </button>
@@ -2088,7 +2088,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <!-- Sağ alt araç çubuğu (sadece temizle — uydu butonu harita kartında) -->
       <div class="roof-draw-toolbar">
-        <button class="roof-tool-btn danger" data-click-action="clearRoofDrawing" id="clear-roof-btn" title="Tüm çizimleri sil" style="display:none">
+        <button class="roof-tool-btn danger is-hidden" data-click-action="clearRoofDrawing" id="clear-roof-btn" title="Tüm çizimleri sil">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
           Çizimleri Temizle
         </button>
@@ -2119,7 +2119,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Güneş paneli kurulacak kullanılabilir çatı alanı. 1 kWp sistem için yaklaşık 6-7 m² alan gerekir.</span></span>
           </label>
           <input type="number" id="roof-area" placeholder="Örn: 80" min="10" max="2000" aria-describedby="roof-area-err" aria-invalid="false" data-input-action="updatePanelPreview"/>
-          <div class="error-msg" id="roof-area-err" role="alert" aria-live="polite" style="display:none">Lütfen 10-2000 m² arası değer girin.</div>
+          <div class="error-msg is-hidden" id="roof-area-err" role="alert" aria-live="polite">Lütfen 10-2000 m² arası değer girin.</div>
           <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px" id="panel-count-preview"></div>
         </div>
         <div id="roof-area-badge">
@@ -2443,7 +2443,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <span>Talep piklerini yumuşatır; hibrit sistemlerde enerji yönetimini daha esnek hale getirir.</span>
           </article>
         </div>
-        <div class="feature-toggle-body" id="battery-inputs" style="display:none">
+        <div class="feature-toggle-body is-hidden" id="battery-inputs">
           <div class="equipment-section-intro battery-section-intro">
             <div class="equipment-section-copy">
               <strong>Resmi ürün serilerinden doğrulanmış örnek ev tipi bataryalar</strong>
@@ -2452,7 +2452,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <div class="bat-models" id="bat-models-wrap"></div>
           <div class="battery-summary-card" id="battery-summary"></div>
-          <div id="bat-custom-inputs" class="battery-custom-card" style="display:none">
+          <div id="bat-custom-inputs" class="battery-custom-card is-hidden">
             <div class="battery-custom-head">
               <strong>Özel batarya tanımı</strong>
               <span>Teknik veri sayfası elinizdeyse aşağıdaki alanlarla projeyi manuel modelleyin.</span>
@@ -2637,7 +2637,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </section>
     </div>
 
-    <div id="on-grid-advanced-fields" style="display:none">
+    <div class="is-hidden" id="on-grid-advanced-fields">
       <div class="on-grid-flow-grid on-grid-advanced-grid">
         <section class="on-grid-panel-section">
           <h3>İleri tüketim ve tarife ayarları</h3>
@@ -2685,9 +2685,9 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <span data-i18n="onGridFlow.hourlyUpload">Saatlik tüketim verisi (8760 CSV, isteğe bağlı)</span>
               <div class="on-grid-upload-row">
                 <input type="file" id="hourly-csv-upload" accept=".csv,.txt" data-change-action="handleHourlyCsvUpload" style="flex:1">
-                <button type="button" id="hourly-csv-clear" data-click-action="clearHourlyCsvUpload" style="display:none" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
+                <button class="is-hidden" type="button" id="hourly-csv-clear" data-click-action="clearHourlyCsvUpload" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
               </div>
-              <div id="hourly-csv-status" class="on-grid-explain" style="display:none"></div>
+              <div id="hourly-csv-status" class="on-grid-explain is-hidden"></div>
             </label>
             <div class="on-grid-explain" data-i18n="onGridFlow.hourlyUploadHint">Her satır bir saati temsil eden tek sütunlu 8760 satırlı CSV. Yüklenmezse sentetik profil kullanılır.</div>
           </div>
@@ -2764,7 +2764,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </article>
       </div>
 
-      <div id="offgrid-advanced-options" style="display:none">
+      <div class="is-hidden" id="offgrid-advanced-options">
         <details class="step5-subdetails" open>
           <summary class="step5-subsummary">
             <div>
@@ -2833,7 +2833,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span data-i18n="tariff.agriculture">Tarımsal</span>
         </button>
       </div>
-      <div style="display:none">
+      <div class="is-hidden">
         <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Abone Tipi</div>
         <select id="tariff-type" data-change-action="updateTariffType" data-arg-prop="value"
           style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;min-width:120px">
@@ -3076,7 +3076,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </details>
 
         <!-- ═══ OFF-GRID LEVEL 2 GİRİŞ AYARLARI — yalnızca off-grid senaryosunda görünür ═══ -->
-        <div id="offgrid-l2-wrap" class="offgrid-l2-card" style="display:none">
+        <div id="offgrid-l2-wrap" class="offgrid-l2-card is-hidden">
           <div class="offgrid-l2-head">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             <span data-i18n="offgridL2.sectionTitle">Off-Grid Sistem Boyutlandırma</span>
@@ -3113,7 +3113,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 <span>Cihazları tek tek ekle, gece yükünü ve saha/8760 kanıtlarını ayrı modelle.</span>
               </button>
             </div>
-            <select id="offgrid-calculation-mode" style="display:none" data-change-action="updateOffgridL2Settings">
+            <select class="is-hidden" id="offgrid-calculation-mode" data-change-action="updateOffgridL2Settings">
               <option value="basic" data-i18n="offgridL2.calculationModeBasic">Basit: konut profili</option>
               <option value="advanced" data-i18n="offgridL2.calculationModeAdvanced">İleri: cihaz listesi ve 8760 saha verisi</option>
             </select>
@@ -3136,7 +3136,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
           <!-- Basit Mod: Konut Profili + Kritik Yük Oranı -->
           <div id="offgrid-simple-mode-wrap" style="margin-bottom:14px">
-            <div id="offgrid-fill-roof-simple-note" class="offgrid-simple-intro" style="display:none">
+            <div id="offgrid-fill-roof-simple-note" class="offgrid-simple-intro is-hidden">
               <strong>Maksimum çatı kapasitesi seçili</strong>
               <span>Bu modda sistem, konut tipi veya enerji ihtiyacı seçtirmeden çatının net kullanılabilir alanına göre panel kapasitesini hesaplar. Tüketim profili yalnızca batarya, jeneratör ve kapsama yorumlarında arka plan varsayımı olarak kalır.</span>
             </div>
@@ -3382,7 +3382,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div class="offgrid-generator-copy">
               Jeneratör opsiyoneldir. Kullanıcı sadece ne kadar güvence istediğini seçer; teknik kapasite ve çalışma varsayımları sistem tarafından otomatik önerilir.
             </div>
-            <div id="offgrid-generator-details" class="offgrid-generator-details" style="display:none">
+            <div id="offgrid-generator-details" class="offgrid-generator-details is-hidden">
               <label>
                 <span>Yedek güç seviyesi</span>
                 <select id="offgrid-generator-strategy" data-change-action="updateOffgridL2Settings">
@@ -3729,7 +3729,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="feature-toggle-body" id="nm-inputs" style="display:none">
+      <div class="feature-toggle-body is-hidden" id="nm-inputs">
         <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:0.8rem">
           <strong style="color:#10B981">2026 Lisanssız Üretim:</strong> Fazla üretim saatlik mahsuplaşma ve tüketim bazlı ihracat sınırıyla değerlendirilir.<br>
           <strong style="color:#06B6D4;margin-top:6px;display:block">Not:</strong> Sözleşme, bağlantı görüşü, tüketim limiti ve depolama kuralları proje bazında doğrulanmalıdır.
@@ -3761,7 +3761,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="feature-toggle-body" id="bill-inputs-block" style="display:none">
+      <div class="feature-toggle-body is-hidden" id="bill-inputs-block">
         <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px">12 aylık elektrik tüketim verilerinizi girerek gerçekçi tasarruf hesabı yapın.</div>
         <div id="bill-inputs-wrap"></div>
       </div>
@@ -3842,7 +3842,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="feature-toggle-body" id="ev-block" style="display:none">
+      <div class="feature-toggle-body is-hidden" id="ev-block">
         <div class="roof-section-grid">
           <div class="form-group" style="margin:0;grid-column:1/-1">
             <label style="font-size:0.8rem">Araç Modeli</label>
@@ -3910,7 +3910,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="feature-toggle-body" id="hp-block" style="display:none">
+      <div class="feature-toggle-body is-hidden" id="hp-block">
         <div class="roof-section-grid">
           <div class="form-group" style="margin:0">
             <label style="font-size:0.8rem">Kullanım Alanı (m²)</label>
@@ -3966,7 +3966,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="feature-toggle-body" id="tax-block" style="display:none">
+      <div class="feature-toggle-body is-hidden" id="tax-block">
         <div class="roof-section-grid">
           <div class="form-group" style="margin:0">
             <label style="font-size:0.8rem">Kurumlar Vergisi Oranı (%)</label>
@@ -4159,7 +4159,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
   </div>
 
-  <div class="on-grid-result-layers" id="on-grid-result-layers" style="display:none"></div>
+  <div class="on-grid-result-layers is-hidden" id="on-grid-result-layers"></div>
 
   <div class="fin-box">
     <div class="card-title" style="margin-bottom:8px">Yatırım Özeti</div>
@@ -4206,7 +4206,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- BESS results -->
-  <div class="bess-result-wrap" id="bess-result-section" style="display:none">
+  <div class="bess-result-wrap is-hidden" id="bess-result-section">
     <div class="bess-result-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>
       Batarya Özeti
@@ -4230,7 +4230,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- ═══ OFF-GRID LEVEL 2 SONUÇ EKRANı — yalnızca off-grid senaryosunda görünür ═══ -->
-  <div id="offgrid-l2-result-section" class="offgrid-result-stack" style="display:none">
+  <div id="offgrid-l2-result-section" class="offgrid-result-stack is-hidden">
 
     <!-- Dispatch Özeti -->
     <div class="offgrid-result-card offgrid-result-card--accent">
@@ -4271,7 +4271,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
 
     <!-- Jeneratör Analizi (jeneratör etkinse görünür) -->
-    <div id="offgrid-generator-result-wrap" class="offgrid-result-card offgrid-result-card--accent" style="display:none">
+    <div id="offgrid-generator-result-wrap" class="offgrid-result-card offgrid-result-card--accent is-hidden">
       <div class="offgrid-result-head">
         <div>
           <div class="offgrid-result-kicker">Yedek Güç</div>
@@ -4283,7 +4283,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
 
     <!-- Kötü Hava Senaryosu (seçildiyse görünür) -->
-    <div id="offgrid-badweather-result-wrap" class="offgrid-result-card offgrid-result-card--slate" style="display:none">
+    <div id="offgrid-badweather-result-wrap" class="offgrid-result-card offgrid-result-card--slate is-hidden">
       <div class="offgrid-result-head">
         <div>
           <div class="offgrid-result-kicker">Dayanıklılık</div>
@@ -4295,7 +4295,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
 
     <!-- Stres Senaryoları -->
-    <div id="offgrid-stress-result-wrap" class="offgrid-result-card offgrid-result-card--slate" style="display:none">
+    <div id="offgrid-stress-result-wrap" class="offgrid-result-card offgrid-result-card--slate is-hidden">
       <div class="offgrid-result-head">
         <div>
           <div class="offgrid-result-kicker">Tasarıma Karşı Test</div>
@@ -4319,7 +4319,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
 
     <!-- Genişletilmiş Dispatch Metrikleri -->
-    <div id="offgrid-extended-metrics" class="offgrid-result-card offgrid-result-card--slate" style="display:none">
+    <div id="offgrid-extended-metrics" class="offgrid-result-card offgrid-result-card--slate is-hidden">
       <div class="offgrid-result-head">
         <div>
           <div class="offgrid-result-kicker">Sistem Sınırları</div>
@@ -4331,7 +4331,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
 
     <!-- Cihaz Özet Metrikleri (cihaz listesi modunda görünür) -->
-    <div id="offgrid-device-metrics" class="offgrid-result-card offgrid-result-card--accent" style="display:none">
+    <div id="offgrid-device-metrics" class="offgrid-result-card offgrid-result-card--accent is-hidden">
       <div class="offgrid-result-head">
         <div>
           <div class="offgrid-result-kicker">Yük Profili</div>
@@ -4343,7 +4343,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
 
     <!-- Kaynak Şeffaflığı -->
-    <div id="offgrid-source-transparency" class="offgrid-result-card offgrid-result-card--slate" style="display:none">
+    <div id="offgrid-source-transparency" class="offgrid-result-card offgrid-result-card--slate is-hidden">
       <div class="offgrid-result-head">
         <div>
           <div class="offgrid-result-kicker">Veri Dayanağı</div>
@@ -4355,7 +4355,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
 
     <!-- Karşılanamayan yük uyarısı -->
-    <div id="offgrid-unmet-warn" class="offgrid-result-card offgrid-result-card--danger" style="display:none">
+    <div id="offgrid-unmet-warn" class="offgrid-result-card offgrid-result-card--danger is-hidden">
       <div class="offgrid-result-head">
         <div>
           <div class="offgrid-result-kicker">Dikkat Gerektiren Nokta</div>
@@ -4384,7 +4384,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <!-- ═══ OFF-GRID LEVEL 2 SONUÇ SONU ═══ -->
 
   <!-- Net metering results -->
-  <div class="nm-result-wrap" id="nm-result-section" style="display:none">
+  <div class="nm-result-wrap is-hidden" id="nm-result-section">
     <div class="nm-result-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/></svg>
       Şebekeye Verilen Fazla Enerji
