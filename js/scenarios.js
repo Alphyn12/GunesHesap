@@ -83,16 +83,16 @@ export function renderScenarioAnalysis() {
         </thead>
         <tbody>
           ${scenarios.map((sc, i) => `
-            <tr style="border-left:3px solid ${scenarioVals[i].color}">
-              <td style="color:${scenarioVals[i].color}">${t(scenarioVals[i].labelKey)}</td>
+            <tr class="scenario-row-color" data-c="${scenarioVals[i].color}">
+              <td class="scenario-text-color" data-c="${scenarioVals[i].color}">${t(scenarioVals[i].labelKey)}</td>
               <td>${sc.paybackYear ? t('scenarioAnalysis.paybackYears').replace('{n}', sc.paybackYear) : t('scenarioAnalysis.paybackOver25')}</td>
               <td>${money(sc.npv)}</td>
               <td>${sc.irr}%</td>
               <td>${sc.roi}%</td>
             </tr>
           `).join('')}
-          <tr style="border-left:3px solid #8B5CF6">
-            <td style="color:#8B5CF6">${t('scenarioAnalysis.customScenario').replace('{rate}', (customRate*100).toFixed(0))}</td>
+          <tr class="scenario-row-purple">
+            <td class="scenario-text-purple">${t('scenarioAnalysis.customScenario').replace('{rate}', (customRate*100).toFixed(0))}</td>
             <td>${customScenario.paybackYear ? t('scenarioAnalysis.paybackYears').replace('{n}', customScenario.paybackYear) : t('scenarioAnalysis.paybackOver25')}</td>
             <td>${money(customScenario.npv)}</td>
             <td>${customScenario.irr}%</td>
@@ -101,6 +101,11 @@ export function renderScenarioAnalysis() {
         </tbody>
       </table>
     `;
+    // F1.C.7: data-c attribute'larını CSS var'a aktar
+    if (typeof tableEl.querySelectorAll === 'function') {
+      tableEl.querySelectorAll('[data-c]').forEach(el =>
+        el.style.setProperty('--c', el.dataset.c));
+    }
   }
 
   // Kümülatif nakit akışı grafiği
@@ -199,27 +204,27 @@ function renderSensitivityTable(r) {
 
   const mcBands = computeMonteCarloBands(r, state, 500);
   const mcHtml = mcBands
-    ? `<div style="margin-top:12px;padding:10px 12px;background:rgba(99,102,241,0.08);border-radius:8px;border:1px solid rgba(99,102,241,0.25)">
-        <div style="font-size:0.82rem;font-weight:700;color:#818CF8;margin-bottom:6px">
+    ? `<div class="mc-card-frame">
+        <div class="mc-card-title">
           Monte Carlo NPV Güven Bandı (500 iterasyon)
-          <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400"> — üretim ±15%, tarife artışı %10–40%</span>
+          <span class="mc-card-hint"> — üretim ±15%, tarife artışı %10–40%</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
-          <div><div style="font-size:0.7rem;color:var(--text-muted)">P90 (muhafazakâr)</div><div style="font-size:1rem;font-weight:700;color:#EF4444">${money(mcBands.p90)}</div></div>
-          <div><div style="font-size:0.7rem;color:var(--text-muted)">P50 (medyan)</div><div style="font-size:1rem;font-weight:700;color:#F59E0B">${money(mcBands.p50)}</div></div>
-          <div><div style="font-size:0.7rem;color:var(--text-muted)">P10 (iyimser)</div><div style="font-size:1rem;font-weight:700;color:#10B981">${money(mcBands.p10)}</div></div>
+        <div class="mc-card-grid">
+          <div><div class="mc-percentile-label">P90 (muhafazakâr)</div><div class="mc-percentile-value mc-percentile-value--p90">${money(mcBands.p90)}</div></div>
+          <div><div class="mc-percentile-label">P50 (medyan)</div><div class="mc-percentile-value mc-percentile-value--p50">${money(mcBands.p50)}</div></div>
+          <div><div class="mc-percentile-label">P10 (iyimser)</div><div class="mc-percentile-value mc-percentile-value--p10">${money(mcBands.p10)}</div></div>
         </div>
       </div>`
     : '';
 
   el.innerHTML = `
-    <div style="font-size:0.9rem;font-weight:700;color:var(--primary);margin:12px 0 8px">${t('scenarioAnalysis.sensitivityTitle')}</div>
+    <div class="scenario-section-title">${t('scenarioAnalysis.sensitivityTitle')}</div>
     <table class="scenario-compare-table">
       <thead><tr><th>${t('scenarioAnalysis.variable')}</th><th>${t('scenarioAnalysis.npvImpact')}</th><th>${t('scenarioAnalysis.newNpv')}</th></tr></thead>
       <tbody>
         ${cases.map(c => `<tr>
           <td>${c.label}</td>
-          <td style="color:${c.delta >= 0 ? '#10B981' : '#EF4444'}">${c.delta >= 0 ? '+' : ''}${money(c.delta)}</td>
+          <td class="${c.delta >= 0 ? 'scenario-delta-positive' : 'scenario-delta-negative'}">${c.delta >= 0 ? '+' : ''}${money(c.delta)}</td>
           <td>${money(c.npv)}</td>
         </tr>`).join('')}
       </tbody>

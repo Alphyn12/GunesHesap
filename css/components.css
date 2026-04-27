@@ -2761,3 +2761,36 @@
 .section-divider-mt-3       { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
 .text-muted-85-block-mb-1-5 { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
 .text-sm-muted-fullwidth    { font-size: 0.8rem; color: var(--text-muted); max-width: 100%; }
+/* ── F1.C.7 batch 3: eng-report ── */
+.loss-bar-fill-dyn  { width: var(--bar-w, 0%); }
+.loss-bar-fill-100  { width: 100%; }
+.opacity-60         { opacity: 0.6; }
+.loss-row-net       { padding: 10px 8px; background: rgba(16,185,129,0.06); border-radius: 6px; }
+.text-strong-default{ font-weight: 700; color: var(--text); }
+.tr-border-top-2    { border-top: 2px solid var(--border); }
+/* ── F1.C.7 batch 3: heat-pump ── */
+.hp-stat-grid       { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+.hp-stat-card       { background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px; text-align: center; }
+.hp-stat-value      { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.hp-stat-value--accent  { color: var(--accent); }
+.hp-stat-value--success { color: var(--success); }
+.hp-stat-value--danger  { color: #EF4444; }
+.text-muted-7       { font-size: 0.7rem; color: var(--text-muted); }
+.hp-footnote        { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px; }
+/* ── F1.C.7 batch 3: scenarios ── */
+.scenario-row-color   { border-left: 3px solid var(--c); }
+.scenario-row-purple  { border-left: 3px solid #8B5CF6; }
+.scenario-text-color  { color: var(--c); }
+.scenario-text-purple { color: #8B5CF6; }
+.mc-card-frame  { margin-top: 12px; padding: 10px 12px; background: rgba(99,102,241,0.08); border-radius: 8px; border: 1px solid rgba(99,102,241,0.25); }
+.mc-card-title  { font-size: 0.82rem; font-weight: 700; color: #818CF8; margin-bottom: 6px; }
+.mc-card-hint   { font-size: 0.7rem; color: var(--text-muted); font-weight: 400; }
+.mc-card-grid   { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.mc-percentile-label { font-size: 0.7rem; color: var(--text-muted); }
+.mc-percentile-value { font-size: 1rem; font-weight: 700; }
+.mc-percentile-value--p90 { color: #EF4444; }
+.mc-percentile-value--p50 { color: #F59E0B; }
+.mc-percentile-value--p10 { color: #10B981; }
+.scenario-section-title  { font-size: 0.9rem; font-weight: 700; color: var(--primary); margin: 12px 0 8px; }
+.scenario-delta-positive { color: #10B981; }
+.scenario-delta-negative { color: #EF4444; }

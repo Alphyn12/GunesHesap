@@ -193,42 +193,42 @@ GHI: ${state.ghi} kWh/m²/${escapeHtml(yearUnit)}${r.usedFallback ? `\n⚠ ${esc
     <div class="loss-waterfall">
       <div class="loss-row">
         <div class="loss-label">${escapeHtml(report('pvgisGrossProduction'))}${r.usedFallback ? ' (Fallback)' : ''}</div>
-        <div class="loss-bar-wrap"><div class="loss-bar-fill neutral" style="width:100%"></div></div>
+        <div class="loss-bar-wrap"><div class="loss-bar-fill neutral loss-bar-fill-100"></div></div>
         <div class="loss-val neutral">${fmt(r.pvgisRawEnergy)} kWh</div>
       </div>
       <div class="loss-row">
     <div class="loss-label">− ${escapeHtml(report('shadingLoss'))} (%${r.effectiveShadingFactor ?? state.shadingFactor})</div>
-        <div class="loss-bar-wrap"><div class="loss-bar-fill negative" style="width:${shadingPct}%"></div></div>
+        <div class="loss-bar-wrap"><div class="loss-bar-fill negative loss-bar-fill-dyn" data-bar-w="${shadingPct}"></div></div>
         <div class="loss-val negative">−${fmt(r.shadingLoss)} kWh</div>
       </div>
       <div class="loss-row">
         <div class="loss-label">− ${escapeHtml(report('soilingLoss'))} (%${state.soilingFactor})</div>
-        <div class="loss-bar-wrap"><div class="loss-bar-fill negative" style="width:${soilingPct}%"></div></div>
+        <div class="loss-bar-wrap"><div class="loss-bar-fill negative loss-bar-fill-dyn" data-bar-w="${soilingPct}"></div></div>
         <div class="loss-val negative">−${fmt(r.soilingLoss)} kWh</div>
       </div>
       ${r.usedFallback ? `<div class="loss-row">
         <div class="loss-label">− ${escapeHtml(report('temperatureLoss'))} (${r.avgSummerTemp}°C, α=${(p.tempCoeff*100).toFixed(3)}%/°C)</div>
-        <div class="loss-bar-wrap"><div class="loss-bar-fill negative" style="width:${tempPct}%"></div></div>
+        <div class="loss-bar-wrap"><div class="loss-bar-fill negative loss-bar-fill-dyn" data-bar-w="${tempPct}"></div></div>
         <div class="loss-val negative">−${fmt(r.tempLossEnergy)} kWh</div>
       </div>
       <div class="loss-row">
         <div class="loss-label">− ${escapeHtml(report('azimuthLoss'))} (${escapeHtml(state.azimuthName)}, k=${state.azimuthCoeff.toFixed(2)})</div>
-        <div class="loss-bar-wrap"><div class="loss-bar-fill negative" style="width:${azimuthPct}%"></div></div>
+        <div class="loss-bar-wrap"><div class="loss-bar-fill negative loss-bar-fill-dyn" data-bar-w="${azimuthPct}"></div></div>
         <div class="loss-val negative">−${fmt(r.azimuthLossEnergy)} kWh</div>
-      </div>` : `<div class="loss-row" style="opacity:0.6">
+      </div>` : `<div class="loss-row opacity-60">
         <div class="loss-label">✔ ${escapeHtml(report('pvgisIncludesTempAzimuth'))}</div>
         <div class="loss-bar-wrap"></div>
-        <div class="loss-val" style="color:var(--text-muted)">—</div>
+        <div class="loss-val text-muted">—</div>
       </div>`}
       ${r.bifacialGainEnergy > 0 ? `
       <div class="loss-row">
         <div class="loss-label">+ ${escapeHtml(report('bifacialGain'))} (+${(p.bifacialGain*100).toFixed(0)}% ${escapeHtml(report('rearSide'))})</div>
-        <div class="loss-bar-wrap"><div class="loss-bar-fill positive" style="width:${bifacialPct}%"></div></div>
+        <div class="loss-bar-wrap"><div class="loss-bar-fill positive loss-bar-fill-dyn" data-bar-w="${bifacialPct}"></div></div>
         <div class="loss-val positive">+${fmt(r.bifacialGainEnergy)} kWh</div>
       </div>` : ''}
-      <div class="loss-row" style="padding:10px 8px;background:rgba(16,185,129,0.06);border-radius:6px">
-        <div class="loss-label" style="font-weight:700;color:var(--text)">= ${escapeHtml(report('netAnnualProduction'))}</div>
-        <div class="loss-bar-wrap"><div class="loss-bar-fill positive" style="width:${Math.min(netEnergy/maxRef*100,100).toFixed(1)}%"></div></div>
+      <div class="loss-row loss-row-net">
+        <div class="loss-label text-strong-default">= ${escapeHtml(report('netAnnualProduction'))}</div>
+        <div class="loss-bar-wrap"><div class="loss-bar-fill positive loss-bar-fill-dyn" data-bar-w="${Math.min(netEnergy/maxRef*100,100).toFixed(1)}"></div></div>
         <div class="loss-val positive">${fmt(netEnergy)} kWh</div>
       </div>
     </div>
@@ -298,7 +298,7 @@ IRR = ${r.irr === 'N/A' ? escapeHtml(report('unableToCalculate')) : r.irr + '%'}
         <tr><td colspan="3">${escapeHtml(i18n.t('report.subtotalExVat'))}</td><td>${money(cb.subtotal)}</td></tr>
         <tr><td colspan="3">${escapeHtml(i18n.t('kdv.note'))}</td><td>${money(cb.kdv)}</td></tr>
         <tr class="total-row"><td colspan="3"><strong>${escapeHtml(i18n.t('report.grandTotal'))}</strong></td><td><strong>${money(cb.total)}</strong></td></tr>
-        ${r.annualOMCost > 0 ? `<tr style="border-top:2px solid var(--border)"><td colspan="3">${escapeHtml(report('annualMaintenance'))} (O&M) — %${state.omRate}</td><td>${money(r.annualOMCost)}/${escapeHtml(yearUnit)}</td></tr>` : ''}
+        ${r.annualOMCost > 0 ? `<tr class="tr-border-top-2"><td colspan="3">${escapeHtml(report('annualMaintenance'))} (O&M) — %${state.omRate}</td><td>${money(r.annualOMCost)}/${escapeHtml(yearUnit)}</td></tr>` : ''}
         ${r.annualInsurance > 0 ? `<tr><td colspan="3">${escapeHtml(report('annualInsurance'))} — %${state.insuranceRate}</td><td>${money(r.annualInsurance)}/${escapeHtml(yearUnit)}</td></tr>` : ''}
         ${r.inverterReplaceCost > 0 ? `<tr><td colspan="3">${escapeHtml(report('inverterReplacement'))} (${escapeHtml(report('year'))} ${r.inverterLifetime || 12})</td><td>${money(r.inverterReplaceCost)}</td></tr>` : ''}
       </tbody>
@@ -330,7 +330,7 @@ ${escapeHtml(report('totalProduction25y'))}: ${fmt(totalEnergy25y)} kWh</div>
             <td>${fmt(y.energy)}</td>
             <td>${y.effectiveImportRate || y.rate}</td>
             <td>${money(y.savings)}</td>
-            <td style="color:var(--danger)">${y.expenses > 0 ? '-' + money(y.expenses) : '0'}</td>
+            <td class="text-danger">${y.expenses > 0 ? '-' + money(y.expenses) : '0'}</td>
             <td>${money(y.netCashFlow)}</td>
             <td>${money(y.cumulative)}</td>
             <td>${money(y.npv)}</td>
@@ -488,6 +488,11 @@ ${escapeHtml(report('exportRevenue'))} = ${money(nm.annualExportRevenue)}/${esca
   }
 
   body.innerHTML = html;
+  // F1.C.7: data-bar-w attribute'larını CSS var'a aktar (CSP-safe direct property)
+  if (typeof body.querySelectorAll === 'function') {
+    body.querySelectorAll('[data-bar-w]').forEach(el =>
+      el.style.setProperty('--bar-w', el.dataset.barW + '%'));
+  }
 }
 
 // Eski Step-6 mühendislik paneli çağrılarıyla uyumluluk için tutulur.

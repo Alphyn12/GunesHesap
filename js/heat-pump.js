@@ -83,26 +83,27 @@ function updateHeatPumpPreview() {
 
   const prevEl = document.getElementById('hp-preview');
   if (prevEl) {
+    const savingClass = annualSaving >= 0 ? 'hp-stat-value--success' : 'hp-stat-value--danger';
     prevEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px">
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.1rem;font-weight:700;color:var(--accent)">${totalElec.toLocaleString('tr-TR')} kWh</div>
-          <div style="font-size:0.7rem;color:var(--text-muted)">Yıllık elektrik ihtiyacı</div>
+      <div class="hp-stat-grid">
+        <div class="hp-stat-card">
+          <div class="hp-stat-value hp-stat-value--accent">${totalElec.toLocaleString('tr-TR')} kWh</div>
+          <div class="text-muted-7">Yıllık elektrik ihtiyacı</div>
         </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.1rem;font-weight:700;color:var(--text)">SPF ${spfH.toFixed(1)} / ${spfC.toFixed(1)}</div>
-          <div style="font-size:0.7rem;color:var(--text-muted)">Isıtma / soğutma SPF</div>
+        <div class="hp-stat-card">
+          <div class="hp-stat-value">SPF ${spfH.toFixed(1)} / ${spfC.toFixed(1)}</div>
+          <div class="text-muted-7">Isıtma / soğutma SPF</div>
         </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.1rem;font-weight:700;color:${annualSaving >= 0 ? 'var(--success)' : '#EF4444'}">${annualSaving >= 0 ? '+' : ''}${annualSaving.toLocaleString('tr-TR')} ₺</div>
-          <div style="font-size:0.7rem;color:var(--text-muted)">Yıllık yakıt tasarrufu</div>
+        <div class="hp-stat-card">
+          <div class="hp-stat-value ${savingClass}">${annualSaving >= 0 ? '+' : ''}${annualSaving.toLocaleString('tr-TR')} ₺</div>
+          <div class="text-muted-7">Yıllık yakıt tasarrufu</div>
         </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.1rem;font-weight:700;color:var(--success)">${co2Saved} t</div>
-          <div style="font-size:0.7rem;color:var(--text-muted)">CO₂ azaltımı (yıllık)</div>
+        <div class="hp-stat-card">
+          <div class="hp-stat-value hp-stat-value--success">${co2Saved} t</div>
+          <div class="text-muted-7">CO₂ azaltımı (yıllık)</div>
         </div>
       </div>
-      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;padding:8px;background:rgba(255,255,255,0.02);border-radius:6px">
+      <div class="hp-footnote">
         Isıtma talebi: <strong>${Math.round(annualHeatDemand).toLocaleString('tr-TR')} kWh/yıl</strong>
         ${doCooling ? ` | Soğutma: <strong>${Math.round(annualCoolDemand).toLocaleString('tr-TR')} kWh/yıl</strong>` : ''}
         | Mevcut yakıt maliyeti: <strong>${Math.round(currentCost).toLocaleString('tr-TR')} ₺/yıl</strong>
