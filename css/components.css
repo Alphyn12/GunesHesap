@@ -1785,3 +1785,35 @@
 .flex-row-md                { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; }
 .subtitle-mb-4              { font-size: 0.9rem; margin-bottom: 14px; }
 .success-callout            { text-align: center; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); }
+
+/* ── F1.C.5b semantic classes: form input row + modal + utility ─────
+   Form alanlarının full-width input pattern'i (en sık ~62 yerde) + modal
+   overlay/header + bazı utility'ler. */
+
+/* Form input row variants (background + border + radius + padding + color + width + font-size) */
+.input-form-row        { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); width: 100%; font-size: 0.9rem; }
+.input-form-row-sm     { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; color: var(--text); width: 100%; font-size: 0.78rem; }
+.input-form-row-md     { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; color: var(--text); width: 100%; font-size: 0.8rem; }
+.input-form-row-85     { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); width: 100%; font-size: 0.85rem; }
+.input-form-row-tight  { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; color: var(--text); width: 100%; font-size: 0.78rem; }
+.input-form-row-110    { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); width: 110px; font-size: 0.85rem; }
+.input-form-row-95     { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); width: 95px; font-size: 0.85rem; }
+
+/* Glass chip toggle (hover-able transparent chip) */
+.chip-toggle-glass     { background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 6px 12px; cursor: pointer; color: var(--text-muted); font-size: 0.78rem; font-family: var(--font-body); }
+
+/* Success callout (centered translucent green panel) */
+.callout-success-tight { text-align: center; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; padding: 14px; }
+
+/* Layout utilities */
+.flex-1                { flex: 1; }
+.fill-area             { width: 100%; height: 100%; }
+.overflow-x-auto       { overflow-x: auto; }
+.overflow-x-auto-mb-4  { overflow-x: auto; margin-bottom: 16px; }
+.max-h-300             { max-height: 300px; }
+.icon-align-middle     { vertical-align: middle; margin-right: 8px; }
+
+/* Modal scaffolding */
+.modal-overlay-base    { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 16px; }
+.modal-header-base     { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.btn-icon-modal-close  { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.4rem; padding: 4px 8px; }
