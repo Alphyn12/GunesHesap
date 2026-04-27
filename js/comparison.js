@@ -66,11 +66,10 @@ function buildComparisonUI() {
 
   wrap.innerHTML = DEFAULT_SCENARIOS.map((sc, idx) => `
     <div class="comparison-scenario" id="comp-sc-${idx}">
-      <h4 style="color:var(--primary);margin-bottom:12px">${ct('comparison.scenarioLabel').replace('{letter}', SCENARIO_LETTERS[idx])}</h4>
+      <h4 class="text-primary mb-3">${ct('comparison.scenarioLabel').replace('{letter}', SCENARIO_LETTERS[idx])}</h4>
       <div class="form-group">
         <label>${ct('comparison.panelTypeLabel')}</label>
-        <select id="comp-panel-${idx}" onchange="runComparison()"
-          style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%">
+        <select id="comp-panel-${idx}" data-change-action="runComparison" class="input-form-row">
           ${PANEL_TYPE_OPTIONS.map(k => {
             const p = PANEL_TYPES[k];
             return `<option value="${k}" ${k === sc.panelType ? 'selected' : ''}>${p.name}</option>`;
@@ -79,8 +78,7 @@ function buildComparisonUI() {
       </div>
       <div class="form-group">
         <label>${ct('comparison.inverterTypeLabel')}</label>
-        <select id="comp-inv-${idx}" onchange="runComparison()"
-          style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%">
+        <select id="comp-inv-${idx}" data-change-action="runComparison" class="input-form-row">
           ${Object.entries(INVERTER_TYPES).map(([k, inv]) => `
             <option value="${k}" ${k === sc.inverterType ? 'selected' : ''}>${inv.name}</option>
           `).join('')}
@@ -89,8 +87,7 @@ function buildComparisonUI() {
       <div class="form-group">
         <label>${ct('comparison.customPriceLabel')}</label>
         <input type="number" id="comp-price-${idx}" placeholder="Toplam TL"
-          oninput="runComparison()"
-          style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%"/>
+          data-input-action="runComparison" class="input-form-row"/>
       </div>
     </div>
   `).join('');
@@ -224,7 +221,7 @@ export function runComparison() {
       <thead>
         <tr>
           <th>${ct('comparison.metricLabel')}</th>
-          ${results.map(r => `<th style="color:var(--primary)">${r.name}</th>`).join('')}
+          ${results.map(r => `<th class="text-primary">${r.name}</th>`).join('')}
         </tr>
       </thead>
       <tbody>
@@ -233,12 +230,12 @@ export function runComparison() {
         <tr><td>${ct('comparison.systemKwp')}</td>${results.map(r => `<td>${r.systemPower} kWp</td>`).join('')}</tr>
         <tr><td>${ct('comparison.annualProduction')}</td>${results.map(r => `<td>${r.annualEnergy} kWh</td>`).join('')}</tr>
         <tr><td>${ct('comparison.totalCost')}</td>${results.map(r => `<td>${money(r.totalCost)}${r.isCustom ? ' *' : ''}</td>`).join('')}</tr>
-        <tr><td>${ct('comparison.payback')}</td>${results.map(r => `<td style="color:${parseFloat(r.paybackYear) === bestPayback ? '#10B981' : 'inherit'};font-weight:${parseFloat(r.paybackYear) === bestPayback ? '700' : '400'}">${ct('comparison.paybackYears').replace('{n}', r.paybackYear)}${parseFloat(r.paybackYear) === bestPayback ? ' ✓' : ''}</td>`).join('')}</tr>
+        <tr><td>${ct('comparison.payback')}</td>${results.map(r => { const isBest = parseFloat(r.paybackYear) === bestPayback; return `<td class="${isBest ? 'comparison-cell-best' : ''}">${ct('comparison.paybackYears').replace('{n}', r.paybackYear)}${isBest ? ' ✓' : ''}</td>`; }).join('')}</tr>
         <tr><td>${ct('comparison.projectNpv')}</td>${results.map(r => `<td>${money(r.npv)}</td>`).join('')}</tr>
         <tr><td>${ct('comparison.lcoe')}</td>${results.map(r => `<td>${(r.compensatedLcoe != null || r.lcoe != null) ? moneyRate(r.compensatedLcoe ?? r.lcoe, 'kWh') : '—'}</td>`).join('')}</tr>
       </tbody>
     </table>
-    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:8px">${ct('comparison.footnote')}</p>
+    <p class="text-helper-75-mt-2">${ct('comparison.footnote')}</p>
   `;
 }
 

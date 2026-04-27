@@ -21,23 +21,23 @@ export function initBillAnalysis() {
           <label>${m}</label>
           <input type="number" id="bill-${i}" min="0" max="5000" placeholder="kWh"
             value="${state.monthlyConsumption ? state.monthlyConsumption[i] : ''}"
-            oninput="onBillInput()"
-            style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);width:100%;font-size:0.85rem"/>
+            data-input-action="onBillInput"
+            class="input-form-row-85-tight"/>
         </div>
       `).join('')}
     </div>
-    <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
-      <label style="font-size:0.85rem;color:var(--text-muted)">${bt('billAnalysis.quickFillLabel')}</label>
+    <div class="flex-row-mt-3-gap-10">
+      <label class="text-muted-85">${bt('billAnalysis.quickFillLabel')}</label>
       <input type="number" id="bill-avg-input" placeholder="Aylık ort. kWh" min="0" max="5000"
-        style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);width:130px;font-size:0.85rem"/>
-      <button onclick="billQuickFill()" style="background:var(--primary);color:#000;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem;font-weight:600">${bt('billAnalysis.quickFillBtn')}</button>
-      <button onclick="billClear()" style="background:var(--surface-light);color:var(--text-muted);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:0.82rem">${bt('billAnalysis.clearBtn')}</button>
+        class="input-form-row-85-tight-130"/>
+      <button data-click-action="billQuickFill" class="btn-primary-md">${bt('billAnalysis.quickFillBtn')}</button>
+      <button data-click-action="billClear" class="btn-surface-light-md">${bt('billAnalysis.clearBtn')}</button>
     </div>
-    <div id="bill-summary" style="margin-top:10px;font-size:0.82rem;color:var(--text-muted)"></div>
-    <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
-      <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:6px">${bt('billAnalysis.csv8760Label')}</label>
-      <input type="file" id="load-8760-input" accept=".csv,.txt" onchange="import8760Csv(this.files?.[0])"
-        style="font-size:0.8rem;color:var(--text-muted);max-width:100%"/>
+    <div id="bill-summary" class="text-base-82-muted-mt-2-5"></div>
+    <div class="section-divider-mt-3">
+      <label class="text-muted-85-block-mb-1-5">${bt('billAnalysis.csv8760Label')}</label>
+      <input type="file" id="load-8760-input" accept=".csv,.txt" data-change-action="import8760Csv"
+        class="text-sm-muted-fullwidth"/>
     </div>
   `;
 

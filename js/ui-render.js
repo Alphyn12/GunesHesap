@@ -98,9 +98,17 @@ function backendEngineText(results = {}, state = window.state || {}) {
     : `${i18n.t('engine.browserActive')}${weatherTag}`;
 }
 
+function offgridStatColorModifier(color) {
+  if (color === 'var(--danger)' || color === 'danger') return 'offgrid-stat-card--danger';
+  if (color === 'var(--success)' || color === 'good') return 'offgrid-stat-card--success';
+  if (color === '#F97316' || color === 'warn') return 'offgrid-stat-card--orange';
+  if (color === '#94A3B8') return 'offgrid-stat-card--gray';
+  if (color === 'rgba(71,85,105,0.18)') return 'offgrid-stat-card--subtle';
+  return 'offgrid-stat-card--primary';
+}
 function offgridStatCard({ value, label, note = '', color = 'var(--primary)' }) {
   return `
-    <article class="offgrid-stat-card" style="--metric-color:${color}">
+    <article class="offgrid-stat-card ${offgridStatColorModifier(color)}">
       <div class="offgrid-stat-value">${escapeHtml(String(value))}</div>
       <div class="offgrid-stat-label">${escapeHtml(label)}</div>
       ${note ? `<div class="offgrid-stat-note">${escapeHtml(note)}</div>` : ''}
@@ -312,7 +320,7 @@ export function renderResults() {
     const taxActive  = state.taxEnabled && kdvAmt > 0 && netBasis < grossCost;
     if (taxActive) {
       finCostEl.innerHTML =
-        `${money(grossCost)}<span style="display:block;font-size:0.72rem;color:var(--text-muted);margin-top:2px">` +
+        `${money(grossCost)}<span class="cost-amount-helper">` +
         `KDV: ${money(kdvAmt)} · ${i18n.t('kdv.financialBasisLabel')}: <strong>${money(netBasis)}</strong></span>`;
     } else {
       finCostEl.textContent = money(grossCost);
@@ -1092,7 +1100,7 @@ function renderOnGridResultLayers(state, r) {
     // No backend comparison — do NOT show 0% or any numeric diff
     parityRowClass = 'data-source-warn';
     parityRowText = i18n.t('onGridResult.parityUnavailable');
-    engineParityHtml = `<div class="on-grid-explain" style="font-size:.78rem;color:var(--text-muted)">${escapeHtml(i18n.t('engine.comparisonUnavailableHint'))}</div>`;
+    engineParityHtml = `<div class="on-grid-explain text-sm-78 text-muted">${escapeHtml(i18n.t('engine.comparisonUnavailableHint'))}</div>`;
   } else {
     // Real backend comparison available — use deltaPct (correct field name)
     const diff = typeof parityData.deltaPct === 'number' ? parityData.deltaPct : 0;
@@ -1192,7 +1200,7 @@ function renderBomResults(bom) {
   card.innerHTML = `
     <details class="advanced-details">
       <summary class="advanced-details-summary">Kalem kalem maliyet listesi (isteğe bağlı)</summary>
-      <div class="result-helper" style="margin-bottom:12px">Bu alan teklif hazırlarken kullanılan kalem kalem maliyet listesini gösterir. İlk bakışta gerekli değilse kapalı bırakabilirsiniz.</div>
+      <div class="result-helper mb-3">Bu alan teklif hazırlarken kullanılan kalem kalem maliyet listesini gösterir. İlk bakışta gerekli değilse kapalı bırakabilirsiniz.</div>
       <table class="tech-table">
         <tbody>
           ${bom.rows.map(row => `<tr><td>${escapeHtml(row.supplier)} — ${escapeHtml(row.name)}</td><td>${Number(row.quantity || 0).toFixed(row.unit === 'fixed' ? 0 : 1)} ${escapeHtml(row.unit)}</td><td>${money(row.total)}</td></tr>`).join('')}
@@ -1541,7 +1549,7 @@ function renderEVResults(ev) {
       <div class="result-metric"><div class="result-metric-val">${money(ev.fuelCostSaved)}</div><div class="result-metric-label">Yıllık yakıt tasarrufu</div></div>
       <div class="result-metric"><div class="result-metric-val">${money(ev.netSaving)}</div><div class="result-metric-label">Net yıllık tasarruf</div></div>
     </div>
-    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">Ek panel ihtiyacı: ${ev.additionalPanels} adet | Güneşten şarj: ${ev.solarChargeKwh.toLocaleString('tr-TR')} kWh/yıl</p>
+    <p class="text-helper-78-mt-2">Ek panel ihtiyacı: ${ev.additionalPanels} adet | Güneşten şarj: ${ev.solarChargeKwh.toLocaleString('tr-TR')} kWh/yıl</p>
   `;
 }
 
@@ -1562,7 +1570,7 @@ function renderHeatPumpResults(hp) {
       <div class="result-metric"><div class="result-metric-val">${money(hp.gas_cost)}</div><div class="result-metric-label">Mevcut doğalgaz maliyeti</div></div>
       <div class="result-metric"><div class="result-metric-val">${money(hp.savings)}</div><div class="result-metric-label">Yıllık tasarruf</div></div>
     </div>
-    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">Isı pompası elektrik tüketimi: ${hp.hp_electricity.toLocaleString('tr-TR')} kWh/yıl</p>
+    <p class="text-helper-78-mt-2">Isı pompası elektrik tüketimi: ${hp.hp_electricity.toLocaleString('tr-TR')} kWh/yıl</p>
   `;
 }
 
@@ -1590,12 +1598,12 @@ function renderStructuralResults(sc) {
     </div>
     <div class="structural-insight-grid">
       <article class="structural-insight-card">
-        <div class="structural-insight-value" style="color:${statusColors[snowStatus]}">${sc.snowLoad.toFixed(2)} kN/m²</div>
+        <div class="structural-insight-value structural-insight--${snowStatus}">${sc.snowLoad.toFixed(2)} kN/m²</div>
         <div class="structural-insight-label">Kar yükü · ${sc.snowZone}</div>
         <div class="structural-insight-note">Kış koşullarında çatının taşıması beklenen ek yük. Bölge ağırlaştıkça bağlantı detayları daha kritik hale gelir.</div>
       </article>
       <article class="structural-insight-card">
-        <div class="structural-insight-value" style="color:${statusColors[windStatus]}">${sc.windPressure.toFixed(2)} kN/m²</div>
+        <div class="structural-insight-value structural-insight--${windStatus}">${sc.windPressure.toFixed(2)} kN/m²</div>
         <div class="structural-insight-label">Rüzgar basıncı · ${sc.windZone}</div>
         <div class="structural-insight-note">Rüzgarın panel ve taşıyıcı sistem üzerinde oluşturabileceği emme ve baskı etkisini temsil eder.</div>
       </article>

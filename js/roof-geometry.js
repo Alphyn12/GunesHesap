@@ -205,18 +205,18 @@ function updateUiAndState(summary) {
   if (out) {
     const featureRows = summary.features.map((f, i) => {
       const bearings = f.edgeBearings?.slice(0, 4).map(e => `${Math.round(e.bearing)}°`).join(', ') || '—';
-      return `<div style="padding:6px 0;border-top:1px solid var(--border-subtle);margin-top:4px">
-        <span style="color:var(--primary);font-weight:600">${i + 1}. Poligon:</span>
-        <span style="color:var(--text)"> ${f.areaM2.toFixed(1)} m²</span>
-        <span style="color:var(--text-muted);font-size:0.78rem"> · ${azimuthName(f.azimuth)} (${Math.round(f.azimuth)}°)</span>
+      return `<div class="roof-poly-row">
+        <span class="text-strong-primary">${i + 1}. Poligon:</span>
+        <span class="text-color-default"> ${f.areaM2.toFixed(1)} m²</span>
+        <span class="text-muted text-sm-78"> · ${azimuthName(f.azimuth)} (${Math.round(f.azimuth)}°)</span>
       </div>`;
     }).join('');
     out.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:0.82rem">
-        <div><span style="color:var(--text-muted)">Toplam alan:</span> <strong style="color:var(--text)">${summary.areaM2.toFixed(1)} m²</strong></div>
-        <div><span style="color:var(--text-muted)">Dominant yön:</span> <strong style="color:var(--text)">${summary.azimuthName} ${Math.round(summary.azimuth)}°</strong></div>
-        <div><span style="color:var(--text-muted)">Katsayı:</span> <strong style="color:var(--text)">${summary.azimuthCoeff.toFixed(2)}</strong></div>
-        <div><span style="color:var(--text-muted)">Merkez:</span> <strong style="color:var(--text)">${summary.centroid ? `${summary.centroid.lat.toFixed(4)}, ${summary.centroid.lng.toFixed(4)}` : '—'}</strong></div>
+      <div class="roof-summary-grid">
+        <div><span class="text-muted">Toplam alan:</span> <strong class="text-color-default">${summary.areaM2.toFixed(1)} m²</strong></div>
+        <div><span class="text-muted">Dominant yön:</span> <strong class="text-color-default">${summary.azimuthName} ${Math.round(summary.azimuth)}°</strong></div>
+        <div><span class="text-muted">Katsayı:</span> <strong class="text-color-default">${summary.azimuthCoeff.toFixed(2)}</strong></div>
+        <div><span class="text-muted">Merkez:</span> <strong class="text-color-default">${summary.centroid ? `${summary.centroid.lat.toFixed(4)}, ${summary.centroid.lng.toFixed(4)}` : '—'}</strong></div>
       </div>
       ${summary.features.length > 1 ? featureRows : ''}
     `;

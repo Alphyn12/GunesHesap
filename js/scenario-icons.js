@@ -152,10 +152,10 @@ export const SCENARIO_ICONS = {
     <g class="agr-drop">
       <circle cx="54" cy="44" r="2.5" fill="#06B6D4" opacity="0.9"/>
     </g>
-    <g class="agr-drop" style="animation-delay:0.6s">
+    <g class="agr-drop anim-delay-6">
       <circle cx="62" cy="40" r="2" fill="#06B6D4" opacity="0.7"/>
     </g>
-    <g class="agr-drop" style="animation-delay:1.2s">
+    <g class="agr-drop anim-delay-12">
       <circle cx="58" cy="36" r="2" fill="#06B6D4" opacity="0.8"/>
     </g>
   </svg>`,
@@ -185,7 +185,7 @@ export const SCENARIO_ICONS = {
     <rect x="43" y="31" width="7" height="14" rx="3" fill="rgba(236,72,153,0.15)" stroke="#EC4899" stroke-width="1"/>
     <rect x="43" y="37" width="7" height="5" rx="2" fill="#EC4899" class="hp-therm"/>
     <path d="M55 34 Q58 38 55 42" stroke="#EC4899" stroke-width="1.5" fill="none" stroke-linecap="round" class="hp-wave"/>
-    <path d="M59 32 Q63 38 59 44" stroke="#EC4899" stroke-width="1.5" fill="none" stroke-linecap="round" class="hp-wave" style="animation-delay:0.4s"/>
+    <path d="M59 32 Q63 38 59 44" stroke="#EC4899" stroke-width="1.5" fill="none" stroke-linecap="round" class="hp-wave anim-delay-4"/>
     <line x1="54" y1="52" x2="54" y2="62" stroke="#475569" stroke-width="2"/>
     <rect x="40" y="62" width="28" height="4" rx="2" fill="#334155"/>
   </svg>`,
@@ -255,9 +255,9 @@ export const SCENARIO_ICONS = {
     <rect x="28" y="34" width="12" height="4" rx="2" fill="#3B82F6" opacity="0.4"/>
     <path d="M45 30 L42 38 H46 L44 46" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ev-bolt"/>
     <line x1="28" y1="26" x2="28" y2="32" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" class="ev-charge"/>
-    <circle cx="28" cy="25" r="2" fill="#3B82F6" class="ev-charge" style="animation-delay:0.3s"/>
-    <line x1="25" y1="22" x2="28" y2="25" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" class="ev-charge" style="animation-delay:0.6s"/>
-    <line x1="31" y1="22" x2="28" y2="25" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" class="ev-charge" style="animation-delay:0.9s"/>
+    <circle cx="28" cy="25" r="2" fill="#3B82F6" class="ev-charge anim-delay-3"/>
+    <line x1="25" y1="22" x2="28" y2="25" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" class="ev-charge anim-delay-6"/>
+    <line x1="31" y1="22" x2="28" y2="25" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" class="ev-charge anim-delay-9"/>
   </svg>`,
 };
 

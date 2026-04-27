@@ -23,7 +23,7 @@ import { runCalculation, isCalculationInProgress } from './calculation-service.j
 import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta } from './calc-engine.js';
 import { calculateSystemLayout, resolvePanelSpec } from './calc-core.js';
 import { renderHourlyProfile, setHourlySeason } from './hourly-profile.js';
-import { toggleBillBlock, onBillToggle, onBillInput, billQuickFill, billClear } from './bill-analysis.js';
+import { toggleBillBlock, onBillToggle, onBillInput, billQuickFill, billClear, import8760Csv } from './bill-analysis.js';
 import { buildInverterCards, selectInverter } from './inverter.js';
 import { calculateStructural } from './structural.js';
 import { toggleEVBlock, onEVToggle, updateEVInput, onEVModelChange } from './ev-charging.js';
@@ -3895,6 +3895,13 @@ registerActions({
 // inline'dan data-click-action'a alındı. selectInverter zaten import'lu.
 registerActions({
   selectInverter,
+  runComparison,
+  // bill-analysis.js dynamic content events
+  onBillInput,
+  billQuickFill,
+  billClear,
+  // import8760Csv expects a File; dispatcher el is the input, files[0] is the file
+  import8760Csv: (_arg, el) => import8760Csv(el?.files?.[0]),
 });
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
