@@ -1008,7 +1008,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 <div class="lp-pane-h">Hangi sistem türünü hesaplayacağız?</div>
                 <div class="lp-pane-scen">
                   <div class="lp-pane-scen-card lp-pane-scen-on">
-                    <div class="lp-pane-scen-tile" style="color:#F59E0B;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.04));border-color:rgba(245,158,11,.45)">
+                    <div class="lp-pane-scen-tile scenario-gradient-ongrid">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="6" r="3"/><rect x="3" y="14" width="18" height="6" rx="1"/><path d="M7 14v6M12 14v6M17 14v6M3 17h18"/></svg>
                     </div>
                     <div>
@@ -1020,7 +1020,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                     </div>
                   </div>
                   <div class="lp-pane-scen-card">
-                    <div class="lp-pane-scen-tile" style="color:#8B5CF6;background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(139,92,246,.04));border-color:rgba(139,92,246,.4)">
+                    <div class="lp-pane-scen-tile scenario-gradient-offgrid">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="6" width="14" height="12" rx="1"/><path d="M8 6v12M12 6v12M4 12h14"/><rect x="20" y="10" width="2" height="4"/></svg>
                     </div>
                     <div>
@@ -1601,7 +1601,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <!-- SIKÇA SORULAN SORULAR -->
   <section class="lp-section" id="lp-faq">
     <div class="lp-container">
-      <div class="lp-section-head" style="grid-template-columns:1fr">
+      <div class="lp-section-head grid-1-col">
         <div>
           <div class="lp-eyebrow"><span class="dot"></span> Sıkça Sorulan Sorular</div>
           <h2><span class="grad">Kullanmadan önce merak ettikleriniz.</span></h2>
@@ -1751,9 +1751,9 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Anasayfa</span>
         </button>
-        <button class="header-icon-btn icon-only" id="settings-open-btn" data-testid="open-settings" data-click-action="openSettings" title="Ayarlar" aria-label="Ayarlar"
+        <button class="header-icon-btn icon-only position-anchor" id="settings-open-btn" data-testid="open-settings" data-click-action="openSettings" title="Ayarlar" aria-label="Ayarlar"
                 data-i18n-title="settings.title" data-i18n-aria-label="settings.title"
-                style="border-color:var(--border);position:relative">
+               >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
@@ -1840,7 +1840,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <button class="settings-choice-btn currency-btn" data-currency="TRY" data-click-action="switchCurrency" data-arg="TRY">₺ TL</button>
       <button class="settings-choice-btn currency-btn" data-currency="USD" data-click-action="switchCurrency" data-arg="USD">$ USD</button>
     </div>
-    <div class="settings-panel-label" style="text-transform:none;letter-spacing:0;font-size:0.7rem;margin-bottom:8px;font-weight:500" data-i18n="settings.usdTryRate">USD / TRY Kuru</div>
+    <div class="settings-panel-label btn-label-loose" data-i18n="settings.usdTryRate">USD / TRY Kuru</div>
     <div class="settings-panel-row settings-panel-row--rate">
       <input type="number" id="usd-try-settings" class="settings-panel-rate-input" min="1" step="0.5" value="38.5"
              data-input-action="setManualUsdTryRateAndSyncSlider"
@@ -1861,7 +1861,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 <div class="step-pane active step-hero" id="step-1">
 
   <!-- Off-screen map preload slot: Leaflet'in gerçek boyutla başlatılması için -->
-  <div id="map-preload-slot" style="position:absolute;left:-9999px;top:-9999px;width:400px;height:300px;z-index:-1">
+  <div class="position-offscreen" id="map-preload-slot">
     <div class="card fill-area" id="map-card">
       <div class="fill-area" id="map"></div>
       <div id="map-draw-hint">Çatı köşelerine tıklayın · Çift tıklayarak tamamlayın · ESC = iptal</div>
@@ -1926,7 +1926,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
   <!-- Continue button -->
   <div class="hero-cta-wrap">
-    <button class="btn btn-primary hero-cta-btn" id="step1-continue-btn" data-testid="step1-continue" data-click-action="validateStep1" style="display:inline-flex">
+    <button class="btn btn-primary hero-cta-btn d-inline-flex" id="step1-continue-btn" data-testid="step1-continue" data-click-action="validateStep1">
       <span data-i18n-text>Sonraki Adım</span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
@@ -1937,15 +1937,15 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 <div class="step-pane" id="step-2">
   <!-- Top bar: search + geolocate -->
   <div class="step2-topbar">
-    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="1" data-arg-type="number" style="flex-shrink:0;padding:7px 14px;font-size:0.82rem;gap:5px">
+    <button class="btn btn-secondary btn-pad-thin-gap" data-click-action="goToStep" data-arg="1" data-arg-type="number">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       Geri
     </button>
     <div class="step2-search-wrap">
       <div class="input-wrap flex-1">
-        <input type="text" id="city-search" placeholder="Adres, sokak, mahalle, ilçe veya şehir yazın..." autocomplete="off"
+        <input class="btn-back-clean" type="text" id="city-search" placeholder="Adres, sokak, mahalle, ilçe veya şehir yazın..." autocomplete="off"
           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-owns="autocomplete-list"
-          style="background:transparent;border:none;padding:0 28px 0 0;font-size:0.95rem"/>
+         />
         <span class="step2-search-icon" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </span>
@@ -1974,7 +1974,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <span class="text-muted">görünümüne geç</span>
       <span class="rdh-sep">→</span>
       <span class="rdh-step"><span class="rdh-num">2</span></span>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="flex-shrink:0;color:var(--primary)"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      <svg class="flex-shrink-0-primary" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
       <span class="text-primary-bold">Poligon aracı</span>
       <span class="text-muted">sol üstte</span>
       <span class="rdh-sep">→</span>
@@ -1989,12 +1989,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="step2-map-overlay step2-legend-card">
       <div class="step2-legend-title" data-i18n="step2.legendTitle">Güneşlenme aralığı</div>
       <div class="ghi-legend step2-overlay-legend">
-        <span class="ghi-leg-item"><span class="ghi-leg-dot" style="background:#6B7280"></span>&lt;1300</span>
-        <span class="ghi-leg-item"><span class="ghi-leg-dot" style="background:#3B82F6"></span>1450</span>
-        <span class="ghi-leg-item"><span class="ghi-leg-dot" style="background:#22C55E"></span>1600</span>
-        <span class="ghi-leg-item"><span class="ghi-leg-dot" style="background:#EAB308"></span>1700</span>
-        <span class="ghi-leg-item"><span class="ghi-leg-dot" style="background:#F97316"></span>1800</span>
-        <span class="ghi-leg-item"><span class="ghi-leg-dot" style="background:#EF4444"></span>&gt;1800</span>
+        <span class="ghi-leg-item"><span class="ghi-leg-dot bg-gray500"></span>&lt;1300</span>
+        <span class="ghi-leg-item"><span class="ghi-leg-dot bg-blue500"></span>1450</span>
+        <span class="ghi-leg-item"><span class="ghi-leg-dot bg-green500"></span>1600</span>
+        <span class="ghi-leg-item"><span class="ghi-leg-dot bg-yellow500"></span>1700</span>
+        <span class="ghi-leg-item"><span class="ghi-leg-dot bg-orange500"></span>1800</span>
+        <span class="ghi-leg-item"><span class="ghi-leg-dot bg-red500"></span>&gt;1800</span>
       </div>
     </div>
   </div>
@@ -2017,7 +2017,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
     </div>
     <div class="loc-bottom-right">
-      <button class="btn btn-secondary" id="step2-back-btn" data-click-action="goToStep" data-arg="1" data-arg-type="number" style="padding:9px 16px;font-size:0.82rem">← Geri</button>
+      <button class="btn btn-secondary btn-pad-md" id="step2-back-btn" data-click-action="goToStep" data-arg="1" data-arg-type="number">← Geri</button>
       <button class="btn btn-primary p-button-md" id="step2-continue-btn" data-click-action="validateStep2">
         <span class="step2-continue-label">Sonraki Adım</span> →
       </button>
@@ -2123,10 +2123,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="text-helper-78-mt-6" id="panel-count-preview"></div>
         </div>
         <div id="roof-area-badge">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg class="icon-align-tight" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           <span id="roof-badge-text">—</span>
         </div>
-        <div id="roof-geometry-summary" style="font-size:0.82rem;color:var(--text-muted);margin-top:8px">Haritada bir veya daha fazla çatı poligonu çizin.</div>
+        <div class="text-base-82-muted-mt-2" id="roof-geometry-summary">Haritada bir veya daha fazla çatı poligonu çizin.</div>
       </div>
 
       <!-- Tilt -->
@@ -2235,7 +2235,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div class="range-labels"><span>0%</span><span>25%</span><span>50%</span></div>
           </div>
           <div class="text-muted-78" id="shading-desc">Az gölge</div>
-          <div id="osm-double-count-warning" class="on-grid-explain" style="display:none;margin-top:10px"></div>
+          <div id="osm-double-count-warning" class="on-grid-explain error-msg-hidden-mt-2-5"></div>
         </div>
         <div class="form-group mt-4">
           <label>Kirlenme Faktörü (%)
@@ -2250,7 +2250,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </div>
         <!-- Bifacial ground albedo — only shown when bifacial panel is selected -->
         <div class="error-msg-hidden-mt-14" id="albedo-wrap">
-          <label style="font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:6px">
+          <label class="flex-row-md-bold-gap">
             Zemin Yansıtıcılığı (Albedo)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Bifacial paneller zemin yansımasından ek enerji üretir. Zemin tipine göre değişir: beton %25, kum %20, çimen %20, çakıl %18, toprak %15.</span></span>
           </label>
@@ -2267,29 +2267,29 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <!-- OSM Shadow -->
       <div class="card mb-4">
-        <div class="card-title" style="font-size:0.9rem;margin-bottom:10px">
+        <div class="card-title text-md-mb-2-5">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
           OSM Çevre Bina Gölge Analizi
         </div>
-        <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;line-height:1.6">
+        <div class="text-base-82-muted-mb-3-line">
           OpenStreetMap verisiyle çevredeki binaların panel üretimine etkisini hesaplar.
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-muted);cursor:pointer;margin-bottom:10px">
-          <input type="checkbox" id="osm-shadow-toggle" data-change-action="toggleOSMShadow" data-arg-prop="checked" style="width:auto;accent-color:var(--primary)">
+          <input class="range-accent-primary" type="checkbox" id="osm-shadow-toggle" data-change-action="toggleOSMShadow" data-arg-prop="checked">
           <span>OSM bina yüksekliği gölge analizini etkinleştir</span>
         </label>
-        <button class="btn btn-secondary" style="font-size:0.8rem;padding:7px 14px" data-click-action="refreshOSMShadowAnalysis">
+        <button class="btn btn-secondary btn-pad-md-thin" data-click-action="refreshOSMShadowAnalysis">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
           Analizi Yenile
         </button>
-        <div id="osm-shadow-summary" style="font-size:0.82rem;color:var(--text-muted);margin-top:12px">OSM gölge analizi kapalı.</div>
+        <div class="text-base-82-muted-mt-3" id="osm-shadow-summary">OSM gölge analizi kapalı.</div>
       </div>
 
       <!-- Multi-roof -->
       <div class="card mb-4">
         <div class="multi-roof-header">
           <div class="multi-roof-header-copy">
-            <div class="card-title" style="margin-bottom:4px;font-size:0.9rem">
+            <div class="card-title text-md-mb-1">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
               Birden Fazla Çatı Yüzeyi
             </div>
@@ -2317,7 +2317,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div id="roof-sections-list"></div>
           <div class="multi-roof-actions">
             <div class="multi-roof-actions-copy" id="multi-roof-actions-copy">En fazla 2 ek yüzey ekleyebilirsiniz.</div>
-            <button class="btn btn-outline" data-click-action="addRoofSection" id="add-roof-btn" style="width:100%;margin-top:4px">
+            <button class="btn btn-outline input-meta-mt-1" data-click-action="addRoofSection" id="add-roof-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Yeni Yüzey Ekle
             </button>
@@ -2411,7 +2411,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
         </div>
         <div id="inverter-cards-wrap" class="inverter-cards"></div>
-        <div id="inverter-info" style="margin-top:12px;font-size:0.82rem;color:var(--text-muted)"></div>
+        <div class="text-base-82-muted-mt-3" id="inverter-info"></div>
       </div>
 
       <!-- Battery block — redesigned to match other equipment cards -->
@@ -2490,7 +2490,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="equipment-summary-card">
       <div class="equipment-summary-headline">
         <div>
-          <div class="card-title" style="font-size:0.9rem;margin-bottom:8px" data-i18n="step4.systemSummary">Sistem Özeti</div>
+          <div class="card-title text-md-mb-2" data-i18n="step4.systemSummary">Sistem Özeti</div>
           <p class="equipment-summary-subcopy">Bu özet, Step 4 içinde seçtiğiniz ekipmanlara göre anlık olarak güncellenir. Toplam ekipman maliyeti panel, inverter ve aktifse batarya depolamayı birlikte gösterir.</p>
         </div>
         <div class="equipment-summary-total">
@@ -2539,7 +2539,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </div>
       </div>
       <div class="equipment-summary-note" id="equip-summary-cost-note">Toplam ekipman tahmini: panel + inverter</div>
-      <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+      <div class="flex-col-mt-5-gap-2">
         <button class="btn btn-secondary btn-full text-base-82" data-click-action="goToStep" data-arg="3" data-arg-type="number">← Geri</button>
         <button class="btn btn-primary btn-full" data-click-action="validateStep4" data-i18n="step4.next">Sonraki Adım →</button>
       </div>
@@ -2911,7 +2911,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <input type="number" id="off-grid-cost-per-kwh" value="" min="0" step="0.01"
           style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:220px;font-size:0.9rem"
           data-input-action="updateTariffAssumptions"/>
-        <div id="off-grid-cost-warn" style="display:none;margin-top:4px;font-size:0.75rem;color:#F59E0B;max-width:260px" data-i18n="offGrid.costMissingWarn">Maliyet girilmedi — 2.5× şebeke tarifesi varsayılıyor.</div>
+        <div class="error-msg-warning-260" id="off-grid-cost-warn" data-i18n="offGrid.costMissingWarn">Maliyet girilmedi — 2.5× şebeke tarifesi varsayılıyor.</div>
       </div>
 
       <details class="step5-subdetails mt-3-5">
@@ -3155,8 +3155,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <span data-i18n="offgridL2.criticalFractionLabel">Kritik Yük Oranı</span>
               <span id="offgrid-critical-fraction-val" style="font-weight:700;color:#8B5CF6;margin-left:6px">60%</span>
             </div>
-            <input type="range" id="offgrid-critical-fraction" min="10" max="100" step="5" value="60"
-              style="width:100%;accent-color:#8B5CF6"
+            <input class="range-accent-purple" type="range" id="offgrid-critical-fraction" min="10" max="100" step="5" value="60"
+             
               data-input-action="updateOffgridCriticalFractionFromSlider"/>
             <div id="offgrid-critical-fraction-hint" style="font-size:0.7rem;color:var(--text-muted);margin-top:3px" data-i18n="offgridL2.criticalFractionHint">
               Toplam günlük tüketimin yüzde kaçı kesintisiz çalışmalı? Buzdolabı, modem, güvenlik, temel aydınlatma ve zorunlu pompa yükleri genelde kritik sayılır.
@@ -3325,7 +3325,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
             <div class="ui-scroll-hint" data-i18n="common.scrollHint">Tabloyu yatay kaydırarak tüm sütunları görün.</div>
             <div id="offgrid-device-table-wrap" style="display:none;overflow-x:auto">
-              <table style="width:100%;font-size:0.75rem;border-collapse:collapse" id="offgrid-device-table">
+              <table class="table-tight" id="offgrid-device-table">
                 <thead>
                   <tr style="color:var(--text-muted);border-bottom:1px solid rgba(148,163,184,0.2)">
                     <th style="text-align:left;padding:4px 6px" data-i18n="offgridL2.deviceName">Cihaz</th>
@@ -4564,7 +4564,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       Güneş Yolu Diyagramı
     </div>
     <div style="display:flex;justify-content:center">
-      <svg id="sun-path-svg" viewBox="0 0 400 400" style="max-width:400px;width:100%"></svg>
+      <svg class="constrained-400-100" id="sun-path-svg" viewBox="0 0 400 400"></svg>
     </div>
     <div id="sun-path-info" style="font-size:0.8rem;color:var(--text-muted);text-align:center;margin-top:10px"></div>
   </div>
@@ -4748,7 +4748,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
 <!-- TEKLİF KARŞILAŞTIRMA MODAL -->
 <div class="modal-overlay-base" id="comparison-modal">
-  <div role="dialog" aria-modal="true" aria-labelledby="comparison-modal-title" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md)">
+  <div class="modal-content-card" role="dialog" aria-modal="true" aria-labelledby="comparison-modal-title">
     <div class="modal-header-base">
       <h2 class="kpi-display-primary" id="comparison-modal-title">
         <svg class="icon-align-middle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>

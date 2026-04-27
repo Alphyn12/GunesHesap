@@ -1825,3 +1825,59 @@
 .dyn-h { height: var(--h, 0%); }
 .dyn-w { width:  var(--w, 0%); }
 .dyn-l { left:   var(--l, 0%); }
+
+/* ── F1.C.5c atomic utilities + scenario gradients + tek-tariff badges ────
+   141 tek-kullanımlık inline style için atomic utility tabanı + birkaç
+   semantic class. Tekil renkler ve gradient'lar component-spesifik. */
+
+/* Display */
+.d-inline-flex { display: inline-flex; }
+
+/* Tek-renk hardcoded background (tariff/segment badge) */
+.bg-gray500   { background: #6B7280; }
+.bg-blue500   { background: #3B82F6; }
+.bg-green500  { background: #22C55E; }
+.bg-yellow500 { background: #EAB308; }
+.bg-orange500 { background: #F97316; }
+.bg-red500    { background: #EF4444; }
+
+/* Senaryo gradient kartlar (tek kullanımlık ama kavramsal) */
+.scenario-gradient-ongrid  { color: #F59E0B; background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(245,158,11,.04)); border-color: rgba(245,158,11,.45); }
+.scenario-gradient-offgrid { color: #8B5CF6; background: linear-gradient(135deg, rgba(139,92,246,.16), rgba(139,92,246,.04)); border-color: rgba(139,92,246,.4); }
+
+/* Helper text + spacing one-off combos */
+.text-base-82-muted-mt-2 { font-size: 0.82rem; color: var(--text-muted); margin-top: 8px; }
+.text-base-82-muted-mt-3 { font-size: 0.82rem; color: var(--text-muted); margin-top: 12px; }
+.text-base-82-muted-mb-3-line { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.6; }
+.text-md-mb-2-5 { font-size: 0.9rem; margin-bottom: 10px; }
+.text-md-mb-2 { font-size: 0.9rem; margin-bottom: 8px; }
+.text-md-mb-1 { margin-bottom: 4px; font-size: 0.9rem; }
+.error-msg-hidden-mt-2-5 { display: none; margin-top: 10px; }
+.error-msg-warning-260 { display: none; margin-top: 4px; font-size: 0.75rem; color: #F59E0B; max-width: 260px; }
+
+/* Layout & spacing one-offs */
+.input-meta-mt-1 { width: 100%; margin-top: 4px; }
+.icon-align-tight { vertical-align: middle; margin-right: 4px; }
+.flex-shrink-0 { flex-shrink: 0; }
+.flex-col-mt-5-gap-2 { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+.flex-row-md-muted { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; }
+.flex-row-md-bold-gap { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+
+/* Specific compositions */
+.btn-pad-md      { padding: 9px 16px; font-size: 0.82rem; }
+.btn-pad-md-thin { font-size: 0.8rem; padding: 7px 14px; }
+.btn-pad-thin-gap { flex-shrink: 0; padding: 7px 14px; font-size: 0.82rem; gap: 5px; }
+.btn-back-clean  { background: transparent; border: none; padding: 0 28px 0 0; font-size: 0.95rem; }
+.btn-label-loose { text-transform: none; letter-spacing: 0; font-size: 0.7rem; margin-bottom: 8px; font-weight: 500; }
+.flex-shrink-0-primary { flex-shrink: 0; color: var(--primary); }
+.range-accent-primary { width: auto; accent-color: var(--primary); }
+.range-accent-purple { width: 100%; accent-color: #8B5CF6; }
+
+/* Layout / structural */
+.grid-1-col       { grid-template-columns: 1fr; }
+.position-anchor  { border-color: var(--border); position: relative; }
+.position-offscreen { position: absolute; left: -9999px; top: -9999px; width: 400px; height: 300px; z-index: -1; }
+.modal-content-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md); }
+.table-tight    { width: 100%; font-size: 0.75rem; border-collapse: collapse; }
+.constrained-400-100 { max-width: 400px; width: 100%; }
+.error-toast-callout { display: none; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
