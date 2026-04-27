@@ -1,5 +1,5 @@
-// v35: Faz 0 — landing.css precache fix.
-const CACHE_NAME = 'solarRota-v35';
+// v36: Faz 1 / F1.B.0 — inline <script> bloğu js/landing-bootstrap.js'a çıkarıldı.
+const CACHE_NAME = 'solarRota-v36';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -35,6 +35,7 @@ const STATIC_ASSETS = [
   '/js/hourly-profile.js',
   '/js/i18n.js',
   '/js/identity.js',
+  '/js/landing-bootstrap.js',
   '/js/inverter.js',
   '/js/location-validation.js',
   '/js/osm-shadow.js',
