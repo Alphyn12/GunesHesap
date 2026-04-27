@@ -3625,6 +3625,18 @@ window.switchLanguage = async function switchSolarRotaLanguage(lang) {
     renderResults();
   }
 };
+
+// F1.B.2 settings grubu: 11 inline onclick (open/close, theme, lang, currency).
+// switchLanguage'ın window'da yeniden tanımlanan wrapper'ı kullanılıyor.
+function openDashboardFromSettings() { closeSettings(); openDashboard(); }
+registerActions({
+  openSettings,
+  closeSettings,
+  setTheme,
+  switchCurrency,
+  switchLanguage: (arg) => window.switchLanguage(arg),
+  openDashboardFromSettings,
+});
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
 window.isInTurkey = isInTurkey;

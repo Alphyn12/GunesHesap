@@ -1751,7 +1751,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Anasayfa</span>
         </button>
-        <button class="header-icon-btn icon-only" id="settings-open-btn" data-testid="open-settings" onclick="openSettings()" title="Ayarlar" aria-label="Ayarlar"
+        <button class="header-icon-btn icon-only" id="settings-open-btn" data-testid="open-settings" data-click-action="openSettings" title="Ayarlar" aria-label="Ayarlar"
                 data-i18n-title="settings.title" data-i18n-aria-label="settings.title"
                 style="border-color:var(--border);position:relative">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
@@ -1808,37 +1808,37 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 </header>
 
 <!-- SETTINGS OVERLAY + PANEL -->
-<div id="settings-overlay" class="settings-overlay" onclick="closeSettings()" style="display:none"></div>
+<div id="settings-overlay" class="settings-overlay" data-click-action="closeSettings" style="display:none"></div>
 <div id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-panel-title" style="display:none">
   <div class="settings-panel-header">
     <span id="settings-panel-title" class="settings-panel-title" data-i18n="settings.title">Ayarlar</span>
-    <button id="settings-close-btn" class="settings-panel-close" onclick="closeSettings()" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
+    <button id="settings-close-btn" class="settings-panel-close" data-click-action="closeSettings" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
   </div>
   <div class="settings-panel-section">
-    <button class="header-icon-btn settings-panel-dashboard-btn" id="dashboard-btn" onclick="closeSettings(); openDashboard()" style="display:none">
+    <button class="header-icon-btn settings-panel-dashboard-btn" id="dashboard-btn" data-click-action="openDashboardFromSettings" style="display:none">
       Kayıtlı Hesaplar
     </button>
   </div>
   <div class="settings-panel-section">
     <div class="settings-panel-label" data-i18n="settings.theme">Tema</div>
     <div class="settings-panel-row">
-      <button class="settings-choice-btn" id="theme-dark-btn" onclick="setTheme('dark')" data-i18n="settings.dark">🌙 Koyu</button>
-      <button class="settings-choice-btn" id="theme-light-btn" onclick="setTheme('light')" data-i18n="settings.light">☀️ Açık</button>
+      <button class="settings-choice-btn" id="theme-dark-btn" data-click-action="setTheme" data-arg="dark" data-i18n="settings.dark">🌙 Koyu</button>
+      <button class="settings-choice-btn" id="theme-light-btn" data-click-action="setTheme" data-arg="light" data-i18n="settings.light">☀️ Açık</button>
     </div>
   </div>
   <div class="settings-panel-section">
     <div class="settings-panel-label" data-i18n="settings.language">Dil / Language</div>
     <div class="settings-panel-row">
-      <button class="settings-choice-btn lang-btn" data-lang="tr" data-testid="lang-tr" onclick="switchLanguage('tr')">TR</button>
-      <button class="settings-choice-btn lang-btn" data-lang="en" data-testid="lang-en" onclick="switchLanguage('en')">EN</button>
-      <button class="settings-choice-btn lang-btn" data-lang="de" data-testid="lang-de" onclick="switchLanguage('de')">DE</button>
+      <button class="settings-choice-btn lang-btn" data-lang="tr" data-testid="lang-tr" data-click-action="switchLanguage" data-arg="tr">TR</button>
+      <button class="settings-choice-btn lang-btn" data-lang="en" data-testid="lang-en" data-click-action="switchLanguage" data-arg="en">EN</button>
+      <button class="settings-choice-btn lang-btn" data-lang="de" data-testid="lang-de" data-click-action="switchLanguage" data-arg="de">DE</button>
     </div>
   </div>
   <div class="settings-panel-section">
     <div class="settings-panel-label" data-i18n="settings.currency">Para Birimi</div>
     <div class="settings-panel-row" style="margin-bottom:14px">
-      <button class="settings-choice-btn currency-btn" data-currency="TRY" onclick="switchCurrency('TRY')">₺ TL</button>
-      <button class="settings-choice-btn currency-btn" data-currency="USD" onclick="switchCurrency('USD')">$ USD</button>
+      <button class="settings-choice-btn currency-btn" data-currency="TRY" data-click-action="switchCurrency" data-arg="TRY">₺ TL</button>
+      <button class="settings-choice-btn currency-btn" data-currency="USD" data-click-action="switchCurrency" data-arg="USD">$ USD</button>
     </div>
     <div class="settings-panel-label" style="text-transform:none;letter-spacing:0;font-size:0.7rem;margin-bottom:8px;font-weight:500" data-i18n="settings.usdTryRate">USD / TRY Kuru</div>
     <div class="settings-panel-row settings-panel-row--rate">
