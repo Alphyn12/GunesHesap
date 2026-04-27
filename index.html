@@ -1956,7 +1956,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       <span class="step2-geo-label">Konumumu Kullan</span>
     </button>
-    <div id="location-warning" data-i18n="step2.outOfTurkey" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:6px 12px;font-size:0.8rem;color:#EF4444">
+    <div class="u-0" id="location-warning" data-i18n="step2.outOfTurkey">
       ⚠ Türkiye sınırları içinde bir konum seçin.
     </div>
     <!-- Hidden for JS compatibility -->
@@ -2254,8 +2254,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             Zemin Yansıtıcılığı (Albedo)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Bifacial paneller zemin yansımasından ek enerji üretir. Zemin tipine göre değişir: beton %25, kum %20, çimen %20, çakıl %18, toprak %15.</span></span>
           </label>
-          <select id="ground-albedo-select" data-change-action="updateGroundAlbedo" data-arg-prop="value"
-            style="margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:220px;font-size:0.9rem">
+          <select class="u-1" id="ground-albedo-select" data-change-action="updateGroundAlbedo" data-arg-prop="value"
+           >
             <option value="0.25">Beton / Taş döşeme (%25)</option>
             <option value="0.20" selected>Kum / Çimen (%20)</option>
             <option value="0.18">Çakıl / Granül (%18)</option>
@@ -2274,7 +2274,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div class="text-base-82-muted-mb-3-line">
           OpenStreetMap verisiyle çevredeki binaların panel üretimine etkisini hesaplar.
         </div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-muted);cursor:pointer;margin-bottom:10px">
+        <label class="u-2">
           <input class="range-accent-primary" type="checkbox" id="osm-shadow-toggle" data-change-action="toggleOSMShadow" data-arg-prop="checked">
           <span>OSM bina yüksekliği gölge analizini etkinleştir</span>
         </label>
@@ -2835,8 +2835,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="is-hidden">
         <div class="text-caption-helper">Abone Tipi</div>
-        <select id="tariff-type" data-change-action="updateTariffType" data-arg-prop="value"
-          style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;min-width:120px">
+        <select class="u-3" id="tariff-type" data-change-action="updateTariffType" data-arg-prop="value"
+         >
           <option value="residential" selected>Konut</option>
           <option value="commercial">Ticari</option>
           <option value="industrial">Sanayi</option>
@@ -2908,8 +2908,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <div class="error-msg-hidden-mt-14" id="off-grid-cost-wrap">
         <div class="text-caption-helper" data-i18n="offGrid.costPerKwhLabel">Dizel/Alternatif Kaynak Maliyeti (₺/kWh)</div>
-        <input type="number" id="off-grid-cost-per-kwh" value="" min="0" step="0.01"
-          style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:220px;font-size:0.9rem"
+        <input class="u-4" type="number" id="off-grid-cost-per-kwh" value="" min="0" step="0.01"
+         
           data-input-action="updateTariffAssumptions"/>
         <div class="error-msg-warning-260" id="off-grid-cost-warn" data-i18n="offGrid.costMissingWarn">Maliyet girilmedi — 2.5× şebeke tarifesi varsayılıyor.</div>
       </div>
@@ -3020,7 +3020,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                
                 data-input-action="updateTariffAssumptions"/>
             </div>
-            <div style="grid-column:1/-1">
+            <div class="u-5">
               <div class="text-caption-helper">Tarife Kaynak URL</div>
               <input class="input-form-row" type="url" id="tariff-evidence-url" value="https://www.epdk.gov.tr/Detay/Icerik/16-38/son-kaynak-tedarik-tarifesi-sktt-ile-ilgili-bil"
                
@@ -3045,11 +3045,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <input class="input-form-row" type="number" id="usd-try-input" value="38.5" min="1" step="0.5"
                
                 data-input-action="setManualUsdTryRateAndRefresh"/>
-              <button type="button" class="btn btn-secondary" style="margin-top:6px;padding:6px 10px;font-size:0.75rem" data-click-action="refreshExchangeRate">Canlı Kur</button>
+              <button type="button" class="btn btn-secondary u-6" data-click-action="refreshExchangeRate">Canlı Kur</button>
             </div>
           </div>
-          <div id="exchange-rate-status" style="font-size:0.76rem;color:var(--text-muted);margin-top:8px">USD/TRY kuru yükleniyor...</div>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);margin-top:8px;cursor:pointer">
+          <div class="u-7" id="exchange-rate-status">USD/TRY kuru yükleniyor...</div>
+          <label class="u-8">
             <input type="checkbox" id="tariff-tax-included" checked data-change-action="updateTariffAssumptions"> Birim fiyat vergi/dağıtım dahil kabul edilsin
           </label>
           <div class="step5-tariff-quick-grid mt-2-5">
@@ -3060,8 +3060,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
              />
             <input class="input-form-row-md" type="date" id="bill-evidence-date" data-change-action="updateTariffAssumptions"
              />
-            <select id="bill-evidence-status" data-change-action="updateTariffAssumptions"
-              style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:0.8rem;width:100%">
+            <select class="u-9" id="bill-evidence-status" data-change-action="updateTariffAssumptions"
+             >
               <option value="missing" selected>Fatura kanıtı eksik</option>
               <option value="pending">Fatura kanıtı bekliyor</option>
               <option value="verified">Fatura kanıtı doğrulandı</option>
@@ -3070,7 +3070,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               data-change-action="attachEvidenceFromInput" data-evidence-field="customerBill"
              />
           </div>
-          <div id="evidence-file-status" style="font-size:0.74rem;color:var(--text-muted);margin-top:6px">customerBill: dosya yok | supplierQuote: dosya yok | tariffSource: dosya yok</div>
+          <div class="u-a" id="evidence-file-status">customerBill: dosya yok | supplierQuote: dosya yok | tariffSource: dosya yok</div>
           <div class="text-helper-78-mt-6" id="tariff-desc">2026 tarife seçimi: mesken yıllık 4.000 kWh, mesken dışı 15.000 kWh SKTT eşiğiyle değerlendirilir.</div>
         </div>
       </details>
@@ -3153,19 +3153,19 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div id="offgrid-simple-profile-summary" class="offgrid-profile-summary"></div>
             <div class="text-helper-75-mb-6" id="offgrid-critical-fraction-row">
               <span data-i18n="offgridL2.criticalFractionLabel">Kritik Yük Oranı</span>
-              <span id="offgrid-critical-fraction-val" style="font-weight:700;color:#8B5CF6;margin-left:6px">60%</span>
+              <span class="u-b" id="offgrid-critical-fraction-val">60%</span>
             </div>
             <input class="range-accent-purple" type="range" id="offgrid-critical-fraction" min="10" max="100" step="5" value="60"
              
               data-input-action="updateOffgridCriticalFractionFromSlider"/>
-            <div id="offgrid-critical-fraction-hint" style="font-size:0.7rem;color:var(--text-muted);margin-top:3px" data-i18n="offgridL2.criticalFractionHint">
+            <div class="u-c" id="offgrid-critical-fraction-hint" data-i18n="offgridL2.criticalFractionHint">
               Toplam günlük tüketimin yüzde kaçı kesintisiz çalışmalı? Buzdolabı, modem, güvenlik, temel aydınlatma ve zorunlu pompa yükleri genelde kritik sayılır.
             </div>
           </div>
 
-          <div id="offgrid-field-data-section" style="margin-bottom:14px;padding:10px 12px;background:rgba(6,182,212,0.05);border:1px solid rgba(6,182,212,0.18);border-radius:8px">
-            <div style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:6px" data-i18n="offgridL2.fieldDataTitle">Saha Verisi (Garanti Hazırlığı)</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+          <div class="u-d" id="offgrid-field-data-section">
+            <div class="u-e" data-i18n="offgridL2.fieldDataTitle">Saha Verisi (Garanti Hazırlığı)</div>
+            <div class="u-f">
               <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.pv8760Upload">Gerçek PV üretimi 8760 CSV</span>
                 <input class="input-meta-row" type="file" id="offgrid-pv-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridPvCsvUpload">
@@ -3270,12 +3270,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 <div class="error-msg-hidden-sm" id="offgrid-customer-signoff-evidence-status"></div>
               </label>
             </div>
-            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:6px" data-i18n="offgridL2.fieldDataHint">Faz 1 için üç gerçek 8760 seri gerekir. Faz 2 için SHA-256 saha kanıtları gerekir. Faz 4 için kabul dosyaları, Faz 5 için aktif izleme ve bakım kayıtları, Faz 6 için periyodik revalidasyon kanıtları gerekir.</div>
+            <div class="u-g" data-i18n="offgridL2.fieldDataHint">Faz 1 için üç gerçek 8760 seri gerekir. Faz 2 için SHA-256 saha kanıtları gerekir. Faz 4 için kabul dosyaları, Faz 5 için aktif izleme ve bakım kayıtları, Faz 6 için periyodik revalidasyon kanıtları gerekir.</div>
           </div>
 
           <!-- Cihaz Listesi (İleri Mod) -->
           <div class="mb-3-5" id="offgrid-device-section">
-            <div style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:8px" data-i18n="offgridL2.deviceListTitle">İleri Cihaz Bazlı Yük Modeli</div>
+            <div class="u-h" data-i18n="offgridL2.deviceListTitle">İleri Cihaz Bazlı Yük Modeli</div>
             <div class="offgrid-advanced-note">
               Her cihaz için güç, günlük çalışma süresi, gece çalışma süresi ve kritik olup olmadığı ayrı girilir. Bu modda hesap motoru günlük kWh alanı yerine cihaz listesini kullanır; cihaz yoksa yedek olarak günlük kWh profiline döner.
             </div>
@@ -3289,46 +3289,46 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </div>
 
             <!-- Katalog Seçici -->
-            <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;margin-bottom:8px;padding:8px 10px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.18);border-radius:8px">
-              <div style="flex:1;min-width:120px">
+            <div class="u-i">
+              <div class="u-j">
                 <div class="text-helper-68-mb-3" data-i18n="offgridL2.catalogCategory">Kategori</div>
                 <select class="input-form-row-tight" id="offgrid-catalog-category" data-change-action="updateOffgridCatalogOptions"
                  >
                   <!-- Options populated by JS (i18n-aware) via updateOffgridCatalogOptions() -->
                 </select>
               </div>
-              <div style="flex:2;min-width:150px">
+              <div class="u-k">
                 <div class="text-helper-68-mb-3" data-i18n="offgridL2.catalogDevice">Cihaz Seçin</div>
                 <select class="input-form-row-tight" id="offgrid-catalog-select" data-change-action="updateOffgridDevicePreview"
                  >
                   <!-- Options populated by JS -->
                 </select>
               </div>
-              <div style="width:56px">
+              <div class="u-l">
                 <div class="text-helper-68-mb-3" data-i18n="offgridL2.catalogQty">Adet</div>
-                <input type="number" id="offgrid-catalog-qty" value="1" min="1" max="99"
-                  style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.78rem;width:100%;text-align:center"/>
+                <input class="u-m" type="number" id="offgrid-catalog-qty" value="1" min="1" max="99"
+                 />
               </div>
               <div>
-                <button data-click-action="addOffgridDeviceFromCatalog"
-                  style="font-size:0.78rem;background:rgba(139,92,246,0.18);color:#8B5CF6;border:1px solid rgba(139,92,246,0.35);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap"
+                <button class="u-n" data-click-action="addOffgridDeviceFromCatalog"
+                 
                   data-i18n="offgridL2.addFromCatalog">Katalogdan Ekle</button>
               </div>
               <div>
-                <button data-click-action="addOffgridDevice"
-                  style="font-size:0.78rem;background:rgba(100,116,139,0.12);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap"
+                <button class="u-o" data-click-action="addOffgridDevice"
+                 
                   data-i18n="offgridL2.addManual">Manuel Ekle</button>
               </div>
             </div>
             <!-- Cihaz önizleme paneli -->
-            <div id="offgrid-device-preview" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(139,92,246,0.04);border:1px solid rgba(139,92,246,0.12);border-radius:6px;font-size:0.72rem;color:var(--text-muted)"></div>
+            <div class="u-p" id="offgrid-device-preview"></div>
 
             <div class="ui-scroll-hint" data-i18n="common.scrollHint">Tabloyu yatay kaydırarak tüm sütunları görün.</div>
-            <div id="offgrid-device-table-wrap" style="display:none;overflow-x:auto">
+            <div class="u-q" id="offgrid-device-table-wrap">
               <table class="table-tight" id="offgrid-device-table">
                 <thead>
-                  <tr style="color:var(--text-muted);border-bottom:1px solid rgba(148,163,184,0.2)">
-                    <th style="text-align:left;padding:4px 6px" data-i18n="offgridL2.deviceName">Cihaz</th>
+                  <tr class="u-r">
+                    <th class="u-s" data-i18n="offgridL2.deviceName">Cihaz</th>
                     <th class="cell-right-tight" data-i18n="offgridL2.devicePowerW">Güç (W)</th>
                     <th class="cell-right-tight" data-i18n="offgridL2.deviceHours">Saat/Gün</th>
                     <th class="cell-right-tight" data-i18n="offgridL2.deviceNightHours">Gece (sa)</th>
@@ -3340,14 +3340,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 </thead>
                 <tbody id="offgrid-device-tbody"></tbody>
                 <tfoot>
-                  <tr style="border-top:1px solid rgba(148,163,184,0.2);font-weight:600">
-                    <td colspan="3" style="padding:4px 6px;color:var(--text-muted)" data-i18n="offgridL2.deviceTotal">Toplam</td>
+                  <tr class="u-t">
+                    <td class="u-u" colspan="3" data-i18n="offgridL2.deviceTotal">Toplam</td>
                     <td class="cell-right-tight" id="offgrid-device-total-kwh">—</td>
                     <td colspan="3"></td>
                   </tr>
                   <tr>
-                    <td colspan="3" style="padding:2px 6px;color:#EF4444;font-size:0.72rem" data-i18n="offgridL2.deviceCriticalTotal">Kritik Yük</td>
-                    <td style="text-align:right;padding:2px 6px;color:#EF4444;font-size:0.72rem" id="offgrid-device-critical-kwh">—</td>
+                    <td class="u-v" colspan="3" data-i18n="offgridL2.deviceCriticalTotal">Kritik Yük</td>
+                    <td class="u-w" id="offgrid-device-critical-kwh">—</td>
                     <td colspan="3"></td>
                   </tr>
                 </tfoot>
@@ -3364,17 +3364,17 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
 
           <!-- Anlık Yük Özeti (cihaz listesi doluysa görünür) -->
-          <div id="offgrid-live-summary" style="display:none;margin-bottom:14px;padding:10px 12px;background:rgba(139,92,246,0.05);border-radius:8px;border:1px solid rgba(139,92,246,0.2)">
-            <div style="font-size:0.72rem;font-weight:600;color:#8B5CF6;margin-bottom:6px" data-i18n="offgridL2.liveSummaryTitle">Anlık Yük Özeti</div>
-            <div id="offgrid-live-summary-body" style="display:flex;flex-wrap:wrap;gap:10px;font-size:0.72rem"></div>
+          <div class="u-x" id="offgrid-live-summary">
+            <div class="u-y" data-i18n="offgridL2.liveSummaryTitle">Anlık Yük Özeti</div>
+            <div class="u-z" id="offgrid-live-summary-body"></div>
           </div>
 
           <!-- Jeneratör / Yedek Güç -->
           <div class="offgrid-generator-card">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="u-10">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-              <span style="font-size:0.78rem;font-weight:600;color:#F59E0B" data-i18n="offgridL2.generatorTitle">Jeneratör / Yedek Güç</span>
-              <label style="display:flex;align-items:center;gap:6px;margin-left:auto;cursor:pointer">
+              <span class="u-11" data-i18n="offgridL2.generatorTitle">Jeneratör / Yedek Güç</span>
+              <label class="u-12">
                 <input type="checkbox" id="offgrid-generator-enabled" data-change-action="updateOffgridL2Settings"/>
                 <span class="text-xs text-muted" data-i18n="offgridL2.generatorEnable">Etkin</span>
               </label>
@@ -3465,11 +3465,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </div>
         <!-- ═══ OFF-GRID LEVEL 2 GİRİŞ SONU ═══ -->
 
-        <div id="irrigation-season-warn" style="display:none;margin-top:6px;font-size:0.75rem;color:#F59E0B;max-width:300px" data-i18n="agriculturalIrrigation.seasonWarn">Yıllık 365 gün kullanım varsayıldı. Sulama sezonu kısaysa günlük tüketimi sulama süresine göre ayarlayın.</div>
+        <div class="u-13" id="irrigation-season-warn" data-i18n="agriculturalIrrigation.seasonWarn">Yıllık 365 gün kullanım varsayıldı. Sulama sezonu kısaysa günlük tüketimi sulama süresine göre ayarlayın.</div>
         <!-- Faz-4 Fix-16: Irrigation pump inputs — shown only for agricultural-irrigation scenario -->
-        <div id="irrigation-pump-wrap" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(16,185,129,0.07);border-radius:8px;border:1px solid rgba(16,185,129,0.25)">
-          <div style="font-size:0.75rem;font-weight:600;color:#10B981;margin-bottom:8px">Pompa / Sezon Detayı</div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <div class="u-14" id="irrigation-pump-wrap">
+          <div class="u-15">Pompa / Sezon Detayı</div>
+          <div class="u-16">
             <div>
               <div class="text-helper-72-mb-3">Pompa Gücü (kW)</div>
               <input class="input-form-row-110" type="number" id="irrig-pump-kw" value="" min="0.1" max="1000" step="0.1"
@@ -3495,7 +3495,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 data-input-action="updateTariffAssumptions"/>
             </div>
           </div>
-          <div id="irrig-load-preview" style="font-size:0.72rem;color:var(--text-secondary);margin-top:6px"></div>
+          <div class="u-17" id="irrig-load-preview"></div>
         </div>
     </div>
         </div>
@@ -3656,8 +3656,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 </select>
               </div>
             </div>
-            <div style="font-size:0.74rem;color:var(--text-muted);margin-top:12px" data-i18n="governance.approvalNote">Onay yalnızca yetkili kullanıcı rolüyle verilir. Onay kaydı oluşturulduktan sonra sessizce değiştirilemez.</div>
-            <div id="local-auth-warning" style="font-size:0.72rem;color:#F59E0B;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:6px;padding:6px 10px;max-width:520px;margin-top:8px">
+            <div class="u-18" data-i18n="governance.approvalNote">Onay yalnızca yetkili kullanıcı rolüyle verilir. Onay kaydı oluşturulduktan sonra sessizce değiştirilemez.</div>
+            <div class="u-19" id="local-auth-warning">
               ⚠ <strong data-i18n="governance.localAuthWarningTitle">Yerel deneme oturumu:</strong> <span data-i18n="governance.localAuthWarningBody">Kullanıcı rolü yalnızca bu tarayıcıda tutulur. Sunucu tarafı kimlik doğrulaması ve değiştirilemez onay kaydı yoktur; gerçek müşteri teklifi öncesinde kurumsal yetkilendirme katmanı gerekir.</span>
             </div>
           </div>
@@ -3687,8 +3687,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <input type="range" id="consumption-slider" min="2" max="100" value="10" data-input-action="updateConsumption" data-arg-prop="value"/>
         <div class="range-labels"><span>2 kWh</span><span>50 kWh</span><span>100 kWh</span></div>
       </div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px">Türkiye konut ortalaması: ~10–15 kWh/gün (~300–450 kWh/ay)</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div class="u-1a">Türkiye konut ortalaması: ~10–15 kWh/gün (~300–450 kWh/ay)</div>
+      <div class="u-1b">
         <button class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="5" data-arg-type="number"
          >
           Stüdyo ~5 kWh
@@ -3730,16 +3730,16 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </label>
       </div>
       <div class="feature-toggle-body is-hidden" id="nm-inputs">
-        <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:0.8rem">
+        <div class="u-1c">
           <strong class="text-emerald">2026 Lisanssız Üretim:</strong> Fazla üretim saatlik mahsuplaşma ve tüketim bazlı ihracat sınırıyla değerlendirilir.<br>
-          <strong style="color:#06B6D4;margin-top:6px;display:block">Not:</strong> Sözleşme, bağlantı görüşü, tüketim limiti ve depolama kuralları proje bazında doğrulanmalıdır.
+          <strong class="u-1d">Not:</strong> Sözleşme, bağlantı görüşü, tüketim limiti ve depolama kuralları proje bazında doğrulanmalıdır.
         </div>
         <div class="form-group mb-0">
           <label class="text-sm">USD/TRY Kuru
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Para birimi dönüşümü için kullanılır.</span></span>
           </label>
-          <input type="number" id="usd-try-input-nm" value="38.5" min="1" step="0.5"
-            style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:140px;font-size:0.9rem"
+          <input class="u-1e" type="number" id="usd-try-input-nm" value="38.5" min="1" step="0.5"
+           
             data-input-action="setManualUsdTryRateSyncAndRefresh"/>
         </div>
       </div>
@@ -3762,7 +3762,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </label>
       </div>
       <div class="feature-toggle-body is-hidden" id="bill-inputs-block">
-        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px">12 aylık elektrik tüketim verilerinizi girerek gerçekçi tasarruf hesabı yapın.</div>
+        <div class="u-1f">12 aylık elektrik tüketim verilerinizi girerek gerçekçi tasarruf hesabı yapın.</div>
         <div id="bill-inputs-wrap"></div>
       </div>
     </div>
@@ -3784,8 +3784,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </label>
       </div>
       <div class="feature-toggle-body" id="om-inputs">
-        <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:0.8rem">
-          <strong style="color:var(--primary)">Profesyonel hesap:</strong> Yıllık bakım, sigorta ve inverter yenileme maliyetlerini 25 yıllık projeksiyona dahil eder.
+        <div class="u-1g">
+          <strong class="u-1h">Profesyonel hesap:</strong> Yıllık bakım, sigorta ve inverter yenileme maliyetlerini 25 yıllık projeksiyona dahil eder.
         </div>
         <div class="roof-section-grid">
           <div class="form-group m-0">
@@ -3813,7 +3813,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               data-input-action="updateTariffAssumptions"/>
           </div>
         </div>
-        <div style="margin-top:12px;font-size:0.8rem;color:var(--text-muted)">
+        <div class="u-1i">
           <strong>İnverter yenileme:</strong> Yıl 12'de inverter maliyeti kadar ek gider otomatik dahil edilir.
         </div>
       </div>
@@ -3844,14 +3844,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="feature-toggle-body is-hidden" id="ev-block">
         <div class="roof-section-grid">
-          <div class="form-group" style="margin:0;grid-column:1/-1">
+          <div class="form-group u-1j">
             <label class="text-sm">Araç Modeli</label>
-            <select id="ev-type" data-change-action="onEVModelChange"
-              style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.85rem">
+            <select class="u-1k" id="ev-type" data-change-action="onEVModelChange"
+             >
             </select>
             <div id="ev-model-info"></div>
           </div>
-          <div class="form-group" id="ev-custom-group" style="margin:0;display:none">
+          <div class="form-group u-1l" id="ev-custom-group">
             <label class="text-sm">Tüketim (kWh/100km)</label>
             <input class="input-form-row" type="number" id="ev-kwh100" min="5" max="50" value="18"
              
@@ -3946,7 +3946,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </select>
           </div>
         </div>
-        <div id="hp-preview" style="font-size:0.8rem;color:var(--text-muted);margin-top:10px"></div>
+        <div class="u-1m" id="hp-preview"></div>
       </div>
     </div>
 
@@ -3990,7 +3990,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div class="text-helper-72-mt-3">Bölge 1:%15 · Bölge 2:%20 · Bölge 3:%25 · Bölge 4:%30 · Bölge 5:%40 · Bölge 6:%45</div>
           </div>
         </div>
-        <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap">
+        <div class="u-1n">
           <label class="flex-row-md">
             <input type="checkbox" id="tax-kdv" checked data-change-action="updateTaxInput"> KDV İadesi (%20)
           </label>
@@ -4052,10 +4052,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="loading-ring-wrap">
             <svg viewBox="0 0 120 120" width="118" height="118">
               <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(71,85,105,0.3)" stroke-width="7"/>
-              <circle id="ring-fill-arc" cx="60" cy="60" r="52" fill="none"
+              <circle class="u-1o" id="ring-fill-arc" cx="60" cy="60" r="52" fill="none"
                 stroke="url(#ringGrad)" stroke-width="7" stroke-linecap="round"
                 stroke-dasharray="326.7" stroke-dashoffset="326.7"
-                style="transform:rotate(-90deg);transform-origin:60px 60px;transition:stroke-dashoffset 0.7s ease"/>
+               />
               <defs>
                 <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stop-color="#F59E0B"/>
@@ -4129,7 +4129,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <div class="kpi-value"><span id="kpi-energy">0</span></div>
       <div class="kpi-unit">kWh / yıl</div>
       <div class="kpi-label">Yılda Üreteceği Elektrik <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Kurulacak sistemin bir yılda yaklaşık ne kadar elektrik üreteceğini gösterir.</span></span></div>
-      <div id="kpi-energy-band" style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;display:none"></div>
+      <div class="u-1p" id="kpi-energy-band"></div>
     </div>
     <div class="kpi-card kpi-color-success">
       <div class="kpi-icon-wrap">
@@ -4152,7 +4152,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <div class="kpi-icon-wrap">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 8C8 10 5.9 16.17 3.82 19.2"/><path d="M17 8C8 10 5.9 16.17 3.82 19.2M9 20c0 2.76 2.24 5 5 5h.07A5.93 5.93 0 0020 19.07V18h-5M12 3a5 5 0 015 5"/></svg>
       </div>
-      <div class="kpi-value" style="color:#34D399"><span id="kpi-co2">0</span></div>
+      <div class="kpi-value u-1q"><span id="kpi-co2">0</span></div>
       <div class="kpi-unit">ton CO₂ / yıl</div>
       <div class="kpi-label">Çevresel Katkı</div>
       <div class="kpi-sub" id="kpi-tree-sub"></div>
@@ -4168,11 +4168,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <span class="fin-label">Tahmini kurulum bütçesi</span>
       <span class="fin-val highlight" id="fin-cost">-</span>
     </div>
-    <div class="fin-row" style="flex-wrap:wrap;gap:8px">
+    <div class="fin-row u-1r">
       <span class="fin-label" data-i18n="finance.grossSimplePayback">Kendini geri ödeme süresi</span>
-      <div style="display:flex;align-items:center;flex:1;min-width:200px">
+      <div class="u-1s">
         <div class="payback-bar-wrap"><div class="payback-bar-fill dyn-w" id="payback-bar" data-w="0"></div></div>
-        <span class="fin-val" id="fin-payback" style="white-space:nowrap">-</span>
+        <span class="fin-val u-1t" id="fin-payback">-</span>
       </div>
     </div>
     <div class="fin-row">
@@ -4390,7 +4390,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       Şebekeye Verilen Fazla Enerji
       <span class="nm-badge" id="nm-license-badge">-</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+    <div class="u-1u">
       <div class="callout-success-tight">
         <div class="kpi-display-success-lg" id="nm-export-kwh">-</div>
         <div class="text-helper-72-mt-3">yılda şebekeye giden enerji</div>
@@ -4427,14 +4427,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
   <!-- PR gauge -->
   <div class="pr-gauge-wrap card mt-4 p-7">
-    <div class="card-title" style="justify-content:center;margin-bottom:8px">Sistem Verim Skoru <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.7rem;padding:1px 6px">?</span><span class="tooltip-box">Bu skor, sistemin teorik potansiyeline ne kadar yakın çalıştığını özetler. Yüksek olması iyi bir yerleşim ve düşük kayıp anlamına gelir.</span></span></div>
-    <div class="result-helper" style="text-align:center;max-width:560px;margin:0 auto 18px">Bu gösterge, panel yerleşimi, sıcaklık, gölge ve diğer kayıpların toplam etkisini tek bir bakışta anlamanızı sağlar.</div>
-    <svg id="pr-gauge-svg" viewBox="0 0 200 120" width="200" height="120" style="overflow:visible;display:block;margin:0 auto">
+    <div class="card-title u-1v">Sistem Verim Skoru <span class="tooltip-wrap"><span class="tooltip-icon u-1w">?</span><span class="tooltip-box">Bu skor, sistemin teorik potansiyeline ne kadar yakın çalıştığını özetler. Yüksek olması iyi bir yerleşim ve düşük kayıp anlamına gelir.</span></span></div>
+    <div class="result-helper u-1x">Bu gösterge, panel yerleşimi, sıcaklık, gölge ve diğer kayıpların toplam etkisini tek bir bakışta anlamanızı sağlar.</div>
+    <svg class="u-1y" id="pr-gauge-svg" viewBox="0 0 200 120" width="200" height="120">
       <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(71,85,105,0.3)" stroke-width="12" stroke-linecap="round"/>
-      <path id="pr-arc-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none"
+      <path class="u-1z" id="pr-arc-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none"
         stroke="url(#prGrad)" stroke-width="12" stroke-linecap="round"
         stroke-dasharray="251.3" stroke-dashoffset="251.3"
-        style="transition:stroke-dashoffset 1.2s cubic-bezier(0.34,1.56,0.64,1)"/>
+       />
       <defs>
         <linearGradient id="prGrad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stop-color="#EF4444"/>
@@ -4442,9 +4442,9 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <stop offset="100%" stop-color="#10B981"/>
         </linearGradient>
       </defs>
-      <line id="pr-needle" x1="100" y1="100" x2="100" y2="28"
+      <line class="u-20" id="pr-needle" x1="100" y1="100" x2="100" y2="28"
         stroke="white" stroke-width="2.5" stroke-linecap="round"
-        style="transform-origin:100px 100px;transition:transform 1.2s cubic-bezier(0.34,1.56,0.64,1)"/>
+       />
       <circle cx="100" cy="100" r="6" fill="white" opacity="0.9"/>
       <text x="18" y="118" font-size="10" fill="#94A3B8" font-family="Space Grotesk,Inter">0%</text>
       <text x="88" y="20" font-size="10" fill="#94A3B8" font-family="Space Grotesk,Inter">75%</text>
@@ -4452,7 +4452,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <text id="pr-gauge-val" x="100" y="94" text-anchor="middle"
         font-size="22" font-family="Space Grotesk,Inter" font-weight="800" fill="#F1F5F9">--%</text>
     </svg>
-    <div id="pr-gauge-label" style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:8px"></div>
+    <div class="u-21" id="pr-gauge-label"></div>
   </div>
 
   <div class="card mt-4">
@@ -4474,7 +4474,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span data-i18n="report.engineeringReportTitle">Uzman Detayları</span>
           <span class="eng-report-subtitle" data-i18n="report.engineeringReportSubtitle">İsterseniz yöntemin ayrıntıları ve teknik varsayımlar burada yer alır.</span>
         </span>
-        <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);background:rgba(245,158,11,0.1);border-radius:4px;padding:2px 8px;border:1px solid rgba(245,158,11,0.2)" data-i18n="report.engineeringReportBadge">İsteğe bağlı</span>
+        <span class="u-22" data-i18n="report.engineeringReportBadge">İsteğe bağlı</span>
       </div>
       <svg class="eng-chevron" id="eng-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
@@ -4547,14 +4547,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Saatlik Üretim Profili
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <div class="u-23">
       <button class="season-btn active" data-season="summer" data-click-action="setHourlySeason" data-arg="summer">Yaz</button>
       <button class="season-btn" data-season="spring" data-click-action="setHourlySeason" data-arg="spring">İlkbahar</button>
       <button class="season-btn" data-season="autumn" data-click-action="setHourlySeason" data-arg="autumn">Sonbahar</button>
       <button class="season-btn" data-season="winter" data-click-action="setHourlySeason" data-arg="winter">Kış</button>
     </div>
     <canvas class="max-h-300" id="hourly-chart-canvas"></canvas>
-    <div id="hourly-stats" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px"></div>
+    <div class="u-24" id="hourly-stats"></div>
   </div>
 
   <!-- Sun path card -->
@@ -4563,10 +4563,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       Güneş Yolu Diyagramı
     </div>
-    <div style="display:flex;justify-content:center">
+    <div class="u-25">
       <svg class="constrained-400-100" id="sun-path-svg" viewBox="0 0 400 400"></svg>
     </div>
-    <div id="sun-path-info" style="font-size:0.8rem;color:var(--text-muted);text-align:center;margin-top:10px"></div>
+    <div class="u-26" id="sun-path-info"></div>
   </div>
 
   <!-- Heatmap card -->
@@ -4575,24 +4575,24 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg>
       Türkiye Aylık Üretim Haritası
     </div>
-    <div id="heatmap-month" style="font-size:0.9rem;color:var(--primary);margin-bottom:10px;font-weight:600">Ocak — Aylık PSH Haritası</div>
-    <div id="heatmap-container" style="height:360px;border-radius:10px;border:1px solid var(--border)"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <div class="u-27" id="heatmap-month">Ocak — Aylık PSH Haritası</div>
+    <div class="u-28" id="heatmap-container"></div>
+    <div class="u-29">
+      <div class="u-2a">
         <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="0" data-arg-type="number">Oca</button>
         <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="3" data-arg-type="number">Nis</button>
         <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="6" data-arg-type="number">Tem</button>
         <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="9" data-arg-type="number">Eki</button>
       </div>
-      <button class="btn btn-primary" id="heatmap-play-btn" data-click-action="toggleHeatmapAnimation" style="padding:7px 16px;font-size:0.82rem">▶ Oynat</button>
+      <button class="btn btn-primary u-2b" id="heatmap-play-btn" data-click-action="toggleHeatmapAnimation">▶ Oynat</button>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:0.72rem;color:var(--text-muted)">
+    <div class="u-2c">
       <span><span class="text-blue">●</span> &lt;1.5 saat/gün</span>
       <span><span class="text-cyan">●</span> 1.5–2.5</span>
-      <span><span style="color:#22C55E">●</span> 2.5–3.5</span>
-      <span><span style="color:#EAB308">●</span> 3.5–4.5</span>
-      <span><span style="color:#F97316">●</span> 4.5–5.5</span>
-      <span><span style="color:#EF4444">●</span> &gt;5.5</span>
+      <span><span class="u-2d">●</span> 2.5–3.5</span>
+      <span><span class="u-2e">●</span> 3.5–4.5</span>
+      <span><span class="u-2f">●</span> 4.5–5.5</span>
+      <span><span class="u-2g">●</span> &gt;5.5</span>
     </div>
   </div>
 
@@ -4616,10 +4616,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div id="scenario-summary-strip" class="scenario-insight-grid"></div>
     <div class="scenario-control-row">
       <label class="text-muted-85">Özel Enflasyon:</label>
-      <input type="range" id="scenario-custom-rate" min="5" max="80" value="30"
+      <input class="u-2h" type="range" id="scenario-custom-rate" min="5" max="80" value="30"
         data-input-action="updateScenarioCustomFromSlider"
-        style="flex:1;min-width:120px;max-width:240px"/>
-      <span id="scenario-custom-label" style="font-size:0.85rem;font-weight:600;color:#8B5CF6">%30</span>
+       />
+      <span class="u-2i" id="scenario-custom-label">%30</span>
     </div>
     <div class="overflow-x-auto-mb-4" id="scenario-table"></div>
     <div class="overflow-x-auto-mb-4" id="sensitivity-table"></div>
@@ -4632,18 +4632,18 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       USD/TRY Döviz Kuru Projeksiyonu
     </div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+    <div class="u-2j">
       <label class="text-muted-85">Yıllık TRY artışı:</label>
-      <input type="range" id="fx-growth-rate" min="5" max="60" value="20"
+      <input class="u-2k" type="range" id="fx-growth-rate" min="5" max="60" value="20"
         data-input-action="updateFxGrowthFromSlider"
-        style="flex:1;min-width:120px;max-width:200px"/>
-      <span id="fx-growth-label" style="font-size:0.85rem;font-weight:600;color:var(--primary)">%20</span>
+       />
+      <span class="u-2l" id="fx-growth-label">%20</span>
     </div>
-    <canvas id="fx-chart-canvas" style="max-height:280px"></canvas>
+    <canvas class="u-2m" id="fx-chart-canvas"></canvas>
   </div>
 
   <!-- EV result card -->
-  <div class="card" id="ev-result-card" style="display:none;margin-top:16px;border-left:3px solid #3B82F6">
+  <div class="card u-2n" id="ev-result-card">
     <div class="card-title text-blue">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
       EV Şarj Analizi
@@ -4652,8 +4652,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- Heat pump result card -->
-  <div class="card" id="heatpump-result-card" style="display:none;margin-top:16px;border-left:3px solid #EC4899">
-    <div class="card-title" style="color:#EC4899">
+  <div class="card u-2o" id="heatpump-result-card">
+    <div class="card-title u-2p">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
       Isı Pompası Analizi
     </div>
@@ -4661,7 +4661,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- Structural result card -->
-  <div class="card" id="structural-result-card" style="display:none;margin-top:16px;border-left:3px solid #F59E0B">
+  <div class="card u-2q" id="structural-result-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
       Yapısal Yük Analizi (TS EN 1991)
@@ -4671,7 +4671,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- Tax result card -->
-  <div class="card" id="tax-result-card" style="display:none;margin-top:16px;border-left:3px solid #10B981">
+  <div class="card u-2r" id="tax-result-card">
     <div class="card-title text-emerald">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       Vergi Avantajı Analizi
@@ -4757,7 +4757,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <button class="btn-icon-modal-close" data-click-action="closeComparison" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
     </div>
     <div class="p-6">
-      <div id="comparison-scenarios" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px"></div>
+      <div class="u-2s" id="comparison-scenarios"></div>
       <div class="overflow-x-auto" id="comparison-result-table"></div>
     </div>
   </div>
@@ -4765,15 +4765,15 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
 <!-- KAYITLI HESAPLAR DASHBOARD MODAL -->
 <div class="modal-overlay-base" id="dashboard-modal">
-  <div role="dialog" aria-modal="true" aria-labelledby="dashboard-modal-title" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:1000px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md)">
+  <div class="u-2t" role="dialog" aria-modal="true" aria-labelledby="dashboard-modal-title">
     <div class="modal-header-base">
       <h2 class="kpi-display-primary" id="dashboard-modal-title">
         <svg class="icon-align-middle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         <span data-i18n="dashboard.saved">Kayıtlı Hesaplar</span>
       </h2>
-      <div style="display:flex;gap:10px;align-items:center">
-        <button data-click-action="compareDashboardSelected" class="btn btn-outline" style="font-size:0.78rem;padding:6px 12px" data-i18n="dashboard.compareSelected">Seçilenleri Karşılaştır</button>
-        <button data-click-action="clearAllSaved" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#EF4444;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.78rem" data-i18n="dashboard.clearAll">Tümünü Sil</button>
+      <div class="u-2u">
+        <button data-click-action="compareDashboardSelected" class="btn btn-outline u-2v" data-i18n="dashboard.compareSelected">Seçilenleri Karşılaştır</button>
+        <button class="u-2w" data-click-action="clearAllSaved" data-i18n="dashboard.clearAll">Tümünü Sil</button>
         <button class="btn-icon-modal-close" data-click-action="closeDashboard" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
       </div>
     </div>
