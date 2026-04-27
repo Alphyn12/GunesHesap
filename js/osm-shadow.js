@@ -137,32 +137,39 @@ function renderShadowSummary(result, sourceLabel) {
   const progressWidth = Math.min(100, result.score).toFixed(0);
   const contributorList = result.contributors.length
     ? result.contributors.slice(0, 5).map(b =>
-        `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border-subtle)">
+        `<div class="osm-row-flex">
           <span>${Math.round(b.heightM)} m yükseklik · ${Math.round(b.distanceM)} m mesafe</span>
-          <span style="color:${b.score >= 25 ? '#EF4444' : '#F59E0B'};font-weight:600">${b.score.toFixed(0)} puan</span>
+          <span class="${b.score >= 25 ? 'osm-score-bad' : 'osm-score-warn'}">${b.score.toFixed(0)} puan</span>
         </div>`
       ).join('')
-    : '<div style="color:var(--text-muted)">OSM verisinde belirgin engel tespit edilmedi</div>';
+    : '<div class="text-muted">OSM verisinde belirgin engel tespit edilmedi</div>';
 
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-bottom:8px;font-size:0.82rem">
-      <div><span style="color:var(--text-muted)">Risk seviyesi:</span>
-        <strong style="color:${color};margin-left:6px">${riskLabel}</strong></div>
-      <div><span style="color:var(--text-muted)">Skor:</span>
-        <strong style="color:${color};margin-left:6px">${result.score.toFixed(0)} / 100</strong></div>
-      <div><span style="color:var(--text-muted)">Ek gölge payı:</span>
-        <strong style="color:var(--text);margin-left:6px">${result.shadowFactorPct.toFixed(1)}%</strong></div>
-      <div><span style="color:var(--text-muted)">Tespit edilen bina:</span>
-        <strong style="color:var(--text);margin-left:6px">${result.contributors.length}</strong></div>
+    <div class="osm-summary-grid">
+      <div><span class="text-muted">Risk seviyesi:</span>
+        <strong class="osm-strong-color" data-c="${color}">${riskLabel}</strong></div>
+      <div><span class="text-muted">Skor:</span>
+        <strong class="osm-strong-color" data-c="${color}">${result.score.toFixed(0)} / 100</strong></div>
+      <div><span class="text-muted">Ek gölge payı:</span>
+        <strong class="osm-strong-default">${result.shadowFactorPct.toFixed(1)}%</strong></div>
+      <div><span class="text-muted">Tespit edilen bina:</span>
+        <strong class="osm-strong-default">${result.contributors.length}</strong></div>
     </div>
-    <div style="height:6px;background:var(--surface-light);border-radius:3px;margin-bottom:8px;overflow:hidden">
-      <div style="height:100%;width:${progressWidth}%;background:${color};border-radius:3px;transition:width 0.6s ease"></div>
+    <div class="osm-progress-track">
+      <div class="osm-progress-fill" data-w="${progressWidth}" data-c="${color}"></div>
     </div>
-    ${result.contributors.length ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:4px">En çok gölge yaratan binalar:</div>${contributorList}` : contributorList}
-    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:8px;border-top:1px solid var(--border-subtle);padding-top:6px">
+    ${result.contributors.length ? `<div class="osm-helper-78-mb-1">En çok gölge yaratan binalar:</div>${contributorList}` : contributorList}
+    <div class="osm-helper-72-divider">
       Kaynak: ${sourceLabel}
     </div>
   `;
+  // F1.C.7: data-c ve data-w attribute'larını CSS var'a aktar
+  if (typeof el.querySelectorAll === 'function') {
+    el.querySelectorAll('[data-c]').forEach(node =>
+      node.style.setProperty('--c', node.dataset.c));
+    el.querySelectorAll('[data-w]').forEach(node =>
+      node.style.setProperty('--w', node.dataset.w + '%'));
+  }
   window.syncOsmShadowDoubleCountWarning?.();
 }
 
@@ -176,8 +183,8 @@ export async function refreshOSMShadowAnalysis() {
   }
   const summary = document.getElementById('osm-shadow-summary');
   if (summary) summary.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;color:var(--accent)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite">
+    <div class="osm-loading-row">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-1s">
         <path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
       OSM Overpass bina verisi alınıyor (${center.lat.toFixed(4)}, ${center.lng.toFixed(4)})...
     </div>`;

@@ -2794,3 +2794,31 @@
 .scenario-section-title  { font-size: 0.9rem; font-weight: 700; color: var(--primary); margin: 12px 0 8px; }
 .scenario-delta-positive { color: #10B981; }
 .scenario-delta-negative { color: #EF4444; }
+/* ── F1.C.7 batch 3b: dashboard ── */
+.dashboard-empty            { color: var(--text-muted); text-align: center; padding: 32px; }
+.dashboard-header-row       { margin-bottom: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.dashboard-record-checkbox  { margin-right: 8px; accent-color: var(--primary); }
+.dashboard-record-row       { display: flex; justify-content: space-between; align-items: flex-start; }
+.dashboard-record-timestamp { color: var(--text-muted); font-size: 0.78rem; margin-left: 8px; }
+.btn-icon-record-delete     { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; }
+.mt-5                       { margin-top: 20px; }
+/* ── F1.C.7 batch 3b: ev-charging ── */
+.ev-info-row              { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; }
+.ev-stat-grid             { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 10px; }
+.ev-stat-value-1-2        { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+.ev-stat-value-1-2--accent  { color: var(--accent); }
+.ev-stat-value-1-2--success { color: var(--success); }
+.text-muted-72            { font-size: 0.72rem; color: var(--text-muted); }
+/* ── F1.C.7 batch 3b: osm-shadow ── */
+.osm-row-flex             { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--border-subtle); }
+.osm-score-bad            { color: #EF4444; font-weight: 600; }
+.osm-score-warn           { color: #F59E0B; font-weight: 600; }
+.osm-summary-grid         { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-bottom: 8px; font-size: 0.82rem; }
+.osm-strong-color         { color: var(--c); margin-left: 6px; }
+.osm-strong-default       { color: var(--text); margin-left: 6px; }
+.osm-progress-track       { height: 6px; background: var(--surface-light); border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
+.osm-progress-fill        { height: 100%; width: var(--w, 0%); background: var(--c); border-radius: 3px; transition: width 0.6s ease; }
+.osm-helper-78-mb-1       { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px; }
+.osm-helper-72-divider    { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 6px; }
+.osm-loading-row          { display: flex; align-items: center; gap: 8px; color: var(--accent); }
+.spin-1s                  { animation: spin 1s linear infinite; }

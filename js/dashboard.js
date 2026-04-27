@@ -159,32 +159,32 @@ function renderDashboard() {
   if (!body) return;
 
   if (saved.length === 0) {
-    body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:32px">${dt('dashboard.noSaved')}</p>`;
+    body.innerHTML = `<p class="dashboard-empty">${dt('dashboard.noSaved')}</p>`;
     return;
   }
 
   let selectedIds = [];
 
   body.innerHTML = `
-    <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:0.85rem;color:var(--text-muted)">${dt('dashboard.selectHint')}</span>
-      <button data-dashboard-action="compare" style="background:var(--primary);color:#000;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem;font-weight:600">${dt('dashboard.compare')}</button>
-      <button data-dashboard-action="export" style="background:var(--surface-light);color:var(--text);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:0.82rem">${dt('dashboard.export')}</button>
-      <label style="background:var(--surface-light);color:var(--text);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:0.82rem">
-        ${dt('dashboard.import')} <input type="file" accept=".json" data-dashboard-import style="display:none"/>
+    <div class="dashboard-header-row">
+      <span class="text-muted-85">${dt('dashboard.selectHint')}</span>
+      <button data-dashboard-action="compare" class="btn-primary-md">${dt('dashboard.compare')}</button>
+      <button data-dashboard-action="export" class="btn-surface-light-md">${dt('dashboard.export')}</button>
+      <label class="btn-surface-light-md">
+        ${dt('dashboard.import')} <input type="file" accept=".json" data-dashboard-import class="is-hidden"/>
       </label>
-      <button data-dashboard-action="clear" style="background:var(--surface-light);color:var(--text-muted);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:0.82rem">${dt('dashboard.clearAll')}</button>
+      <button data-dashboard-action="clear" class="btn-surface-light-md">${dt('dashboard.clearAll')}</button>
     </div>
     <div class="dashboard-list">
       ${saved.map(rec => `
         <div class="dashboard-card" id="dash-card-${rec.id}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div class="dashboard-record-row">
             <div>
-              <input type="checkbox" id="dash-chk-${rec.id}" value="${rec.id}" style="margin-right:8px;accent-color:var(--primary)"/>
-              <strong style="color:var(--primary)">${escapeHtml(rec.cityName || '—')}</strong>
-              <span style="color:var(--text-muted);font-size:0.78rem;margin-left:8px">${escapeHtml(rec.timestamp)}</span>
+              <input type="checkbox" id="dash-chk-${rec.id}" value="${rec.id}" class="dashboard-record-checkbox"/>
+              <strong class="text-primary">${escapeHtml(rec.cityName || '—')}</strong>
+              <span class="dashboard-record-timestamp">${escapeHtml(rec.timestamp)}</span>
             </div>
-            <button data-delete-record="${rec.id}" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem">✕</button>
+            <button data-delete-record="${rec.id}" class="btn-icon-record-delete">✕</button>
           </div>
           <div class="dashboard-card-metrics">
             <span>${escapeHtml(rec.systemPower.toFixed(1))} kWp</span>
@@ -197,7 +197,7 @@ function renderDashboard() {
         </div>
       `).join('')}
     </div>
-    <div id="dashboard-compare-result" style="margin-top:20px"></div>
+    <div id="dashboard-compare-result" class="mt-5"></div>
   `;
   wireDashboardEvents(body);
 
@@ -234,7 +234,7 @@ export function compareDashboardSelected() {
   ];
 
   resultEl.innerHTML = `
-    <h4 style="color:var(--primary);margin-bottom:12px">${dt('dashboard.compareTitle')}</h4>
+    <h4 class="text-primary mb-3">${dt('dashboard.compareTitle')}</h4>
     <table class="comp-table">
       <thead>
         <tr>

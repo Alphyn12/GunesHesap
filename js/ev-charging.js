@@ -34,11 +34,11 @@ export function onEVModelChange() {
   if (infoEl && key !== 'custom') {
     const chargeHours = (model.batteryKwh / model.chargeKw).toFixed(1);
     infoEl.innerHTML = `
-      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-muted);margin-top:8px">
-        <span>Batarya: <strong style="color:var(--text)">${model.batteryKwh} kWh</strong></span>
-        <span>Şarj gücü: <strong style="color:var(--text)">${model.chargeKw} kW AC</strong></span>
-        <span>Tam şarj: <strong style="color:var(--text)">~${chargeHours} saat</strong></span>
-        <span>Menzil: <strong style="color:var(--text)">${model.range} km</strong></span>
+      <div class="ev-info-row">
+        <span>Batarya: <strong class="text-color-default">${model.batteryKwh} kWh</strong></span>
+        <span>Şarj gücü: <strong class="text-color-default">${model.chargeKw} kW AC</strong></span>
+        <span>Tam şarj: <strong class="text-color-default">~${chargeHours} saat</strong></span>
+        <span>Menzil: <strong class="text-color-default">${model.range} km</strong></span>
       </div>`;
   } else if (infoEl) {
     infoEl.innerHTML = '';
@@ -106,22 +106,22 @@ function updateEVPreview() {
   const prevEl = document.getElementById('ev-preview');
   if (prevEl) {
     prevEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:10px">
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--accent)">${daily_kWh.toFixed(1)} kWh</div>
-          <div style="font-size:0.72rem;color:var(--text-muted)">Günlük şarj ihtiyacı</div>
+      <div class="ev-stat-grid">
+        <div class="hp-stat-card">
+          <div class="ev-stat-value-1-2 ev-stat-value-1-2--accent">${daily_kWh.toFixed(1)} kWh</div>
+          <div class="text-muted-72">Günlük şarj ihtiyacı</div>
         </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--accent)">${Math.round(annual_kWh).toLocaleString('tr-TR')} kWh</div>
-          <div style="font-size:0.72rem;color:var(--text-muted)">Yıllık şarj tüketimi</div>
+        <div class="hp-stat-card">
+          <div class="ev-stat-value-1-2 ev-stat-value-1-2--accent">${Math.round(annual_kWh).toLocaleString('tr-TR')} kWh</div>
+          <div class="text-muted-72">Yıllık şarj tüketimi</div>
         </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--success)">${fuelSaved_TL.toLocaleString('tr-TR')} ₺</div>
-          <div style="font-size:0.72rem;color:var(--text-muted)">Yıllık yakıt tasarrufu</div>
+        <div class="hp-stat-card">
+          <div class="ev-stat-value-1-2 ev-stat-value-1-2--success">${fuelSaved_TL.toLocaleString('tr-TR')} ₺</div>
+          <div class="text-muted-72">Yıllık yakıt tasarrufu</div>
         </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--success)">${co2Saved} t</div>
-          <div style="font-size:0.72rem;color:var(--text-muted)">CO₂ azaltımı (yıllık)</div>
+        <div class="hp-stat-card">
+          <div class="ev-stat-value-1-2 ev-stat-value-1-2--success">${co2Saved} t</div>
+          <div class="text-muted-72">CO₂ azaltımı (yıllık)</div>
         </div>
       </div>`;
   }
