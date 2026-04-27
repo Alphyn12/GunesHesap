@@ -54,7 +54,11 @@
       "Bash(pkill -f \"http.server 8768\")",
       "Bash(python -m pytest backend/tests/test_backend_api.py -x --tb=short)",
       "Bash(python -m pytest backend/tests/test_backend_api.py --tb=short --deselect backend/tests/test_backend_api.py::test_financial_proposal_contract)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(npm run *)",
+      "Bash(sed 's/\"$//')",
+      "Bash(awk '{print length}')",
+      "Bash(awk '{sum+=$1} END {print \"Toplam:\", sum, \"Ortam:\", sum/276}')"
     ]
   }
 }
