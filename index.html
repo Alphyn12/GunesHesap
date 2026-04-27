@@ -1767,37 +1767,37 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="header-inner">
       <div class="step-dots-wrap" style="flex:1">
         <div class="step-dots" role="navigation" aria-label="Form adımları" data-i18n-aria-label="nav.progressAria">
-          <button type="button" class="step-dot active" data-step="1" data-testid="step-dot-1" aria-controls="step-1" aria-label="1. adım: Senaryo" aria-current="step" onclick="requestStepChange(1)">
+          <button type="button" class="step-dot active" data-step="1" data-testid="step-dot-1" aria-controls="step-1" aria-label="1. adım: Senaryo" aria-current="step" data-click-action="requestStepChange" data-arg="1" data-arg-type="number">
             <span class="step-dot-num">1</span>
             <span class="step-dot-label">Senaryo</span>
           </button>
           <div class="step-connector" id="conn-1-2"></div>
-          <button type="button" class="step-dot" data-step="2" data-testid="step-dot-2" aria-controls="step-2" aria-label="2. adım: Konum" onclick="requestStepChange(2)">
+          <button type="button" class="step-dot" data-step="2" data-testid="step-dot-2" aria-controls="step-2" aria-label="2. adım: Konum" data-click-action="requestStepChange" data-arg="2" data-arg-type="number">
             <span class="step-dot-num">2</span>
             <span class="step-dot-label">Konum</span>
           </button>
           <div class="step-connector" id="conn-2-3"></div>
-          <button type="button" class="step-dot" data-step="3" data-testid="step-dot-3" aria-controls="step-3" aria-label="3. adım: Çatı" onclick="requestStepChange(3)">
+          <button type="button" class="step-dot" data-step="3" data-testid="step-dot-3" aria-controls="step-3" aria-label="3. adım: Çatı" data-click-action="requestStepChange" data-arg="3" data-arg-type="number">
             <span class="step-dot-num">3</span>
             <span class="step-dot-label">Çatı</span>
           </button>
           <div class="step-connector" id="conn-3-4"></div>
-          <button type="button" class="step-dot" data-step="4" data-testid="step-dot-4" aria-controls="step-4" aria-label="4. adım: Ekipman" onclick="requestStepChange(4)">
+          <button type="button" class="step-dot" data-step="4" data-testid="step-dot-4" aria-controls="step-4" aria-label="4. adım: Ekipman" data-click-action="requestStepChange" data-arg="4" data-arg-type="number">
             <span class="step-dot-num">4</span>
             <span class="step-dot-label">Ekipman</span>
           </button>
           <div class="step-connector" id="conn-4-5"></div>
-          <button type="button" class="step-dot" data-step="5" data-testid="step-dot-5" aria-controls="step-5" aria-label="5. adım: Ayarlar" onclick="requestStepChange(5)">
+          <button type="button" class="step-dot" data-step="5" data-testid="step-dot-5" aria-controls="step-5" aria-label="5. adım: Ayarlar" data-click-action="requestStepChange" data-arg="5" data-arg-type="number">
             <span class="step-dot-num">5</span>
             <span class="step-dot-label">Ayarlar</span>
           </button>
           <div class="step-connector" id="conn-5-6"></div>
-          <button type="button" class="step-dot" data-step="6" data-testid="step-dot-6" aria-controls="step-6" aria-label="6. adım: Hesapla" onclick="requestStepChange(6)">
+          <button type="button" class="step-dot" data-step="6" data-testid="step-dot-6" aria-controls="step-6" aria-label="6. adım: Hesapla" data-click-action="requestStepChange" data-arg="6" data-arg-type="number">
             <span class="step-dot-num">6</span>
             <span class="step-dot-label">Hesapla</span>
           </button>
           <div class="step-connector" id="conn-6-7"></div>
-          <button type="button" class="step-dot" data-step="7" data-testid="step-dot-7" aria-controls="step-7" aria-label="7. adım: Sonuçlar" onclick="requestStepChange(7)">
+          <button type="button" class="step-dot" data-step="7" data-testid="step-dot-7" aria-controls="step-7" aria-label="7. adım: Sonuçlar" data-click-action="requestStepChange" data-arg="7" data-arg-type="number">
             <span class="step-dot-num">7</span>
             <span class="step-dot-label">Sonuçlar</span>
           </button>
@@ -1937,7 +1937,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 <div class="step-pane" id="step-2">
   <!-- Top bar: search + geolocate -->
   <div class="step2-topbar">
-    <button class="btn btn-secondary" onclick="goToStep(1)" style="flex-shrink:0;padding:7px 14px;font-size:0.82rem;gap:5px">
+    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="1" data-arg-type="number" style="flex-shrink:0;padding:7px 14px;font-size:0.82rem;gap:5px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       Geri
     </button>
@@ -2017,7 +2017,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
     </div>
     <div class="loc-bottom-right">
-      <button class="btn btn-secondary" id="step2-back-btn" onclick="goToStep(1)" style="padding:9px 16px;font-size:0.82rem">← Geri</button>
+      <button class="btn btn-secondary" id="step2-back-btn" data-click-action="goToStep" data-arg="1" data-arg-type="number" style="padding:9px 16px;font-size:0.82rem">← Geri</button>
       <button class="btn btn-primary" id="step2-continue-btn" onclick="validateStep2()" style="padding:9px 20px">
         <span class="step2-continue-label">Sonraki Adım</span> →
       </button>
@@ -2327,7 +2327,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <!-- Step 3 nav -->
       <div class="step3-nav-sticky">
-        <button class="btn btn-secondary" onclick="goToStep(2)">← Geri</button>
+        <button class="btn btn-secondary" data-click-action="goToStep" data-arg="2" data-arg-type="number">← Geri</button>
         <button class="btn btn-primary" onclick="validateStep3()">Sonraki Adım →</button>
       </div>
     </div>
@@ -2540,7 +2540,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="equipment-summary-note" id="equip-summary-cost-note">Toplam ekipman tahmini: panel + inverter</div>
       <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-secondary btn-full" onclick="goToStep(3)" style="font-size:0.82rem">← Geri</button>
+        <button class="btn btn-secondary btn-full" data-click-action="goToStep" data-arg="3" data-arg-type="number" style="font-size:0.82rem">← Geri</button>
         <button class="btn btn-primary btn-full" onclick="validateStep4()" data-i18n="step4.next">Sonraki Adım →</button>
       </div>
     </div>
@@ -4008,7 +4008,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </details>
 
   <div class="nav-btns" style="margin-top:28px">
-    <button class="btn btn-secondary" onclick="goToStep(4)">← Geri</button>
+    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number">← Geri</button>
     <button class="btn btn-primary" id="calc-btn" data-testid="calculate-results" onclick="validateStep5()">Sonraki Adım →</button>
   </div>
 </div>
@@ -4533,7 +4533,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span data-i18n="report.compareQuotes">Teklif Karşılaştır</span>
         </button>
-        <button class="btn btn-outline" data-testid="recalculate" onclick="goToStep(1)">
+        <button class="btn btn-outline" data-testid="recalculate" data-click-action="goToStep" data-arg="1" data-arg-type="number">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
       <span data-i18n="report.recalculate">Yeniden Hesapla</span>
         </button>
@@ -4692,7 +4692,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="2">
-    <button class="btn btn-secondary" onclick="goToStep(1)" aria-label="Geri">
+    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="1" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
@@ -4701,7 +4701,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="3">
-    <button class="btn btn-secondary" onclick="goToStep(2)" aria-label="Geri">
+    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="2" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
@@ -4710,7 +4710,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="4">
-    <button class="btn btn-secondary" onclick="goToStep(3)" aria-label="Geri">
+    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="3" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
@@ -4719,7 +4719,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="5">
-    <button class="btn btn-secondary" onclick="goToStep(4)" aria-label="Geri">
+    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
@@ -4736,7 +4736,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span>Karşılaştır</span>
     </button>
-    <button class="btn btn-outline" data-testid="m-recalculate" onclick="goToStep(1)" aria-label="Yeniden hesapla">
+    <button class="btn btn-outline" data-testid="m-recalculate" data-click-action="goToStep" data-arg="1" data-arg-type="number" aria-label="Yeniden hesapla">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
       <span>Yenile</span>
     </button>

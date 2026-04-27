@@ -86,10 +86,16 @@ function dispatchAction(eventType, e) {
     return;
   }
   const argProp = el.dataset.argProp;
-  const arg = argProp === 'value' ? el.value
+  const argType = el.dataset.argType;
+  const rawArg = argProp === 'value' ? el.value
     : argProp === 'checked' ? el.checked
     : el.dataset.arg !== undefined ? el.dataset.arg
     : undefined;
+  const arg = argType === 'number' && rawArg !== undefined && rawArg !== null
+      ? Number(rawArg)
+    : argType === 'bool' && rawArg !== undefined && rawArg !== null
+      ? (rawArg === true || rawArg === 'true')
+    : rawArg;
   handler(arg, el, e);
 }
 
@@ -3544,6 +3550,8 @@ window.addEventListener('load', () => {
 // ═══════════════════════════════════════════════════════════
 window.goToStep = goToStep;
 window.requestStepChange = requestStepChange;
+// F1.B.2 — step-nav grubu: 18 inline onclick'in yerine data-action delegation.
+registerActions({ goToStep, requestStepChange });
 window.validateStep1 = validateStep1;
 window.validateStep2 = validateStep2;
 window.validateStep3 = validateStep3;
