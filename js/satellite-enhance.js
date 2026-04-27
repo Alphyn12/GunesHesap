@@ -123,14 +123,14 @@ export async function enhanceSatelliteView() {
   const status = document.getElementById('sat-enhance-status');
   const preview = document.getElementById('sat-enhance-preview');
   if (window._activeTileLayer === 'satellite') {
-    if (status) status.innerHTML = `<span style="color:var(--primary)">
+    if (status) status.innerHTML = `<span class="text-primary">
       ⚠ Uydu (Esri) katmanında netleştirme desteklenmez — CORS kısıtlaması.
       Lütfen "Koyu" veya "OpenStreetMap" katmanına geçin.
     </span>`;
     window.showToast?.('Netleştirme yalnızca OSM veya Koyu harita katmanında çalışır.', 'warning');
     return null;
   }
-  if (status) status.innerHTML = `<span style="color:var(--accent)">Harita görünümü işleniyor...</span>`;
+  if (status) status.innerHTML = `<span class="text-accent">Harita görünümü işleniyor...</span>`;
   try {
     const source = await captureMapCanvas(window.map);
     const result = enhanceCanvasFallback(source, 1.5, 0.85);
@@ -143,7 +143,7 @@ export async function enhanceSatelliteView() {
     renderPreview(source, result.canvas, result);
     return result;
   } catch (err) {
-    if (status) status.innerHTML = `<span style="color:var(--danger)">İşlem yapılamadı: ${err.message}</span>`;
+    if (status) status.innerHTML = `<span class="text-danger">İşlem yapılamadı: ${err.message}</span>`;
     window.showToast?.(`Netleştirme başarısız: ${err.message}`, 'error');
     return null;
   }

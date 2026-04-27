@@ -2703,3 +2703,22 @@
   cursor:pointer;
   font-size:0.78rem;
 }
+
+/* ── F1.C.7 batch 1: JS innerHTML inline style refactor ─────────────
+   ui-charts/inverter/satellite-enhance/hourly-profile/sun-path için class set.
+   Dinamik renkler için --c CSS var; JS setProperty ile uygulanır. */
+.rating-badge         { color: var(--c, var(--success)); font-weight: 700; }
+.dynamic-color        { color: var(--c); }
+.hourly-bullet-self   { color: #10B981; }
+.hourly-bullet-export { color: #3B82F6; }
+.hourly-bullet-import { color: #EF4444; }
+.sun-path-card        { font-size: 0.78rem; color: var(--text-muted); line-height: 1.7; margin-top: 10px; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 8px; border-left: 3px solid rgba(245,158,11,0.4); }
+.sun-path-city        { color: var(--text); }
+.sun-path-status      { color: var(--primary); }
+.sun-path-explainer   { opacity: 0.75; }
+.inverter-shade-good { color: #10B981; }
+.inverter-shade-warn { color: #F59E0B; }
+.inverter-shade-bad  { color: #EF4444; }
+.text-primary { color: var(--primary); }
+.text-accent  { color: var(--accent); }
+.text-danger  { color: var(--danger); }

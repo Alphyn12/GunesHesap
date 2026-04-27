@@ -83,7 +83,8 @@ export function renderPRGauge(prValue) {
   if (lblEl) {
     const rating = prValue >= 80 ? 'Mükemmel' : prValue >= 70 ? 'İyi' : prValue >= 60 ? 'Orta' : 'Düşük';
     const color  = prValue >= 80 ? '#10B981' : prValue >= 70 ? '#F59E0B' : prValue >= 60 ? '#F97316' : '#EF4444';
-    lblEl.innerHTML = `<span style="color:${color};font-weight:700">${rating}</span> — sistem kayıpları düşük görünüyor`;
+    lblEl.innerHTML = `<span class="rating-badge">${rating}</span> — sistem kayıpları düşük görünüyor`;
+    lblEl.querySelector('.rating-badge')?.style.setProperty('--c', color);
   }
 }
 

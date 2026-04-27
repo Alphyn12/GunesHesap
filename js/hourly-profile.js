@@ -133,9 +133,9 @@ function updateHourlyChart(state, r) {
   if (statsEl) {
     const isOffGrid = state.scenarioKey === 'off-grid';
     statsEl.innerHTML = `
-      <span class="hourly-stat"><span style="color:#10B981">●</span> Öz tüketim: ${totalSelf.toFixed(1)} kWh/gün (${selfRatio}%)</span>
-      <span class="hourly-stat"><span style="color:#3B82F6">●</span> ${isOffGrid ? 'Fazla PV' : 'Şebeke export'}: ${totalExport.toFixed(1)} kWh/gün</span>
-      <span class="hourly-stat"><span style="color:#EF4444">●</span> ${isOffGrid ? 'Karşılanamayan yük' : 'Şebeke import'}: ${totalImport.toFixed(1)} kWh/gün</span>
+      <span class="hourly-stat"><span class="hourly-bullet-self">●</span> Öz tüketim: ${totalSelf.toFixed(1)} kWh/gün (${selfRatio}%)</span>
+      <span class="hourly-stat"><span class="hourly-bullet-export">●</span> ${isOffGrid ? 'Fazla PV' : 'Şebeke export'}: ${totalExport.toFixed(1)} kWh/gün</span>
+      <span class="hourly-stat"><span class="hourly-bullet-import">●</span> ${isOffGrid ? 'Karşılanamayan yük' : 'Şebeke import'}: ${totalImport.toFixed(1)} kWh/gün</span>
     `;
   }
 }

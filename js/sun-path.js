@@ -252,10 +252,10 @@ export function renderSunPath() {
       ? `Şu An: Yükseklik ${curPos.elevation.toFixed(1)}° | Azimut ${curPos.azimuth.toFixed(1)}° (${nowStr})`
       : `Güneş şu an ufkun altında (${nowStr})`;
     infoEl.innerHTML = `
-      <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.7;margin-top:10px;padding:10px 14px;background:rgba(255,255,255,0.02);border-radius:8px;border-left:3px solid rgba(245,158,11,0.4)">
-        <strong style="color:var(--text)">${state.cityName || 'Seçilen konum'}</strong> —
-        <span style="color:var(--primary)">${sunStatus}</span><br>
-        <span style="opacity:0.75">İçe doğru halkalar 0°→75° yüksekliği gösterir. Dış çemberde azimut yönleri (0°=Kuzey, 90°=Doğu, 180°=Güney, 270°=Batı).
+      <div class="sun-path-card">
+        <strong class="sun-path-city">${state.cityName || 'Seçilen konum'}</strong> —
+        <span class="sun-path-status">${sunStatus}</span><br>
+        <span class="sun-path-explainer">İçe doğru halkalar 0°→75° yüksekliği gösterir. Dış çemberde azimut yönleri (0°=Kuzey, 90°=Doğu, 180°=Güney, 270°=Batı).
         Kırmızı noktalar yaz solstisinde (21 Haziran) iki saatlik aralıklarla güneş pozisyonlarını gösterir.</span>
       </div>`;
   }

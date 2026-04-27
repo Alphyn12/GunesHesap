@@ -25,8 +25,11 @@ export function buildInverterCards() {
     const priceStr = cur === 'USD'
       ? `$${price10.toLocaleString('en-US', { maximumFractionDigits: 0 })}/kWp`
       : `${Math.round(price10).toLocaleString('tr-TR')} ₺/kWp`;
+    const shadeClass = inv.shadeTolerance >= 0.85 ? 'inverter-shade-good'
+      : inv.shadeTolerance >= 0.70 ? 'inverter-shade-warn'
+      : 'inverter-shade-bad';
     return `
-    <div class="inverter-card${selected === key ? ' selected' : ''}" id="inv-card-${key}" data-testid="inverter-card-${key}" data-inverter-key="${key}" role="button" tabindex="0" aria-pressed="${selected === key ? 'true' : 'false'}" onclick="selectInverter('${key}')">
+    <div class="inverter-card${selected === key ? ' selected' : ''}" id="inv-card-${key}" data-testid="inverter-card-${key}" data-inverter-key="${key}" role="button" tabindex="0" aria-pressed="${selected === key ? 'true' : 'false'}" data-click-action="selectInverter" data-arg="${key}">
       <div class="inverter-check">✓</div>
       <div class="equipment-card-topline">
         <span class="equipment-card-badge">${inv.badge || 'İnverter tipi'}</span>
@@ -44,7 +47,7 @@ export function buildInverterCards() {
       <div class="inverter-card-stats">
         <div class="inverter-stat">
           <span class="inverter-stat-label">Gölge Toleransı</span>
-          <span style="color:${inv.shadeTolerance >= 0.85 ? '#10B981' : inv.shadeTolerance >= 0.70 ? '#F59E0B' : '#EF4444'}">${(inv.shadeTolerance * 100).toFixed(0)}%</span>
+          <span class="${shadeClass}">${(inv.shadeTolerance * 100).toFixed(0)}%</span>
         </div>
         <div class="inverter-stat">
           <span class="inverter-stat-label">Ömür</span>

@@ -3889,6 +3889,13 @@ registerActions({
   // Tariff refresh wrapper
   updateTariffAssumptionsAndRefresh,
 });
+
+// F1.C.7 batch 1: JS modüllerinde inline onclick → data-action.
+// inverter card'ı buildInverterCards() ile dinamik üretiliyor; onclick
+// inline'dan data-click-action'a alındı. selectInverter zaten import'lu.
+registerActions({
+  selectInverter,
+});
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
 window.isInTurkey = isInTurkey;
