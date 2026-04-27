@@ -665,7 +665,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
   <!-- LP NAV -->
   <nav class="lp-nav" aria-label="Landing navigation">
-    <a href="#" class="lp-nav-brand" onclick="event.preventDefault();goToLandingTop()">
+    <a href="#" class="lp-nav-brand" data-click-action="goToLandingTopFromBrandLink">
       <img src="new_version_logo.png" alt="Solar Rota"/>
       <div class="lp-nav-brand-col">
         <span class="lp-nav-brand-text">Solar Rota</span>
@@ -680,7 +680,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <a href="#lp-faq">SSS</a>
     </div>
     <div class="lp-nav-spacer"></div>
-    <button type="button" class="lp-nav-cta" onclick="startCalculator()">
+    <button type="button" class="lp-nav-cta" data-click-action="startCalculator">
       Hesaplamaya Başla
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
@@ -705,7 +705,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           ön fizibilite çıktınız hazır.
         </p>
         <div class="lp-hero-ctas">
-          <button type="button" class="lp-btn lp-btn-primary lp-btn-xl" onclick="startCalculator()">
+          <button type="button" class="lp-btn lp-btn-primary lp-btn-xl" data-click-action="startCalculator">
             Hesaplamaya Başla
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
@@ -879,31 +879,31 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <!-- TAB NAV -->
       <div class="lp-tour-tabs" role="tablist">
-        <button type="button" class="lp-tour-tab active" data-step="1" role="tab" onclick="lpTourStep(1)">
+        <button type="button" class="lp-tour-tab active" data-step="1" role="tab" data-click-action="lpTourStep" data-arg="1" data-arg-type="number">
           <span class="lp-tour-tab-num">01</span>
           <span class="lp-tour-tab-name">Senaryo</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="2" role="tab" onclick="lpTourStep(2)">
+        <button type="button" class="lp-tour-tab" data-step="2" role="tab" data-click-action="lpTourStep" data-arg="2" data-arg-type="number">
           <span class="lp-tour-tab-num">02</span>
           <span class="lp-tour-tab-name">Konum</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="3" role="tab" onclick="lpTourStep(3)">
+        <button type="button" class="lp-tour-tab" data-step="3" role="tab" data-click-action="lpTourStep" data-arg="3" data-arg-type="number">
           <span class="lp-tour-tab-num">03</span>
           <span class="lp-tour-tab-name">Çatı</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="4" role="tab" onclick="lpTourStep(4)">
+        <button type="button" class="lp-tour-tab" data-step="4" role="tab" data-click-action="lpTourStep" data-arg="4" data-arg-type="number">
           <span class="lp-tour-tab-num">04</span>
           <span class="lp-tour-tab-name">Ekipman</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="5" role="tab" onclick="lpTourStep(5)">
+        <button type="button" class="lp-tour-tab" data-step="5" role="tab" data-click-action="lpTourStep" data-arg="5" data-arg-type="number">
           <span class="lp-tour-tab-num">05</span>
           <span class="lp-tour-tab-name">Ayarlar</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="6" role="tab" onclick="lpTourStep(6)">
+        <button type="button" class="lp-tour-tab" data-step="6" role="tab" data-click-action="lpTourStep" data-arg="6" data-arg-type="number">
           <span class="lp-tour-tab-num">06</span>
           <span class="lp-tour-tab-name">Hesapla</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="7" role="tab" onclick="lpTourStep(7)">
+        <button type="button" class="lp-tour-tab" data-step="7" role="tab" data-click-action="lpTourStep" data-arg="7" data-arg-type="number">
           <span class="lp-tour-tab-num">07</span>
           <span class="lp-tour-tab-name">Sonuçlar</span>
         </button>
@@ -1388,7 +1388,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <p>Seçiminiz hesaplama mantığını, rapor şablonunu ve önerilen girdileri belirler.</p>
       </div>
       <div class="lp-scen-grid">
-        <button type="button" class="lp-scen-card" style="--c:#F59E0B" onclick="startCalculatorWithScenario('on-grid')">
+        <button type="button" class="lp-scen-card" style="--c:#F59E0B" data-click-action="startCalculatorWithScenario" data-arg="on-grid">
           <div class="lp-scen-num">01</div>
           <div class="lp-scen-tile">
             <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1414,7 +1414,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </span>
         </button>
 
-        <button type="button" class="lp-scen-card" style="--c:#8B5CF6" onclick="startCalculatorWithScenario('off-grid')">
+        <button type="button" class="lp-scen-card" style="--c:#8B5CF6" data-click-action="startCalculatorWithScenario" data-arg="off-grid">
           <div class="lp-scen-num">02</div>
           <div class="lp-scen-tile">
             <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1608,70 +1608,70 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </div>
       </div>
       <div class="lp-faq-wrap">
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Bu araç kimler için uygundur?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">Solar Rota; ev sahipleri, KOBİ'ler, GES kurulumcuları ve teknik ekipler için bir ön fizibilite aracıdır. Bir çatıya yaklaşık ne kadar panel sığacağını, beklenen yıllık üretimi ve fatura üzerindeki etkisini hızlıca görmek için tasarlanmıştır. Saha ölçümü ve nihai projenin yerine geçmez.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Ücretsiz mi? Kayıt gerekiyor mu?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">Evet, tamamen ücretsizdir ve kayıt gerektirmez. On-Grid ve Off-Grid senaryolarına, saatlik üretim simülasyonuna, finansal analize ve PDF çıktısına herhangi bir sınırlama olmadan erişebilirsiniz.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Verilerim nereye gidiyor? Güvende mi?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">Hesaplamalar doğrudan tarayıcınızda çalışır. Girdiğiniz tüketim, konum ve fatura bilgileri cihazınızda kalır; bizim tarafımıza gönderilmez. Kaydettiğiniz senaryolar yalnızca tarayıcının yerel depolama alanında (localStorage) tutulur.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>On-Grid ve Off-Grid senaryoları arasındaki fark nedir?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">On-Grid, şebekeye bağlı sistemler içindir: fatura tasarrufu, öz tüketim oranı, saatlik mahsuplaşma ve geri dönüş süresi hesaplanır. Off-Grid ise şebekeden bağımsız kurulumlar içindir: günlük yük profili, otonomi gün sayısı ve batarya kapasitesi üzerinden planlama yapılır.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Çatımı nasıl tanımlayabilirim?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">İki yöntem vardır: uydu görünümünde çatının köşelerini işaretleyerek çokgen çizebilir ya da doğrudan alan (m²), eğim açısı ve azimut (yön) değerlerini elle girebilirsiniz. Birden fazla çatı yüzeyi, farklı azimut yönleri ve gölgelenme faktörü de desteklenir.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>KDV, dağıtım bedeli ve saatlik mahsuplaşma hesaplamaya dahil mi?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">Evet. Ayarlar adımında tarife tipini (mesken, ticarethane, sanayi, tarımsal) seçebilir; KDV oranını, dağıtım bedelini, birim yatırım maliyetini ve yıllık tarife zam senaryosunu tanımlayabilirsiniz. On-Grid senaryosunda saatlik mahsuplaşma modeli de otomatik uygulanır. USD/TRY kuru üzerinden kur etkisi de simüle edilir.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Hangi panel ve inverter seçenekleri mevcut?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">Farklı güç sınıflarında yaygın panel ve inverter modellerinden oluşan bir seçim listesi vardır. Wp (güç), verim ve birim fiyat üzerinden karşılaştırma yapabilir; string veya mikro-inverter gibi farklı topolojiler için uygun modeli seçebilirsiniz.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Hesaplarımı kaydedip sonradan karşılaştırabilir miyim?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">Evet. Yaptığınız her hesabı kaydedebilir; ayarlar panelindeki "Kayıtlı Hesaplar" bölümünden görüntüleyebilir, silebilir veya birden çok senaryoyu yan yana karşılaştırabilirsiniz.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Mobil cihazda kullanılabilir mi? Çevrimdışı çalışır mı?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
           </div>
           <div class="lp-faq-a">Araç; masaüstü, tablet ve telefonda çalışır. PWA olarak tasarlandığı için ana ekrana ekleyebilir, ilk açılışın ardından büyük ölçüde çevrimdışı kullanabilirsiniz. Güneş ışınım verisi çekimi için kısa süreli internet gerekir; bağlantı yoksa yerel tahmin modeline otomatik geçilir.</div>
         </div>
-        <div class="lp-faq-item" onclick="toggleFaq(this)">
+        <div class="lp-faq-item" data-click-action="toggleFaq">
           <div class="lp-faq-q">
             <span>Sonuçlar ne kadar kesindir?</span>
             <div class="lp-faq-plus" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
@@ -1691,7 +1691,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <h2>Güneş enerjisi projenizin <span class="amber">ön analizini</span> hemen başlatın.</h2>
         <p>Kayıt gerekmez. KDV, dağıtım bedeli ve saatlik mahsuplaşma dahil tüm hesaplamalar anında kullanımınıza açık.</p>
         <div class="lp-cta-row">
-          <button type="button" class="lp-btn lp-btn-primary lp-btn-xl" onclick="startCalculator()">
+          <button type="button" class="lp-btn lp-btn-primary lp-btn-xl" data-click-action="startCalculator">
             Hesaplamaya Başla
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
@@ -1718,7 +1718,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
         </div>
         <div class="lp-footer-links">
-          <a onclick="startCalculator()">Hesaplama Aracı</a>
+          <a data-click-action="startCalculator">Hesaplama Aracı</a>
           <a href="#lp-features">Özellikler</a>
           <a href="#lp-scenarios">Senaryolar</a>
           <a href="#lp-how">Kullanım</a>

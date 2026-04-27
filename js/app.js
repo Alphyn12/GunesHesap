@@ -3682,6 +3682,23 @@ registerActions({
   fillOnGridMonthlyFromAnnualFromUI,
 });
 
+// F1.B.2 landing/FAQ/tour grubu: 24 inline.
+// toggleFaq imzası (el) bekler — dispatcher handler(arg, el, e) geçiriyor,
+// register'da el'i ikinci argüman olarak alıyoruz. Diğerleri landing-
+// bootstrap.js'da window.X olarak expose; lazy-bind ile çağırıyoruz çünkü
+// app.js önce yüklenir, landing-bootstrap'ın window'a yazması sonra olabilir.
+function goToLandingTopFromBrandLink(_arg, _el, e) {
+  if (e?.preventDefault) e.preventDefault();
+  window.goToLandingTop?.();
+}
+registerActions({
+  goToLandingTopFromBrandLink,
+  startCalculator: () => window.startCalculator?.(),
+  startCalculatorWithScenario: (arg) => window.startCalculatorWithScenario?.(arg),
+  lpTourStep: (arg) => window.lpTourStep?.(arg),
+  toggleFaq: (_arg, el) => window.toggleFaq?.(el),
+});
+
 // F1.B.2 equipment grubu: 24 inline (roof/map/battery/NM/OM + off-grid device).
 // Slider/select this.value handler'ları içlerinde parseInt/coerce yapıyor —
 // data-arg-prop="value" string geçirimi davranışı bozmaz.
