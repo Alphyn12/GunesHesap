@@ -1865,7 +1865,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="card" id="map-card" style="width:100%;height:100%">
       <div id="map" style="width:100%;height:100%"></div>
       <div id="map-draw-hint">Çatı köşelerine tıklayın · Çift tıklayarak tamamlayın · ESC = iptal</div>
-      <button class="map-layer-btn" id="map-satellite-btn" onclick="toggleMapLayer()" title="Harita görünümünü değiştir">
+      <button class="map-layer-btn" id="map-satellite-btn" data-click-action="toggleMapLayer" title="Harita görünümünü değiştir">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
         <span id="map-layer-label" data-i18n="step2.satelliteMapLabel">Uydu görünüm</span>
       </button>
@@ -2032,7 +2032,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="step3-map-col">
       <div id="step3-map-slot" style="width:100%;height:100%"></div>
       <div class="roof-tool-legend" id="roof-tool-legend">
-        <button class="roof-tool-legend-close" type="button" onclick="closeRoofToolLegend()" aria-label="Araç rehberini kapat" title="Kapat">
+        <button class="roof-tool-legend-close" type="button" data-click-action="closeRoofToolLegend" aria-label="Araç rehberini kapat" title="Kapat">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <div class="roof-tool-legend-title" data-i18n="step3.drawGuideTitle">Çatı alanını ölçmek için araç rehberi</div>
@@ -2072,7 +2072,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
         </div>
       </div>
-      <button class="roof-tool-legend-toggle" id="roof-tool-legend-toggle" type="button" onclick="openRoofToolLegend()" style="display:none">
+      <button class="roof-tool-legend-toggle" id="roof-tool-legend-toggle" type="button" data-click-action="openRoofToolLegend" style="display:none">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
         Araç rehberi
       </button>
@@ -2095,7 +2095,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <!-- Etap 4: Mobile fullscreen draw mode toggle -->
       <button class="step3-fullscreen-toggle" id="step3-fullscreen-toggle" type="button"
-              onclick="toggleStep3Fullscreen()" aria-label="Tam ekran çizim modu" title="Tam ekran çizim">
+              data-click-action="toggleStep3Fullscreen" aria-label="Tam ekran çizim modu" title="Tam ekran çizim">
         <svg class="step3-fs-icon-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg>
         <svg class="step3-fs-icon-close" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6"/></svg>
       </button>
@@ -2143,7 +2143,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div class="roof-control-shell">
               <div class="range-wrap">
                 <span class="range-value" id="tilt-val">33°</span>
-                <input type="range" id="tilt-slider" min="0" max="90" value="33" oninput="updateTilt(this.value)"/>
+                <input type="range" id="tilt-slider" min="0" max="90" value="33" data-input-action="updateTilt" data-arg-prop="value"/>
                 <div class="range-labels"><span>0°</span><span>45°</span><span>90°</span></div>
               </div>
               <div id="tilt-diagram-wrap">
@@ -2231,7 +2231,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </label>
           <div class="range-wrap">
             <span class="range-value" id="shading-val">10%</span>
-            <input type="range" id="shading-slider" min="0" max="50" value="10" oninput="updateShading(this.value)"/>
+            <input type="range" id="shading-slider" min="0" max="50" value="10" data-input-action="updateShading" data-arg-prop="value"/>
             <div class="range-labels"><span>0%</span><span>25%</span><span>50%</span></div>
           </div>
           <div style="font-size:0.78rem;color:var(--text-muted)" id="shading-desc">Az gölge</div>
@@ -2243,7 +2243,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </label>
           <div class="range-wrap">
             <span class="range-value" id="soiling-val">3%</span>
-            <input type="range" id="soiling-slider" min="0" max="10" value="3" oninput="updateSoiling(this.value)"/>
+            <input type="range" id="soiling-slider" min="0" max="10" value="3" data-input-action="updateSoiling" data-arg-prop="value"/>
             <div class="range-labels"><span>0%</span><span>5%</span><span>10%</span></div>
           </div>
           <div style="font-size:0.78rem;color:var(--text-muted)" id="soiling-desc">Orta düzey kirlenme (Türkiye ortalaması)</div>
@@ -2254,7 +2254,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             Zemin Yansıtıcılığı (Albedo)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Bifacial paneller zemin yansımasından ek enerji üretir. Zemin tipine göre değişir: beton %25, kum %20, çimen %20, çakıl %18, toprak %15.</span></span>
           </label>
-          <select id="ground-albedo-select" onchange="updateGroundAlbedo(this.value)"
+          <select id="ground-albedo-select" data-change-action="updateGroundAlbedo" data-arg-prop="value"
             style="margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:220px;font-size:0.9rem">
             <option value="0.25">Beton / Taş döşeme (%25)</option>
             <option value="0.20" selected>Kum / Çimen (%20)</option>
@@ -2299,7 +2299,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="multi-roof-header-actions">
             <span class="multi-roof-count-badge" id="multi-roof-count-badge">Kapalı</span>
             <label class="toggle-switch">
-              <input type="checkbox" id="multi-roof-toggle" onchange="toggleMultiRoof(this.checked)">
+              <input type="checkbox" id="multi-roof-toggle" data-change-action="toggleMultiRoof" data-arg-prop="checked">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -2317,7 +2317,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div id="roof-sections-list"></div>
           <div class="multi-roof-actions">
             <div class="multi-roof-actions-copy" id="multi-roof-actions-copy">En fazla 2 ek yüzey ekleyebilirsiniz.</div>
-            <button class="btn btn-outline" onclick="addRoofSection()" id="add-roof-btn" style="width:100%;margin-top:4px">
+            <button class="btn btn-outline" data-click-action="addRoofSection" id="add-roof-btn" style="width:100%;margin-top:4px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Yeni Yüzey Ekle
             </button>
@@ -2425,7 +2425,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <p class="equipment-battery-subcopy">Batarya; gündüz üretilen fazla elektriği akşam kullanmak, kısa kesintilerde kritik yükleri beslemek ve öz tüketim oranını artırmak için kullanılır. Sadece “fazla üretimi satmak” isteyen projede şart değildir.</p>
           </div>
           <label class="toggle-switch" onclick="event.stopPropagation()">
-            <input type="checkbox" id="battery-toggle" onchange="onBatteryToggle(this.checked)">
+            <input type="checkbox" id="battery-toggle" data-change-action="onBatteryToggle" data-arg-prop="checked">
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -2460,11 +2460,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div class="battery-custom-grid">
               <div class="form-group" style="margin:0">
                 <label>Kapasite (kWh)</label>
-                <input type="number" id="bat-capacity" min="1" max="50" value="5" step="0.1" oninput="updateBatteryCustom()"/>
+                <input type="number" id="bat-capacity" min="1" max="50" value="5" step="0.1" data-input-action="updateBatteryCustom"/>
               </div>
               <div class="form-group" style="margin:0">
                 <label>Deşarj Derinliği DoD (%)</label>
-                <input type="number" id="bat-dod" min="50" max="100" value="80" step="5" oninput="updateBatteryCustom()"/>
+                <input type="number" id="bat-dod" min="50" max="100" value="80" step="5" data-input-action="updateBatteryCustom"/>
               </div>
               <div class="form-group" style="margin:0">
                 <label>Round-trip Verimlilik (%)
@@ -3086,12 +3086,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="offgrid-block">
             <div class="offgrid-block-kicker">Önce sistemi nasıl boyutlandıracağınızı seçin</div>
             <div class="offgrid-sizing-choice-grid" role="group" aria-label="Off-grid sistem hedefi">
-              <button type="button" data-offgrid-design-target-card="bill-offset" onclick="setOffgridDesignTarget('bill-offset')">
+              <button type="button" data-offgrid-design-target-card="bill-offset" data-click-action="setOffgridDesignTarget" data-arg="bill-offset">
                 <strong>Elektrik ihtiyacına göre sistem</strong>
                 <span>Seçilen konut profili veya cihaz listesindeki yıllık yük kadar kurulu güç hedeflenir.</span>
                 <small>Batarya ve jeneratörle birlikte daha dengeli, maliyet odaklı ön fizibilite için.</small>
               </button>
-              <button type="button" data-offgrid-design-target-card="fill-roof" onclick="setOffgridDesignTarget('fill-roof')" class="active">
+              <button type="button" data-offgrid-design-target-card="fill-roof" data-click-action="setOffgridDesignTarget" data-arg="fill-roof" class="active">
                 <strong>Maksimum çatı kapasitesi</strong>
                 <span>Çatı alanı izin verdiği kadar panel yerleştirilir; fazla üretim ve kötü hava dayanımı ayrıca incelenir.</span>
                 <small>Şebekesiz bölgede ileride yük artışı, pompa/klima veya yüksek otonomi düşünülüyorsa.</small>
@@ -3292,14 +3292,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;margin-bottom:8px;padding:8px 10px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.18);border-radius:8px">
               <div style="flex:1;min-width:120px">
                 <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:3px" data-i18n="offgridL2.catalogCategory">Kategori</div>
-                <select id="offgrid-catalog-category" onchange="updateOffgridCatalogOptions()"
+                <select id="offgrid-catalog-category" data-change-action="updateOffgridCatalogOptions"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.78rem;width:100%">
                   <!-- Options populated by JS (i18n-aware) via updateOffgridCatalogOptions() -->
                 </select>
               </div>
               <div style="flex:2;min-width:150px">
                 <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:3px" data-i18n="offgridL2.catalogDevice">Cihaz Seçin</div>
-                <select id="offgrid-catalog-select" onchange="updateOffgridDevicePreview()"
+                <select id="offgrid-catalog-select" data-change-action="updateOffgridDevicePreview"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.78rem;width:100%">
                   <!-- Options populated by JS -->
                 </select>
@@ -3310,12 +3310,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.78rem;width:100%;text-align:center"/>
               </div>
               <div>
-                <button onclick="addOffgridDeviceFromCatalog()"
+                <button data-click-action="addOffgridDeviceFromCatalog"
                   style="font-size:0.78rem;background:rgba(139,92,246,0.18);color:#8B5CF6;border:1px solid rgba(139,92,246,0.35);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap"
                   data-i18n="offgridL2.addFromCatalog">Katalogdan Ekle</button>
               </div>
               <div>
-                <button onclick="addOffgridDevice()"
+                <button data-click-action="addOffgridDevice"
                   style="font-size:0.78rem;background:rgba(100,116,139,0.12);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap"
                   data-i18n="offgridL2.addManual">Manuel Ekle</button>
               </div>
@@ -3359,7 +3359,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </div>
               <div class="empty-state__title" data-i18n="offgridL2.deviceListEmpty">Cihaz eklenmedi — basit mod kullanılıyor.</div>
               <div class="empty-state__hint" data-i18n="offgridL2.deviceListEmptyHint">Detaylı sonuç için cihaz kütüphanesinden ekleyin veya manuel ekleyebilirsiniz.</div>
-              <button class="empty-state__cta" type="button" onclick="addOffgridDevice()" data-i18n="offgridL2.deviceListEmptyCta">İlk Cihazı Ekle</button>
+              <button class="empty-state__cta" type="button" data-click-action="addOffgridDevice" data-i18n="offgridL2.deviceListEmptyCta">İlk Cihazı Ekle</button>
             </div>
           </div>
 
@@ -3715,7 +3715,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="step5-module-grid">
     <!-- Net metering block -->
     <div class="advanced-feature-block step5-module-card" id="nm-block" data-module-rank="primary">
-      <div class="feature-toggle-header" onclick="toggleNMBlock()">
+      <div class="feature-toggle-header" data-click-action="toggleNMBlock">
         <div class="feature-toggle-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
           <div class="feature-toggle-copy">
@@ -3725,7 +3725,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="feature-badge" data-i18n="common.badgeOptional">Opsiyonel</span>
         </div>
         <label class="toggle-switch" onclick="event.stopPropagation()">
-          <input type="checkbox" id="nm-toggle" onchange="onNMToggle(this.checked)">
+          <input type="checkbox" id="nm-toggle" data-change-action="onNMToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -3769,7 +3769,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
     <!-- O&M block -->
     <div class="advanced-feature-block step5-module-card" id="om-block" data-module-rank="primary">
-      <div class="feature-toggle-header" onclick="toggleOMBlock()">
+      <div class="feature-toggle-header" data-click-action="toggleOMBlock">
         <div class="feature-toggle-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
           <div class="feature-toggle-copy">
@@ -3779,7 +3779,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="feature-badge" data-i18n="common.badgeOptional">Opsiyonel</span>
         </div>
         <label class="toggle-switch" onclick="event.stopPropagation()">
-          <input type="checkbox" id="om-toggle" checked onchange="onOMToggle(this.checked)">
+          <input type="checkbox" id="om-toggle" checked data-change-action="onOMToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
       </div>

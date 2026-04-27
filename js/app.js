@@ -3681,6 +3681,33 @@ registerActions({
   updateOnGridAssumptionsAndTariff,
   fillOnGridMonthlyFromAnnualFromUI,
 });
+
+// F1.B.2 equipment grubu: 24 inline (roof/map/battery/NM/OM + off-grid device).
+// Slider/select this.value handler'ları içlerinde parseInt/coerce yapıyor —
+// data-arg-prop="value" string geçirimi davranışı bozmaz.
+registerActions({
+  toggleMapLayer,
+  closeRoofToolLegend,
+  openRoofToolLegend,
+  toggleStep3Fullscreen,
+  updateTilt,
+  updateShading,
+  updateSoiling,
+  updateGroundAlbedo,
+  toggleMultiRoof,
+  addRoofSection,
+  onBatteryToggle,
+  updateBatteryCustom,
+  toggleNMBlock,
+  onNMToggle,
+  toggleOMBlock,
+  onOMToggle,
+  setOffgridDesignTarget,
+  updateOffgridCatalogOptions,
+  updateOffgridDevicePreview,
+  addOffgridDeviceFromCatalog,
+  addOffgridDevice,
+});
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
 window.isInTurkey = isInTurkey;
