@@ -95,6 +95,8 @@ function dispatchAction(eventType, e) {
       ? Number(rawArg)
     : argType === 'bool' && rawArg !== undefined && rawArg !== null
       ? (rawArg === true || rawArg === 'true')
+    : argType === 'json' && typeof rawArg === 'string'
+      ? JSON.parse(rawArg)
     : rawArg;
   handler(arg, el, e);
 }
@@ -3658,6 +3660,26 @@ registerActions({
 registerActions({
   updateTariffAssumptions,
   updateTariffType,
+});
+
+// F1.B.2 on-grid panel grubu: 14 inline.
+// 3 object-arg variants HTML'de data-arg-type="json" ile geçiyor —
+// dispatcher otomatik JSON.parse eder, fonksiyon orijinal {fillMonthly:true}
+// imzasını korur.
+function updateOnGridAssumptionsAndTariff() {
+  updateOnGridAssumptions();
+  updateTariffAssumptions();
+}
+function fillOnGridMonthlyFromAnnualFromUI() {
+  const v = document.getElementById('on-grid-annual-consumption')?.value;
+  if (v !== undefined) fillOnGridMonthlyFromAnnual(v);
+}
+registerActions({
+  updateOnGridAssumptions,
+  setOnGridInputMode,
+  setOnGridDesignTarget,
+  updateOnGridAssumptionsAndTariff,
+  fillOnGridMonthlyFromAnnualFromUI,
 });
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;

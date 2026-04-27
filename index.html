@@ -2563,8 +2563,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <p>Bu adım artık iki seviyeli çalışır: önce hızlı ön fizibilite için birkaç temel bilgi girin, isterseniz ileri modda aylık tüketim, tarife ve mahsuplaşma detaylarını açın.</p>
       </div>
       <div class="on-grid-mode-toggle">
-        <button type="button" data-on-grid-mode-btn="basic" onclick="setOnGridInputMode('basic')" class="active" data-i18n="onGridFlow.basic">Basit</button>
-        <button type="button" data-on-grid-mode-btn="advanced" onclick="setOnGridInputMode('advanced')" data-i18n="onGridFlow.advanced">İleri</button>
+        <button type="button" data-on-grid-mode-btn="basic" data-click-action="setOnGridInputMode" data-arg="basic" class="active" data-i18n="onGridFlow.basic">Basit</button>
+        <button type="button" data-on-grid-mode-btn="advanced" data-click-action="setOnGridInputMode" data-arg="advanced" data-i18n="onGridFlow.advanced">İleri</button>
       </div>
     </div>
 
@@ -2576,12 +2576,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
         <input type="hidden" id="on-grid-design-target" value="fill-roof">
         <div class="on-grid-choice-grid" role="group" aria-label="On-grid sistem hedefi">
-          <button type="button" class="on-grid-choice-card" data-design-target-card="bill-offset" onclick="setOnGridDesignTarget('bill-offset')">
+          <button type="button" class="on-grid-choice-card" data-design-target-card="bill-offset" data-click-action="setOnGridDesignTarget" data-arg="bill-offset">
             <strong>Elektrik faturasına göre sistem</strong>
             <span>Yıllık tüketiminizi karşılayacak ölçekte, daha dengeli bir kurulu güç seçilir.</span>
             <small>Ev, villa, küçük işletme ve ilk teklif görüşmeleri için önerilir.</small>
           </button>
-          <button type="button" class="on-grid-choice-card active" data-design-target-card="fill-roof" onclick="setOnGridDesignTarget('fill-roof')">
+          <button type="button" class="on-grid-choice-card active" data-design-target-card="fill-roof" data-click-action="setOnGridDesignTarget" data-arg="fill-roof">
             <strong>Maksimum teknik performans</strong>
             <span>Çatı alanı izin verdiği sürece daha yüksek kurulu güç hedeflenir.</span>
             <small>Çatının potansiyelini görmek, ileride yük artışı planlamak veya fazla üretimi incelemek için uygundur.</small>
@@ -2590,7 +2590,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
         <div class="on-grid-field-grid on-grid-basic-form">
           <label class="on-grid-field-card"><span class="on-grid-field-label" data-i18n="onGridFlow.subscriberType">Abone tipi</span>
-            <select id="on-grid-subscriber-type" onchange="updateOnGridAssumptions(); updateTariffAssumptions()">
+            <select id="on-grid-subscriber-type" data-change-action="updateOnGridAssumptionsAndTariff">
               <option value="residential" data-i18n="onGridFlow.subscriberResidential">Mesken</option>
               <option value="commercial" data-i18n="onGridFlow.subscriberCommercial">Ticari</option>
               <option value="industrial" data-i18n="onGridFlow.subscriberIndustrial">Sanayi</option>
@@ -2600,13 +2600,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </select>
           </label>
           <label class="on-grid-field-card"><span class="on-grid-field-label" data-i18n="onGridFlow.annualConsumption">Yıllık tüketim (kWh)</span>
-            <input type="number" id="on-grid-annual-consumption" min="0" step="1" value="3650" oninput="updateOnGridAssumptions({ fillMonthly: true })">
+            <input type="number" id="on-grid-annual-consumption" min="0" step="1" value="3650" data-input-action="updateOnGridAssumptions" data-arg-type="json" data-arg='{"fillMonthly":true}'>
           </label>
           <label class="on-grid-field-card"><span class="on-grid-field-label" data-i18n="onGridFlow.monthlyConsumptionInput">Faturadaki aylık tüketim (kWh, isteğe bağlı)</span>
-            <input type="number" id="on-grid-monthly-consumption-input" min="0" step="1" value="" oninput="updateOnGridAssumptions({ source: 'monthly-kwh', fillMonthly: true })">
+            <input type="number" id="on-grid-monthly-consumption-input" min="0" step="1" value="" data-input-action="updateOnGridAssumptions" data-arg-type="json" data-arg='{"source":"monthly-kwh","fillMonthly":true}'>
           </label>
           <label class="on-grid-field-card"><span class="on-grid-field-label">Yaklaşık aylık elektrik faturası (₺, isteğe bağlı)</span>
-            <input type="number" id="on-grid-monthly-bill-estimate" min="0" step="1" value="" oninput="updateOnGridAssumptions({ source: 'monthly-bill', fillMonthly: true })">
+            <input type="number" id="on-grid-monthly-bill-estimate" min="0" step="1" value="" data-input-action="updateOnGridAssumptions" data-arg-type="json" data-arg='{"source":"monthly-bill","fillMonthly":true}'>
           </label>
         </div>
 
@@ -2643,14 +2643,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <h3>İleri tüketim ve tarife ayarları</h3>
           <div class="on-grid-field-grid on-grid-field-grid--advanced">
             <label class="on-grid-field-card"><span class="on-grid-field-label" data-i18n="onGridFlow.connectionType">Bağlantı tipi</span>
-              <select id="on-grid-connection-type" onchange="updateOnGridAssumptions()">
+              <select id="on-grid-connection-type" data-change-action="updateOnGridAssumptions">
                 <option value="monofaze" data-i18n="onGridFlow.connectionMono">Monofaze</option>
                 <option value="trifaze" selected data-i18n="onGridFlow.connectionTri">Trifaze</option>
                 <option value="unknown" data-i18n="onGridFlow.connectionUnknown">Bilinmiyor</option>
               </select>
             </label>
             <label class="on-grid-field-card"><span class="on-grid-field-label" data-i18n="onGridFlow.usageProfile">Kullanım profili</span>
-              <select id="on-grid-usage-profile" onchange="updateOnGridAssumptions()">
+              <select id="on-grid-usage-profile" data-change-action="updateOnGridAssumptions">
                 <option value="daytime-heavy" data-i18n="onGridFlow.profileDaytime">Gündüz ağırlıklı</option>
                 <option value="balanced" selected data-i18n="onGridFlow.profileBalanced">Dengeli</option>
                 <option value="evening-heavy" data-i18n="onGridFlow.profileEvening">Akşam ağırlıklı</option>
@@ -2676,7 +2676,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <h3 data-i18n="onGridFlow.consumptionData">Tüketim verisi</h3>
           <div class="on-grid-monthly-head">
             <span data-i18n="onGridFlow.monthlyDistribution">Aylık kWh dağılımı</span>
-            <button type="button" onclick="fillOnGridMonthlyFromAnnual(document.getElementById('on-grid-annual-consumption').value)" data-i18n="onGridFlow.autoDistribute">Otomatik dağıt</button>
+            <button type="button" data-click-action="fillOnGridMonthlyFromAnnualFromUI" data-i18n="onGridFlow.autoDistribute">Otomatik dağıt</button>
           </div>
           <div class="on-grid-monthly-grid" id="on-grid-monthly-grid"></div>
           <div class="on-grid-explain" data-i18n="onGridFlow.consumptionNote">kWh verisi fatura tutarından daha güvenilirdir. Aylık tüketim girilirse SKTT/PST ve self-consumption hesabı yıllık tek değerden daha savunulabilir olur.</div>
@@ -2699,7 +2699,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <h3 data-i18n="onGridFlow.roofPlacement">Çatı / yerleşim varsayımları</h3>
           <div class="on-grid-field-grid on-grid-field-grid--advanced">
             <label class="on-grid-field-card"><span class="on-grid-field-label" data-i18n="onGridFlow.roofType">Çatı tipi</span>
-              <select id="on-grid-roof-type" onchange="updateOnGridAssumptions()">
+              <select id="on-grid-roof-type" data-change-action="updateOnGridAssumptions">
                 <option value="flat-concrete" data-i18n="onGridFlow.roofFlat">Beton teras / düz çatı</option>
                 <option value="metal-trapez" data-i18n="onGridFlow.roofMetal">Metal trapez</option>
                 <option value="tile" data-i18n="onGridFlow.roofTile">Kiremit / eğimli çatı</option>
@@ -2707,11 +2707,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </select>
             </label>
             <label class="on-grid-field-card"><span class="on-grid-field-label" data-i18n="onGridFlow.usableRoofRatio">Net kullanılabilir alan (%)</span>
-              <input type="number" id="on-grid-usable-roof-ratio" min="10" max="95" step="1" value="75" oninput="updateOnGridAssumptions()">
+              <input type="number" id="on-grid-usable-roof-ratio" min="10" max="95" step="1" value="75" data-input-action="updateOnGridAssumptions">
               <small class="on-grid-field-hint">Parapet, servis boşluğu, yangın koridoru ve bakım erişimi sonrası kullanılabilir kalan çatı yüzdesidir.</small>
             </label>
             <label class="on-grid-field-card on-grid-field-card--wide"><span class="on-grid-field-label" data-i18n="onGridFlow.shadingQuality">Gölge veri kalitesi</span>
-              <select id="on-grid-shading-quality" onchange="updateOnGridAssumptions()">
+              <select id="on-grid-shading-quality" data-change-action="updateOnGridAssumptions">
                 <option value="user-estimate" selected data-i18n="onGridFlow.shadingUser">Kullanıcı beyanı</option>
                 <option value="map-assisted" data-i18n="onGridFlow.shadingMap">Harita/OSM destekli ön değerlendirme</option>
                 <option value="site-verified" data-i18n="onGridFlow.shadingSite">Saha doğrulamalı</option>
