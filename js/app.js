@@ -3651,6 +3651,14 @@ registerActions({
   toggleHeatmapAnimation,
   setHeatmapMonth,
 });
+
+// F1.B.2 tariff core grubu: 37 inline change/input.
+// updateTariffAssumptions çoğu tarife alanında hem change hem input;
+// updateTariffType select.value bekler (data-arg-prop="value").
+registerActions({
+  updateTariffAssumptions,
+  updateTariffType,
+});
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
 window.isInTurkey = isInTurkey;

@@ -2658,14 +2658,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </select>
             </label>
             <label class="on-grid-field-card on-grid-field-card--wide"><span class="on-grid-field-label" data-i18n="onGridFlow.tariffInputMode">Tarife giriş modu</span>
-              <select id="tariff-input-mode" onchange="updateTariffAssumptions()">
+              <select id="tariff-input-mode" data-change-action="updateTariffAssumptions">
                 <option value="net-plus-fee" selected data-i18n="onGridFlow.tariffInputModeNet">Enerji bedeli + dağıtım bedeli ayrı</option>
                 <option value="gross" data-i18n="onGridFlow.tariffInputModeGross">Brüt tarife (dağıtım dahil)</option>
               </select>
               <small class="on-grid-field-hint">Uzun faturada enerji ve dağıtım kalemleri ayrı görünüyorsa ilk seçeneği kullanın. Tek toplam fiyat biliyorsanız brüt tarife yeterlidir.</small>
             </label>
             <label class="on-grid-field-card" id="distribution-fee-label"><span class="on-grid-field-label" data-i18n="onGridFlow.distributionFee">Dağıtım bedeli (importa ek, TL/kWh)</span>
-              <input type="number" id="distribution-fee-input" min="0" step="0.01" value="0" oninput="updateTariffAssumptions()">
+              <input type="number" id="distribution-fee-input" min="0" step="0.01" value="0" data-input-action="updateTariffAssumptions">
               <small class="on-grid-field-hint">Brüt tarife seçerseniz bu alan otomatik olarak etkisiz kalır.</small>
             </label>
           </div>
@@ -2835,7 +2835,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div style="display:none">
         <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Abone Tipi</div>
-        <select id="tariff-type" onchange="updateTariffType(this.value)"
+        <select id="tariff-type" data-change-action="updateTariffType" data-arg-prop="value"
           style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;min-width:120px">
           <option value="residential" selected>Konut</option>
           <option value="commercial">Ticari</option>
@@ -2848,7 +2848,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <div class="step5-tariff-quick-grid">
         <div>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Rejimi</div>
-          <select id="tariff-regime" onchange="updateTariffAssumptions()"
+          <select id="tariff-regime" data-change-action="updateTariffAssumptions"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
             <option value="auto" selected>Otomatik PST/SKTT</option>
             <option value="pst">PST / Ulusal Tarife</option>
@@ -2861,17 +2861,17 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">PST / Baz Fiyat (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Perakende Satış Tarifesi — elektrik dağıtım şirketinden kWh başına ödediğiniz fiyat.</span></span></div>
           <input type="number" id="tariff-input" value="7.16" min="0.5" step="0.01"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-            oninput="updateTariffAssumptions()"/>
+            data-input-action="updateTariffAssumptions"/>
         </div>
         <div>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">İhracat / Mahsup Fiyatı (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Üretip şebekeye sattığınız ya da mahsup ettiğiniz fazla enerji için alınan birim fiyat.</span></span></div>
           <input type="number" id="export-tariff-input" value="0" min="0" step="0.01"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-            oninput="updateTariffAssumptions()"/>
+            data-input-action="updateTariffAssumptions"/>
         </div>
         <div>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Mahsuplaşma Modu</div>
-          <select id="export-settlement-mode" onchange="updateTariffAssumptions()"
+          <select id="export-settlement-mode" data-change-action="updateTariffAssumptions"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
             <option value="auto" selected>Otomatik</option>
             <option value="hourly">Saatlik</option>
@@ -2882,11 +2882,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="settlementDate.label">Sistem Devreye Alma Tarihi</div>
           <input type="date" id="settlement-date"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-            oninput="updateTariffAssumptions()"/>
+            data-input-action="updateTariffAssumptions"/>
         </div>
         <div>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="onGridFlow.tariffSourceType">Tarife kaynak türü</div>
-          <select id="tariff-source-type" onchange="updateTariffAssumptions()"
+          <select id="tariff-source-type" data-change-action="updateTariffAssumptions"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
             <option value="manual" selected data-i18n="onGridFlow.tariffSourceManual">Manuel giriş</option>
             <option value="estimate" data-i18n="onGridFlow.tariffSourceEstimate">Tahmini / varsayılan</option>
@@ -2910,7 +2910,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="offGrid.costPerKwhLabel">Dizel/Alternatif Kaynak Maliyeti (₺/kWh)</div>
         <input type="number" id="off-grid-cost-per-kwh" value="" min="0" step="0.01"
           style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:220px;font-size:0.9rem"
-          oninput="updateTariffAssumptions()"/>
+          data-input-action="updateTariffAssumptions"/>
         <div id="off-grid-cost-warn" style="display:none;margin-top:4px;font-size:0.75rem;color:#F59E0B;max-width:260px" data-i18n="offGrid.costMissingWarn">Maliyet girilmedi — 2.5× şebeke tarifesi varsayılıyor.</div>
       </div>
 
@@ -2928,37 +2928,37 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">SKTT Fiyatı (TL/kWh)</div>
               <input type="number" id="sktt-tariff-input" value="7.16" min="0" step="0.01"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Sözleşmeli Fiyat (TL/kWh)</div>
               <input type="number" id="contracted-tariff-input" value="7.16" min="0" step="0.01"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Sözleşme Gücü (kW)</div>
               <input type="number" id="contracted-power-input" value="10" min="0" step="0.1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Önceki Yıl Tüketim (kWh)</div>
               <input type="number" id="previous-year-consumption-input" value="0" min="0" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Cari Yıl Tüketim (kWh)</div>
               <input type="number" id="current-year-consumption-input" value="0" min="0" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Satılabilir İhracat Sınırı (kWh)</div>
               <input type="number" id="sellable-export-cap-input" value="0" min="0" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
           </div>
         </div>
@@ -2978,35 +2978,35 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Yıllık Fiyat Artışı (%) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Elektrik tarifesinin yılda kaç yüzde artacağı tahmini.</span></span></div>
               <input type="number" id="price-increase-input" value="12" min="-50" max="200" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Gider Eskalasyonu (%)</div>
               <input type="number" id="expense-escalation-input" value="10" min="-50" max="200" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">İskonto Oranı (%) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Paranın zaman değerini yansıtan oran; NPV hesabında kullanılır.</span></span></div>
               <input type="number" id="discount-rate-input" value="18" min="0" max="100" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kaynak Tarihi</div>
               <input type="date" id="tariff-source-date" value="2026-04-12"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kaynak Kontrol Tarihi</div>
               <input type="date" id="tariff-source-checked-at"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kanıt Durumu</div>
-              <select id="tariff-evidence-status" onchange="updateTariffAssumptions()"
+              <select id="tariff-evidence-status" data-change-action="updateTariffAssumptions"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                 <option value="verified" selected>Doğrulandı</option>
                 <option value="pending">Bekliyor</option>
@@ -3018,13 +3018,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kanıt Ref</div>
               <input type="text" id="tariff-evidence-ref" value="EPDK/SKTT-2026-local"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div style="grid-column:1/-1">
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kaynak URL</div>
               <input type="url" id="tariff-evidence-url" value="https://www.epdk.gov.tr/Detay/Icerik/16-38/son-kaynak-tedarik-tarifesi-sktt-ile-ilgili-bil"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kaynak Dosyası</div>
@@ -3050,17 +3050,17 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <div id="exchange-rate-status" style="font-size:0.76rem;color:var(--text-muted);margin-top:8px">USD/TRY kuru yükleniyor...</div>
           <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);margin-top:8px;cursor:pointer">
-            <input type="checkbox" id="tariff-tax-included" checked onchange="updateTariffAssumptions()"> Birim fiyat vergi/dağıtım dahil kabul edilsin
+            <input type="checkbox" id="tariff-tax-included" checked data-change-action="updateTariffAssumptions"> Birim fiyat vergi/dağıtım dahil kabul edilsin
           </label>
           <div class="step5-tariff-quick-grid" style="margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
-              <input type="checkbox" id="quote-bill-verified" onchange="updateTariffAssumptions()"> <span data-i18n="governance.billVerified">Fatura/tüketim verisi doğrulandı</span>
+              <input type="checkbox" id="quote-bill-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.billVerified">Fatura/tüketim verisi doğrulandı</span>
             </label>
-            <input type="text" id="bill-evidence-ref" placeholder="Fatura kanıt ref / dosya adı" oninput="updateTariffAssumptions()"
+            <input type="text" id="bill-evidence-ref" placeholder="Fatura kanıt ref / dosya adı" data-input-action="updateTariffAssumptions"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.8rem"/>
-            <input type="date" id="bill-evidence-date" onchange="updateTariffAssumptions()"
+            <input type="date" id="bill-evidence-date" data-change-action="updateTariffAssumptions"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.8rem"/>
-            <select id="bill-evidence-status" onchange="updateTariffAssumptions()"
+            <select id="bill-evidence-status" data-change-action="updateTariffAssumptions"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:0.8rem;width:100%">
               <option value="missing" selected>Fatura kanıtı eksik</option>
               <option value="pending">Fatura kanıtı bekliyor</option>
@@ -3474,25 +3474,25 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Pompa Gücü (kW)</div>
               <input type="number" id="irrig-pump-kw" value="" min="0.1" max="1000" step="0.1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:110px;font-size:0.85rem"
-                oninput="updateTariffAssumptions()" placeholder="örn. 15"/>
+                data-input-action="updateTariffAssumptions" placeholder="örn. 15"/>
             </div>
             <div>
               <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Günlük Çalışma (saat)</div>
               <input type="number" id="irrig-hours-per-day" value="" min="0.5" max="24" step="0.5"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:110px;font-size:0.85rem"
-                oninput="updateTariffAssumptions()" placeholder="örn. 6"/>
+                data-input-action="updateTariffAssumptions" placeholder="örn. 6"/>
             </div>
             <div>
               <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Sezon Başı (ay 1-12)</div>
               <input type="number" id="irrig-season-start" value="4" min="1" max="12" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:95px;font-size:0.85rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Sezon Sonu (ay 1-12)</div>
               <input type="number" id="irrig-season-end" value="9" min="1" max="12" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:95px;font-size:0.85rem"
-                oninput="updateTariffAssumptions()"/>
+                data-input-action="updateTariffAssumptions"/>
             </div>
           </div>
           <div id="irrig-load-preview" style="font-size:0.72rem;color:var(--text-secondary);margin-top:6px"></div>
@@ -3547,7 +3547,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <div>
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="onGridFlow.costSourceType">Maliyet kaynağı</div>
-            <select id="cost-source-type" onchange="updateTariffAssumptions()"
+            <select id="cost-source-type" data-change-action="updateTariffAssumptions"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
               <option value="catalog" selected data-i18n="onGridFlow.costSourceCatalog">Katalog / otomatik fiyat</option>
               <option value="manual" data-i18n="onGridFlow.costSourceManual">Manuel override</option>
@@ -3558,10 +3558,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <input type="checkbox" id="grid-checklist-complete" onchange="updateProposalGovernanceInput()"> <span data-i18n="governance.gridChecklistComplete">Şebeke başvuru kontrol listesi tamamlandı</span>
           </label>
           <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
-            <input type="checkbox" id="quote-inputs-verified" onchange="updateTariffAssumptions()"> <span data-i18n="governance.inputsVerified">Teklif varsayımları doğrulandı</span>
+            <input type="checkbox" id="quote-inputs-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.inputsVerified">Teklif varsayımları doğrulandı</span>
           </label>
           <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
-            <input type="checkbox" id="quote-ready-approved" onchange="updateTariffAssumptions()"> <span data-i18n="governance.quoteReadyApproved">Quote-ready onayı verildi</span>
+            <input type="checkbox" id="quote-ready-approved" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.quoteReadyApproved">Quote-ready onayı verildi</span>
           </label>
         </div>
 
@@ -3810,7 +3810,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </label>
             <input type="number" id="annual-load-growth" value="0" min="0" max="30" step="0.5"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-              oninput="updateTariffAssumptions()"/>
+              data-input-action="updateTariffAssumptions"/>
           </div>
         </div>
         <div style="margin-top:12px;font-size:0.8rem;color:var(--text-muted)">
