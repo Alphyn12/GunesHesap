@@ -17,7 +17,7 @@ import {
   getPanelCatalogForType
 } from './panel-catalog.js';
 import { showToast, animateCounter, launchConfetti, resetConfetti, renderPRGauge } from './ui-charts.js';
-import { renderResults, renderMonthlyChart, downloadPDF, shareResults, loadFromHash } from './ui-render.js';
+import { renderResults, renderMonthlyChart, downloadPDF, downloadTechnicalPDF, shareResults, loadFromHash, exportProposalHandoff, exportCrmLead } from './ui-render.js';
 import { toggleEngReport, renderEngReport } from './eng-report.js';
 import { runCalculation, isCalculationInProgress } from './calculation-service.js';
 import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta } from './calc-engine.js';
@@ -26,7 +26,7 @@ import { renderHourlyProfile, setHourlySeason } from './hourly-profile.js';
 import { toggleBillBlock, onBillToggle, onBillInput, billQuickFill, billClear } from './bill-analysis.js';
 import { buildInverterCards, selectInverter } from './inverter.js';
 import { calculateStructural } from './structural.js';
-import { toggleEVBlock, onEVToggle, updateEVInput } from './ev-charging.js';
+import { toggleEVBlock, onEVToggle, updateEVInput, onEVModelChange } from './ev-charging.js';
 import { toggleHeatPumpBlock, onHeatPumpToggle, updateHeatPumpInput } from './heat-pump.js';
 import { renderSunPath } from './sun-path.js';
 import { renderScenarioAnalysis, onScenarioCustomChange } from './scenarios.js';
@@ -3792,6 +3792,97 @@ registerActions({
   updateOffgridCriticalFractionFromSlider,
   updateProposalGovernanceInput,
   updateUserIdentityInput,
+});
+
+// F1.B.2 misc grubu: 49 inline (validate*, export, exchange rate, scenario
+// slider'lar, season toggle, vb.) Ayrıca event.stopPropagation kontrol-akışı
+// kalıbı için "stopPropagation" virtual action.
+//
+// Multi-stmt wrapper'lar:
+function updateOmRateFromInput(_arg, el) {
+  if (el) window.state.omRate = parseFloat(el.value) || 1.2;
+}
+function updateInsuranceRateFromInput(_arg, el) {
+  if (el) window.state.insuranceRate = parseFloat(el.value) || 0;
+}
+function setManualUsdTryRateAndRefresh(_arg, el) {
+  if (!el) return;
+  setManualUsdTryRate(el.value);
+  updateTariffAssumptions();
+  if (window.state?.results) renderResults();
+}
+function setManualUsdTryRateAndSyncSlider(_arg, el) {
+  if (!el) return;
+  setManualUsdTryRate(el.value);
+  const t = document.getElementById('usd-try-input');
+  if (t) t.value = el.value;
+}
+function setManualUsdTryRateSyncAndRefresh(_arg, el) {
+  if (!el) return;
+  setManualUsdTryRate(el.value);
+  const t = document.getElementById('usd-try-input');
+  if (t) t.value = el.value;
+  updateTariffAssumptions();
+  if (window.state?.results) renderResults();
+}
+function updateScenarioCustomFromSlider(_arg, el) {
+  if (!el) return;
+  const lbl = document.getElementById('scenario-custom-label');
+  if (lbl) lbl.textContent = '%' + el.value;
+  onScenarioCustomChange();
+}
+function updateFxGrowthFromSlider(_arg, el) {
+  if (!el) return;
+  const lbl = document.getElementById('fx-growth-label');
+  if (lbl) lbl.textContent = '%' + el.value;
+  onScenarioCustomChange();
+}
+function updateTariffAssumptionsAndRefresh() {
+  updateTariffAssumptions();
+  if (window.state?.results) renderResults();
+}
+
+registerActions({
+  // event control flow
+  stopPropagation: (_arg, _el, e) => e?.stopPropagation(),
+  // Step validation
+  validateStep1, validateStep2, validateStep3, validateStep4, validateStep5,
+  // Misc no-arg actions
+  refreshExchangeRate,
+  downloadPDF,
+  downloadTechnicalPDF,
+  useGeolocation,
+  toggleEngReport,
+  shareResults,
+  refreshOSMShadowAnalysis,
+  goToLanding: () => window.goToLanding?.(),
+  lpTourPrev: () => window.lpTourPrev?.(),
+  lpTourNext: () => window.lpTourNext?.(),
+  exportProposalHandoff,
+  exportCrmLead,
+  clearRoofDrawing: () => window.clearRoofDrawing?.(),
+  // Hourly profile season
+  setHourlySeason,
+  // EV
+  onEVModelChange,
+  // OSM shadow toggle
+  toggleOSMShadow,
+  // Panel preview
+  updatePanelPreview,
+  // Battery efficiency 2-arg via data-sync-source
+  syncBatteryEfficiencyInputs: (arg, el) => syncBatteryEfficiencyInputs(arg, el?.dataset.syncSource),
+  // State mutation wrappers
+  updateOmRateFromInput,
+  updateInsuranceRateFromInput,
+  // setManualUsdTryRate variants
+  setManualUsdTryRateAndRefresh,
+  setManualUsdTryRateAndSyncSlider,
+  setManualUsdTryRateSyncAndRefresh,
+  // Scenario sliders
+  updateScenarioCustomFromSlider,
+  updateFxGrowthFromSlider,
+  // Tariff refresh wrapper
+  updateTariffAssumptionsAndRefresh,
 });
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;

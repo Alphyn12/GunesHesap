@@ -1362,7 +1362,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <!-- Stepper alt navigation -->
       <div class="lp-tour-foot">
-        <button type="button" class="lp-tour-prev" onclick="lpTourPrev()" aria-label="Önceki adım">
+        <button type="button" class="lp-tour-prev" data-click-action="lpTourPrev" aria-label="Önceki adım">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </button>
         <div class="lp-tour-pages">
@@ -1370,7 +1370,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <span class="lp-tour-divider">/</span>
           <span class="lp-tour-total">07</span>
         </div>
-        <button type="button" class="lp-tour-next" onclick="lpTourNext()" aria-label="Sonraki adım">
+        <button type="button" class="lp-tour-next" data-click-action="lpTourNext" aria-label="Sonraki adım">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </div>
@@ -1747,7 +1747,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <span class="brand-assurance" data-i18n="app.headerAssurance">Türkiye odaklı mühendislik aracı</span>
       </div>
       <div class="header-actions">
-        <button class="app-home-btn" id="back-to-landing-btn" onclick="goToLanding()" title="Anasayfa" aria-label="Anasayfa">
+        <button class="app-home-btn" id="back-to-landing-btn" data-click-action="goToLanding" title="Anasayfa" aria-label="Anasayfa">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Anasayfa</span>
         </button>
@@ -1843,9 +1843,9 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="settings-panel-label" style="text-transform:none;letter-spacing:0;font-size:0.7rem;margin-bottom:8px;font-weight:500" data-i18n="settings.usdTryRate">USD / TRY Kuru</div>
     <div class="settings-panel-row settings-panel-row--rate">
       <input type="number" id="usd-try-settings" class="settings-panel-rate-input" min="1" step="0.5" value="38.5"
-             oninput="setManualUsdTryRate(this.value); const el=document.getElementById('usd-try-input'); if(el){el.value=this.value}"
+             data-input-action="setManualUsdTryRateAndSyncSlider"
              aria-label="USD / TRY Kuru" data-i18n-aria-label="settings.usdTryRate"/>
-      <button class="settings-panel-rate-refresh" onclick="refreshExchangeRate()" title="Kuru güncelle" aria-label="Kuru güncelle"
+      <button class="settings-panel-rate-refresh" data-click-action="refreshExchangeRate" title="Kuru güncelle" aria-label="Kuru güncelle"
               data-i18n-title="settings.refreshRate" data-i18n-aria-label="settings.refreshRate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       </button>
@@ -1926,7 +1926,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
   <!-- Continue button -->
   <div class="hero-cta-wrap">
-    <button class="btn btn-primary hero-cta-btn" id="step1-continue-btn" data-testid="step1-continue" onclick="validateStep1()" style="display:inline-flex">
+    <button class="btn btn-primary hero-cta-btn" id="step1-continue-btn" data-testid="step1-continue" data-click-action="validateStep1" style="display:inline-flex">
       <span data-i18n-text>Sonraki Adım</span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
@@ -1952,7 +1952,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div class="autocomplete-list" id="autocomplete-list" role="listbox"></div>
       </div>
     </div>
-    <button class="btn btn-secondary step2-geo-btn" id="geolocation-btn" onclick="useGeolocation()">
+    <button class="btn btn-secondary step2-geo-btn" id="geolocation-btn" data-click-action="useGeolocation">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       <span class="step2-geo-label">Konumumu Kullan</span>
     </button>
@@ -2018,7 +2018,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
     <div class="loc-bottom-right">
       <button class="btn btn-secondary" id="step2-back-btn" data-click-action="goToStep" data-arg="1" data-arg-type="number" style="padding:9px 16px;font-size:0.82rem">← Geri</button>
-      <button class="btn btn-primary" id="step2-continue-btn" onclick="validateStep2()" style="padding:9px 20px">
+      <button class="btn btn-primary" id="step2-continue-btn" data-click-action="validateStep2" style="padding:9px 20px">
         <span class="step2-continue-label">Sonraki Adım</span> →
       </button>
     </div>
@@ -2088,7 +2088,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <!-- Sağ alt araç çubuğu (sadece temizle — uydu butonu harita kartında) -->
       <div class="roof-draw-toolbar">
-        <button class="roof-tool-btn danger" onclick="clearRoofDrawing()" id="clear-roof-btn" title="Tüm çizimleri sil" style="display:none">
+        <button class="roof-tool-btn danger" data-click-action="clearRoofDrawing" id="clear-roof-btn" title="Tüm çizimleri sil" style="display:none">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
           Çizimleri Temizle
         </button>
@@ -2118,7 +2118,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <label>Kullanılabilir Alan (m²)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Güneş paneli kurulacak kullanılabilir çatı alanı. 1 kWp sistem için yaklaşık 6-7 m² alan gerekir.</span></span>
           </label>
-          <input type="number" id="roof-area" placeholder="Örn: 80" min="10" max="2000" aria-describedby="roof-area-err" aria-invalid="false" oninput="updatePanelPreview()"/>
+          <input type="number" id="roof-area" placeholder="Örn: 80" min="10" max="2000" aria-describedby="roof-area-err" aria-invalid="false" data-input-action="updatePanelPreview"/>
           <div class="error-msg" id="roof-area-err" role="alert" aria-live="polite" style="display:none">Lütfen 10-2000 m² arası değer girin.</div>
           <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px" id="panel-count-preview"></div>
         </div>
@@ -2275,10 +2275,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           OpenStreetMap verisiyle çevredeki binaların panel üretimine etkisini hesaplar.
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-muted);cursor:pointer;margin-bottom:10px">
-          <input type="checkbox" id="osm-shadow-toggle" onchange="toggleOSMShadow(this.checked)" style="width:auto;accent-color:var(--primary)">
+          <input type="checkbox" id="osm-shadow-toggle" data-change-action="toggleOSMShadow" data-arg-prop="checked" style="width:auto;accent-color:var(--primary)">
           <span>OSM bina yüksekliği gölge analizini etkinleştir</span>
         </label>
-        <button class="btn btn-secondary" style="font-size:0.8rem;padding:7px 14px" onclick="refreshOSMShadowAnalysis()">
+        <button class="btn btn-secondary" style="font-size:0.8rem;padding:7px 14px" data-click-action="refreshOSMShadowAnalysis">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
           Analizi Yenile
         </button>
@@ -2328,7 +2328,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <!-- Step 3 nav -->
       <div class="step3-nav-sticky">
         <button class="btn btn-secondary" data-click-action="goToStep" data-arg="2" data-arg-type="number">← Geri</button>
-        <button class="btn btn-primary" onclick="validateStep3()">Sonraki Adım →</button>
+        <button class="btn btn-primary" data-click-action="validateStep3">Sonraki Adım →</button>
       </div>
     </div>
   </div>
@@ -2424,7 +2424,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </div>
             <p class="equipment-battery-subcopy">Batarya; gündüz üretilen fazla elektriği akşam kullanmak, kısa kesintilerde kritik yükleri beslemek ve öz tüketim oranını artırmak için kullanılır. Sadece “fazla üretimi satmak” isteyen projede şart değildir.</p>
           </div>
-          <label class="toggle-switch" onclick="event.stopPropagation()">
+          <label class="toggle-switch" data-click-action="stopPropagation">
             <input type="checkbox" id="battery-toggle" data-change-action="onBatteryToggle" data-arg-prop="checked">
             <span class="toggle-slider"></span>
           </label>
@@ -2470,14 +2470,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 <label>Round-trip Verimlilik (%)
                   <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Şarj edilen enerjinin ne kadarı deşarjda geri alınır. Ev tipi LFP sistemlerde modelleme için çoğunlukla %90–95 bandı kullanılır.</span></span>
                 </label>
-                <input type="number" id="bat-eff-input" min="75" max="97" value="90" step="1" oninput="syncBatteryEfficiencyInputs(this.value, 'number')"/>
+                <input type="number" id="bat-eff-input" min="75" max="97" value="90" step="1" data-input-action="syncBatteryEfficiencyInputs" data-arg-prop="value" data-sync-source="number"/>
               </div>
             </div>
             <div class="form-group" style="margin-bottom:0">
               <label>Modelleme için kullanılan round-trip verimi</label>
               <div class="range-wrap">
                 <span class="range-value" id="bat-eff-val">90%</span>
-                <input type="range" id="bat-eff" min="75" max="97" value="90" oninput="syncBatteryEfficiencyInputs(this.value, 'range')"/>
+                <input type="range" id="bat-eff" min="75" max="97" value="90" data-input-action="syncBatteryEfficiencyInputs" data-arg-prop="value" data-sync-source="range"/>
                 <div class="range-labels"><span>75%</span><span>86%</span><span>97%</span></div>
               </div>
             </div>
@@ -2541,7 +2541,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <div class="equipment-summary-note" id="equip-summary-cost-note">Toplam ekipman tahmini: panel + inverter</div>
       <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-secondary btn-full" data-click-action="goToStep" data-arg="3" data-arg-type="number" style="font-size:0.82rem">← Geri</button>
-        <button class="btn btn-primary btn-full" onclick="validateStep4()" data-i18n="step4.next">Sonraki Adım →</button>
+        <button class="btn btn-primary btn-full" data-click-action="validateStep4" data-i18n="step4.next">Sonraki Adım →</button>
       </div>
     </div>
   </div>
@@ -3034,7 +3034,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </div>
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Sonuç Para Birimi</div>
-              <select id="display-currency" onchange="updateTariffAssumptions(); if (state.results) renderResults()"
+              <select id="display-currency" data-change-action="updateTariffAssumptionsAndRefresh"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                 <option value="TRY" selected>TL</option>
                 <option value="USD">USD</option>
@@ -3044,8 +3044,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">USD/TRY Kuru <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Sonuç Para Birimi olarak USD seçildiğinde tüm tutarlar bu kur üzerinden dönüştürülür.</span></span></div>
               <input type="number" id="usd-try-input" value="38.5" min="1" step="0.5"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-                oninput="setManualUsdTryRate(this.value); updateTariffAssumptions(); if (state.results) renderResults()"/>
-              <button type="button" class="btn btn-secondary" style="margin-top:6px;padding:6px 10px;font-size:0.75rem" onclick="refreshExchangeRate()">Canlı Kur</button>
+                data-input-action="setManualUsdTryRateAndRefresh"/>
+              <button type="button" class="btn btn-secondary" style="margin-top:6px;padding:6px 10px;font-size:0.75rem" data-click-action="refreshExchangeRate">Canlı Kur</button>
             </div>
           </div>
           <div id="exchange-rate-status" style="font-size:0.76rem;color:var(--text-muted);margin-top:8px">USD/TRY kuru yükleniyor...</div>
@@ -3724,7 +3724,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <span class="feature-badge" data-i18n="common.badgeOptional">Opsiyonel</span>
         </div>
-        <label class="toggle-switch" onclick="event.stopPropagation()">
+        <label class="toggle-switch" data-click-action="stopPropagation">
           <input type="checkbox" id="nm-toggle" data-change-action="onNMToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
@@ -3740,7 +3740,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </label>
           <input type="number" id="usd-try-input-nm" value="38.5" min="1" step="0.5"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:140px;font-size:0.9rem"
-            oninput="setManualUsdTryRate(this.value); const el=document.getElementById('usd-try-input'); if(el) el.value=this.value; updateTariffAssumptions(); if (state.results) renderResults()"/>
+            data-input-action="setManualUsdTryRateSyncAndRefresh"/>
         </div>
       </div>
     </div>
@@ -3756,7 +3756,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <span class="feature-badge" data-i18n="common.badgeDetailed">Detay</span>
         </div>
-        <label class="toggle-switch" onclick="event.stopPropagation()">
+        <label class="toggle-switch" data-click-action="stopPropagation">
           <input type="checkbox" id="bill-toggle" data-change-action="onBillToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
@@ -3778,7 +3778,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <span class="feature-badge" data-i18n="common.badgeOptional">Opsiyonel</span>
         </div>
-        <label class="toggle-switch" onclick="event.stopPropagation()">
+        <label class="toggle-switch" data-click-action="stopPropagation">
           <input type="checkbox" id="om-toggle" checked data-change-action="onOMToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
@@ -3794,7 +3794,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </label>
             <input type="number" id="om-rate" value="1.2" min="0" max="5" step="0.1"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-              oninput="state.omRate=parseFloat(this.value)||1.2"/>
+              data-input-action="updateOmRateFromInput"/>
           </div>
           <div class="form-group" style="margin:0">
             <label style="font-size:0.8rem">Yıllık Sigorta Oranı (%)
@@ -3802,7 +3802,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </label>
             <input type="number" id="insurance-rate" value="0.5" min="0" max="3" step="0.1"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
-              oninput="state.insuranceRate=parseFloat(this.value)||0"/>
+              data-input-action="updateInsuranceRateFromInput"/>
           </div>
           <div class="form-group" style="margin:0">
             <label style="font-size:0.8rem">Yıllık Yük Artışı (%)
@@ -3837,7 +3837,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <span class="feature-badge" data-i18n="common.badgeLoadGrowth">Yük artışı</span>
         </div>
-        <label class="toggle-switch" onclick="event.stopPropagation()">
+        <label class="toggle-switch" data-click-action="stopPropagation">
           <input type="checkbox" id="ev-toggle" data-change-action="onEVToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
@@ -3846,7 +3846,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div class="roof-section-grid">
           <div class="form-group" style="margin:0;grid-column:1/-1">
             <label style="font-size:0.8rem">Araç Modeli</label>
-            <select id="ev-type" onchange="onEVModelChange()"
+            <select id="ev-type" data-change-action="onEVModelChange"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.85rem">
             </select>
             <div id="ev-model-info"></div>
@@ -3905,7 +3905,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <span class="feature-badge" data-i18n="common.badgeLoadGrowth">Yük artışı</span>
         </div>
-        <label class="toggle-switch" onclick="event.stopPropagation()">
+        <label class="toggle-switch" data-click-action="stopPropagation">
           <input type="checkbox" id="hp-toggle" data-change-action="onHeatPumpToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
@@ -3961,7 +3961,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
           <span class="feature-badge" data-i18n="common.badgeCommercial">Ticari</span>
         </div>
-        <label class="toggle-switch" onclick="event.stopPropagation()">
+        <label class="toggle-switch" data-click-action="stopPropagation">
           <input type="checkbox" id="tax-toggle" data-change-action="onTaxToggle" data-arg-prop="checked">
           <span class="toggle-slider"></span>
         </label>
@@ -4009,7 +4009,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
   <div class="nav-btns" style="margin-top:28px">
     <button class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number">← Geri</button>
-    <button class="btn btn-primary" id="calc-btn" data-testid="calculate-results" onclick="validateStep5()">Sonraki Adım →</button>
+    <button class="btn btn-primary" id="calc-btn" data-testid="calculate-results" data-click-action="validateStep5">Sonraki Adım →</button>
   </div>
 </div>
 
@@ -4467,7 +4467,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
   <!-- Engineer report -->
   <div class="eng-report-wrap">
-    <div class="eng-report-header" id="eng-report-toggle" onclick="toggleEngReport()">
+    <div class="eng-report-header" id="eng-report-toggle" data-click-action="toggleEngReport">
       <div class="eng-report-title">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
         <span class="eng-report-title-text">
@@ -4496,15 +4496,15 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div class="action-group-copy" data-i18n="report.customerOutputsCopy">İlk görüşme, karar özeti ve teknik eki müşteriye veya karar vericiye göndermek için kullanın.</div>
       </div>
       <div class="action-btns">
-        <button class="btn btn-primary" data-testid="download-proposal-pdf" onclick="downloadPDF()">
+        <button class="btn btn-primary" data-testid="download-proposal-pdf" data-click-action="downloadPDF">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
       <span data-i18n="report.downloadProposalPdf">Ön Fizibilite PDF İndir</span>
         </button>
-        <button class="btn btn-outline" data-testid="download-technical-pdf" onclick="downloadTechnicalPDF()">
+        <button class="btn btn-outline" data-testid="download-technical-pdf" data-click-action="downloadTechnicalPDF">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h6"/><path d="M5 3h14v18H5z"/></svg>
       <span data-i18n="report.downloadTechnicalPdf">Teknik Ek PDF İndir</span>
         </button>
-        <button class="btn btn-secondary" data-testid="share-results" onclick="shareResults()">
+        <button class="btn btn-secondary" data-testid="share-results" data-click-action="shareResults">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       <span data-i18n="report.shareResults">Sonuç Özetini Paylaş</span>
         </button>
@@ -4517,11 +4517,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div class="action-group-copy" data-i18n="report.opsOutputsCopy">CRM aktarımı, veri handoff, teklif karşılaştırması ve yeni varyasyon denemeleri için kullanın.</div>
       </div>
       <div class="action-btns">
-        <button class="btn btn-secondary" data-testid="export-proposal-json" onclick="exportProposalHandoff()">
+        <button class="btn btn-secondary" data-testid="export-proposal-json" data-click-action="exportProposalHandoff">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span data-i18n="report.exportProposalJson">Proposal JSON</span>
         </button>
-        <button class="btn btn-secondary" data-testid="export-crm-json" onclick="exportCrmLead()">
+        <button class="btn btn-secondary" data-testid="export-crm-json" data-click-action="exportCrmLead">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5M8 17h8"/></svg>
       <span data-i18n="report.exportCrmJson">CRM JSON</span>
         </button>
@@ -4548,10 +4548,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       Saatlik Üretim Profili
     </div>
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-      <button class="season-btn active" data-season="summer" onclick="setHourlySeason('summer')">Yaz</button>
-      <button class="season-btn" data-season="spring" onclick="setHourlySeason('spring')">İlkbahar</button>
-      <button class="season-btn" data-season="autumn" onclick="setHourlySeason('autumn')">Sonbahar</button>
-      <button class="season-btn" data-season="winter" onclick="setHourlySeason('winter')">Kış</button>
+      <button class="season-btn active" data-season="summer" data-click-action="setHourlySeason" data-arg="summer">Yaz</button>
+      <button class="season-btn" data-season="spring" data-click-action="setHourlySeason" data-arg="spring">İlkbahar</button>
+      <button class="season-btn" data-season="autumn" data-click-action="setHourlySeason" data-arg="autumn">Sonbahar</button>
+      <button class="season-btn" data-season="winter" data-click-action="setHourlySeason" data-arg="winter">Kış</button>
     </div>
     <canvas id="hourly-chart-canvas" style="max-height:300px"></canvas>
     <div id="hourly-stats" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px"></div>
@@ -4617,7 +4617,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="scenario-control-row">
       <label style="font-size:0.85rem;color:var(--text-muted)">Özel Enflasyon:</label>
       <input type="range" id="scenario-custom-rate" min="5" max="80" value="30"
-        oninput="document.getElementById('scenario-custom-label').textContent='%'+this.value;onScenarioCustomChange()"
+        data-input-action="updateScenarioCustomFromSlider"
         style="flex:1;min-width:120px;max-width:240px"/>
       <span id="scenario-custom-label" style="font-size:0.85rem;font-weight:600;color:#8B5CF6">%30</span>
     </div>
@@ -4635,7 +4635,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
       <label style="font-size:0.85rem;color:var(--text-muted)">Yıllık TRY artışı:</label>
       <input type="range" id="fx-growth-rate" min="5" max="60" value="20"
-        oninput="document.getElementById('fx-growth-label').textContent='%'+this.value;onScenarioCustomChange()"
+        data-input-action="updateFxGrowthFromSlider"
         style="flex:1;min-width:120px;max-width:200px"/>
       <span id="fx-growth-label" style="font-size:0.85rem;font-weight:600;color:var(--primary)">%20</span>
     </div>
@@ -4686,7 +4686,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 <!-- MOBILE STICKY BOTTOM CTA BAR (Etap 2) -->
 <nav class="mobile-bottom-bar" aria-label="Adım navigasyonu" data-testid="mobile-bottom-bar">
   <div class="mobile-bottom-bar__group" data-step="1">
-    <button class="btn btn-primary" data-testid="m-step1-continue" onclick="validateStep1()">
+    <button class="btn btn-primary" data-testid="m-step1-continue" data-click-action="validateStep1">
       <span data-i18n="step1.continue">Devam</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
@@ -4696,7 +4696,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step2-continue" onclick="validateStep2()">
+    <button class="btn btn-primary" data-testid="m-step2-continue" data-click-action="validateStep2">
       <span>Konumu Onayla</span>
     </button>
   </div>
@@ -4705,7 +4705,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step3-continue" onclick="validateStep3()">
+    <button class="btn btn-primary" data-testid="m-step3-continue" data-click-action="validateStep3">
       <span>Devam</span>
     </button>
   </div>
@@ -4714,7 +4714,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step4-continue" onclick="validateStep4()">
+    <button class="btn btn-primary" data-testid="m-step4-continue" data-click-action="validateStep4">
       <span>Devam</span>
     </button>
   </div>
@@ -4723,12 +4723,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step5-calculate" onclick="validateStep5()">
+    <button class="btn btn-primary" data-testid="m-step5-calculate" data-click-action="validateStep5">
       <span data-i18n="report.calculate">Hesapla</span>
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="7">
-    <button class="btn btn-primary" data-testid="m-pdf" onclick="downloadPDF()" aria-label="PDF indir">
+    <button class="btn btn-primary" data-testid="m-pdf" data-click-action="downloadPDF" aria-label="PDF indir">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span>PDF</span>
     </button>
