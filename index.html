@@ -2110,7 +2110,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <!-- Roof area -->
       <div class="card mb-4">
-        <div class="card-title" style="font-size:0.9rem;margin-bottom:14px">
+        <div class="card-title subtitle-mb-4">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
           Çatı Alanı
         </div>
@@ -2120,7 +2120,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </label>
           <input type="number" id="roof-area" placeholder="Örn: 80" min="10" max="2000" aria-describedby="roof-area-err" aria-invalid="false" data-input-action="updatePanelPreview"/>
           <div class="error-msg is-hidden" id="roof-area-err" role="alert" aria-live="polite">Lütfen 10-2000 m² arası değer girin.</div>
-          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px" id="panel-count-preview"></div>
+          <div class="text-helper-78-mt-6" id="panel-count-preview"></div>
         </div>
         <div id="roof-area-badge">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2131,7 +2131,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <!-- Tilt -->
       <div class="card mb-4">
-        <div class="card-title" style="font-size:0.9rem;margin-bottom:14px">Eğim & Yön</div>
+        <div class="card-title subtitle-mb-4">Eğim & Yön</div>
         <div class="roof-geometry-grid">
           <div class="roof-geometry-panel">
             <div class="roof-control-head">
@@ -2224,7 +2224,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <!-- Shading & Soiling -->
       <div class="card mb-4">
-        <div class="card-title" style="font-size:0.9rem;margin-bottom:14px">Kayıp Faktörleri</div>
+        <div class="card-title subtitle-mb-4">Kayıp Faktörleri</div>
         <div class="form-group">
           <label>Gölgelenme Faktörü (%)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Komşu binalar, ağaçlar veya bacalardan kaynaklanan gölge kayıp yüzdesi.</span></span>
@@ -2249,7 +2249,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="text-muted-78" id="soiling-desc">Orta düzey kirlenme (Türkiye ortalaması)</div>
         </div>
         <!-- Bifacial ground albedo — only shown when bifacial panel is selected -->
-        <div id="albedo-wrap" style="display:none;margin-top:14px">
+        <div class="error-msg-hidden-mt-14" id="albedo-wrap">
           <label style="font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:6px">
             Zemin Yansıtıcılığı (Albedo)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Bifacial paneller zemin yansımasından ek enerji üretir. Zemin tipine göre değişir: beton %25, kum %20, çimen %20, çakıl %18, toprak %15.</span></span>
@@ -2304,7 +2304,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </label>
           </div>
         </div>
-        <div id="roof-sections-extra" style="display:none;margin-top:16px">
+        <div class="error-msg-hidden-md" id="roof-sections-extra">
           <div class="multi-roof-intro-card">
             <div class="multi-roof-intro-icon" aria-hidden="true">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-5h6v5"/></svg>
@@ -2777,7 +2777,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div class="step5-tariff-quick-grid">
               <div id="offgrid-cost-anchor"></div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Off-grid teklif olgunluğu</div>
+                <div class="text-caption-helper">Off-grid teklif olgunluğu</div>
                 <select id="offgrid-field-maturity-note" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                   <option>Ön keşif: profil ve varsayımlarla hesap</option>
                   <option>Saha hazırlığı: cihaz listesi ve gölge kontrolü var</option>
@@ -2834,7 +2834,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </button>
       </div>
       <div class="is-hidden">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Abone Tipi</div>
+        <div class="text-caption-helper">Abone Tipi</div>
         <select id="tariff-type" data-change-action="updateTariffType" data-arg-prop="value"
           style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;min-width:120px">
           <option value="residential" selected>Konut</option>
@@ -2847,7 +2847,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
       <div class="step5-tariff-quick-grid">
         <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Rejimi</div>
+          <div class="text-caption-helper">Tarife Rejimi</div>
           <select id="tariff-regime" data-change-action="updateTariffAssumptions"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
             <option value="auto" selected>Otomatik PST/SKTT</option>
@@ -2858,19 +2858,19 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </select>
         </div>
         <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">PST / Baz Fiyat (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Perakende Satış Tarifesi — elektrik dağıtım şirketinden kWh başına ödediğiniz fiyat.</span></span></div>
+          <div class="text-caption-helper">PST / Baz Fiyat (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Perakende Satış Tarifesi — elektrik dağıtım şirketinden kWh başına ödediğiniz fiyat.</span></span></div>
           <input type="number" id="tariff-input" value="7.16" min="0.5" step="0.01"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
             data-input-action="updateTariffAssumptions"/>
         </div>
         <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">İhracat / Mahsup Fiyatı (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Üretip şebekeye sattığınız ya da mahsup ettiğiniz fazla enerji için alınan birim fiyat.</span></span></div>
+          <div class="text-caption-helper">İhracat / Mahsup Fiyatı (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Üretip şebekeye sattığınız ya da mahsup ettiğiniz fazla enerji için alınan birim fiyat.</span></span></div>
           <input type="number" id="export-tariff-input" value="0" min="0" step="0.01"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
             data-input-action="updateTariffAssumptions"/>
         </div>
         <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Mahsuplaşma Modu</div>
+          <div class="text-caption-helper">Mahsuplaşma Modu</div>
           <select id="export-settlement-mode" data-change-action="updateTariffAssumptions"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
             <option value="auto" selected>Otomatik</option>
@@ -2879,13 +2879,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </select>
         </div>
         <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="settlementDate.label">Sistem Devreye Alma Tarihi</div>
+          <div class="text-caption-helper" data-i18n="settlementDate.label">Sistem Devreye Alma Tarihi</div>
           <input type="date" id="settlement-date"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
             data-input-action="updateTariffAssumptions"/>
         </div>
         <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="onGridFlow.tariffSourceType">Tarife kaynak türü</div>
+          <div class="text-caption-helper" data-i18n="onGridFlow.tariffSourceType">Tarife kaynak türü</div>
           <select id="tariff-source-type" data-change-action="updateTariffAssumptions"
             style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
             <option value="manual" selected data-i18n="onGridFlow.tariffSourceManual">Manuel giriş</option>
@@ -2906,8 +2906,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         </div>
       </div>
 
-      <div id="off-grid-cost-wrap" style="display:none;margin-top:14px">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="offGrid.costPerKwhLabel">Dizel/Alternatif Kaynak Maliyeti (₺/kWh)</div>
+      <div class="error-msg-hidden-mt-14" id="off-grid-cost-wrap">
+        <div class="text-caption-helper" data-i18n="offGrid.costPerKwhLabel">Dizel/Alternatif Kaynak Maliyeti (₺/kWh)</div>
         <input type="number" id="off-grid-cost-per-kwh" value="" min="0" step="0.01"
           style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:220px;font-size:0.9rem"
           data-input-action="updateTariffAssumptions"/>
@@ -2925,37 +2925,37 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="step5-inline-note"><strong>Yalnızca gerekli olduğunda değiştirin:</strong> Bu alanlar genellikle büyük ticari tesis, ikili anlaşma veya özel mahsuplaşma kısıtları olan projelerde önemlidir.</div>
           <div class="step5-tariff-quick-grid">
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">SKTT Fiyatı (TL/kWh)</div>
+              <div class="text-caption-helper">SKTT Fiyatı (TL/kWh)</div>
               <input type="number" id="sktt-tariff-input" value="7.16" min="0" step="0.01"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Sözleşmeli Fiyat (TL/kWh)</div>
+              <div class="text-caption-helper">Sözleşmeli Fiyat (TL/kWh)</div>
               <input type="number" id="contracted-tariff-input" value="7.16" min="0" step="0.01"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Sözleşme Gücü (kW)</div>
+              <div class="text-caption-helper">Sözleşme Gücü (kW)</div>
               <input type="number" id="contracted-power-input" value="10" min="0" step="0.1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Önceki Yıl Tüketim (kWh)</div>
+              <div class="text-caption-helper">Önceki Yıl Tüketim (kWh)</div>
               <input type="number" id="previous-year-consumption-input" value="0" min="0" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Cari Yıl Tüketim (kWh)</div>
+              <div class="text-caption-helper">Cari Yıl Tüketim (kWh)</div>
               <input type="number" id="current-year-consumption-input" value="0" min="0" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Satılabilir İhracat Sınırı (kWh)</div>
+              <div class="text-caption-helper">Satılabilir İhracat Sınırı (kWh)</div>
               <input type="number" id="sellable-export-cap-input" value="0" min="0" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
@@ -2975,37 +2975,37 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="step5-inline-note"><strong>Bu bölüm neden ayrı?</strong> Bu alanlar teknik hesap motorunu değil, finansal sunum kalitesini ve ticari yorum biçimini etkiler. İlk görüşmede çoğu zaman varsayılan bırakılabilir.</div>
           <div class="step5-tariff-quick-grid">
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Yıllık Fiyat Artışı (%) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Elektrik tarifesinin yılda kaç yüzde artacağı tahmini.</span></span></div>
+              <div class="text-caption-helper">Yıllık Fiyat Artışı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Elektrik tarifesinin yılda kaç yüzde artacağı tahmini.</span></span></div>
               <input type="number" id="price-increase-input" value="12" min="-50" max="200" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Gider Eskalasyonu (%)</div>
+              <div class="text-caption-helper">Gider Eskalasyonu (%)</div>
               <input type="number" id="expense-escalation-input" value="10" min="-50" max="200" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">İskonto Oranı (%) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Paranın zaman değerini yansıtan oran; NPV hesabında kullanılır.</span></span></div>
+              <div class="text-caption-helper">İskonto Oranı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Paranın zaman değerini yansıtan oran; NPV hesabında kullanılır.</span></span></div>
               <input type="number" id="discount-rate-input" value="18" min="0" max="100" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kaynak Tarihi</div>
+              <div class="text-caption-helper">Kaynak Tarihi</div>
               <input type="date" id="tariff-source-date" value="2026-04-12"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kaynak Kontrol Tarihi</div>
+              <div class="text-caption-helper">Kaynak Kontrol Tarihi</div>
               <input type="date" id="tariff-source-checked-at"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kanıt Durumu</div>
+              <div class="text-caption-helper">Tarife Kanıt Durumu</div>
               <select id="tariff-evidence-status" data-change-action="updateTariffAssumptions"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                 <option value="verified" selected>Doğrulandı</option>
@@ -3015,25 +3015,25 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </select>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kanıt Ref</div>
+              <div class="text-caption-helper">Tarife Kanıt Ref</div>
               <input type="text" id="tariff-evidence-ref" value="EPDK/SKTT-2026-local"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div style="grid-column:1/-1">
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kaynak URL</div>
+              <div class="text-caption-helper">Tarife Kaynak URL</div>
               <input type="url" id="tariff-evidence-url" value="https://www.epdk.gov.tr/Detay/Icerik/16-38/son-kaynak-tedarik-tarifesi-sktt-ile-ilgili-bil"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kaynak Dosyası</div>
+              <div class="text-caption-helper">Tarife Kaynak Dosyası</div>
               <input type="file" id="tariff-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
                 data-change-action="attachEvidenceFromInput" data-evidence-field="tariffSource"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.78rem"/>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Sonuç Para Birimi</div>
+              <div class="text-caption-helper">Sonuç Para Birimi</div>
               <select id="display-currency" data-change-action="updateTariffAssumptionsAndRefresh"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                 <option value="TRY" selected>TL</option>
@@ -3041,7 +3041,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </select>
             </div>
             <div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">USD/TRY Kuru <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Sonuç Para Birimi olarak USD seçildiğinde tüm tutarlar bu kur üzerinden dönüştürülür.</span></span></div>
+              <div class="text-caption-helper">USD/TRY Kuru <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Sonuç Para Birimi olarak USD seçildiğinde tüm tutarlar bu kur üzerinden dönüştürülür.</span></span></div>
               <input type="number" id="usd-try-input" value="38.5" min="1" step="0.5"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
                 data-input-action="setManualUsdTryRateAndRefresh"/>
@@ -3053,7 +3053,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <input type="checkbox" id="tariff-tax-included" checked data-change-action="updateTariffAssumptions"> Birim fiyat vergi/dağıtım dahil kabul edilsin
           </label>
           <div class="step5-tariff-quick-grid mt-2-5">
-            <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
+            <label class="flex-row-muted-sm">
               <input type="checkbox" id="quote-bill-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.billVerified">Fatura/tüketim verisi doğrulandı</span>
             </label>
             <input type="text" id="bill-evidence-ref" placeholder="Fatura kanıt ref / dosya adı" data-input-action="updateTariffAssumptions"
@@ -3071,7 +3071,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.78rem"/>
           </div>
           <div id="evidence-file-status" style="font-size:0.74rem;color:var(--text-muted);margin-top:6px">customerBill: dosya yok | supplierQuote: dosya yok | tariffSource: dosya yok</div>
-          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px" id="tariff-desc">2026 tarife seçimi: mesken yıllık 4.000 kWh, mesken dışı 15.000 kWh SKTT eşiğiyle değerlendirilir.</div>
+          <div class="text-helper-78-mt-6" id="tariff-desc">2026 tarife seçimi: mesken yıllık 4.000 kWh, mesken dışı 15.000 kWh SKTT eşiğiyle değerlendirilir.</div>
         </div>
       </details>
 
@@ -3102,7 +3102,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
           <!-- Hesap Seviyesi -->
           <div class="offgrid-block">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px" data-i18n="offgridL2.calculationModeLabel">Hesap Seviyesi</div>
+            <div class="text-helper-75-mb-6" data-i18n="offgridL2.calculationModeLabel">Hesap Seviyesi</div>
             <div class="offgrid-mode-toggle">
               <button type="button" data-offgrid-mode-btn="basic" data-click-action="setOffgridCalculationMode" data-arg="basic" class="active">
                 <strong>Basit hesap</strong>
@@ -3124,7 +3124,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
           <!-- Otonom Hedef Seçici -->
           <div class="offgrid-block">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="offgridL2.autonomyGoalLabel">Otonom Hedef</div>
+            <div class="text-caption-helper" data-i18n="offgridL2.autonomyGoalLabel">Otonom Hedef</div>
             <select id="offgrid-autonomy-goal"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;width:100%"
               data-change-action="updateOffgridL2Settings">
@@ -3151,7 +3151,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </div>
             <div id="offgrid-residential-profile-grid" class="offgrid-profile-grid"></div>
             <div id="offgrid-simple-profile-summary" class="offgrid-profile-summary"></div>
-            <div id="offgrid-critical-fraction-row" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px">
+            <div class="text-helper-75-mb-6" id="offgrid-critical-fraction-row">
               <span data-i18n="offgridL2.criticalFractionLabel">Kritik Yük Oranı</span>
               <span id="offgrid-critical-fraction-val" style="font-weight:700;color:#8B5CF6;margin-left:6px">60%</span>
             </div>
@@ -3166,108 +3166,108 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div id="offgrid-field-data-section" style="margin-bottom:14px;padding:10px 12px;background:rgba(6,182,212,0.05);border:1px solid rgba(6,182,212,0.18);border-radius:8px">
             <div style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:6px" data-i18n="offgridL2.fieldDataTitle">Saha Verisi (Garanti Hazırlığı)</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.pv8760Upload">Gerçek PV üretimi 8760 CSV</span>
-                <input type="file" id="offgrid-pv-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridPvCsvUpload" style="margin-top:4px;width:100%">
-                <button type="button" id="offgrid-pv-csv-clear" data-click-action="clearOffgridPvCsvUpload" style="display:none;margin-top:4px" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
-                <div id="offgrid-pv-csv-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-pv-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridPvCsvUpload">
+                <button class="error-msg-hidden-mt-4" type="button" id="offgrid-pv-csv-clear" data-click-action="clearOffgridPvCsvUpload" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
+                <div class="error-msg-hidden-sm" id="offgrid-pv-csv-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.load8760Upload">Gerçek toplam yük 8760 CSV</span>
-                <input type="file" id="offgrid-load-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridLoadCsvUpload" style="margin-top:4px;width:100%">
-                <button type="button" id="offgrid-load-csv-clear" data-click-action="clearOffgridLoadCsvUpload" style="display:none;margin-top:4px" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
-                <div id="offgrid-load-csv-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-load-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridLoadCsvUpload">
+                <button class="error-msg-hidden-mt-4" type="button" id="offgrid-load-csv-clear" data-click-action="clearOffgridLoadCsvUpload" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
+                <div class="error-msg-hidden-sm" id="offgrid-load-csv-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.critical8760Upload">Gerçek kritik yük 8760 CSV</span>
-                <input type="file" id="offgrid-critical-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridCriticalCsvUpload" style="margin-top:4px;width:100%">
-                <button type="button" id="offgrid-critical-csv-clear" data-click-action="clearOffgridCriticalCsvUpload" style="display:none;margin-top:4px" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
-                <div id="offgrid-critical-csv-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-critical-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridCriticalCsvUpload">
+                <button class="error-msg-hidden-mt-4" type="button" id="offgrid-critical-csv-clear" data-click-action="clearOffgridCriticalCsvUpload" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
+                <div class="error-msg-hidden-sm" id="offgrid-critical-csv-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.shadingEvidenceUpload">Saha gölge kanıtı</span>
-                <input type="file" id="offgrid-shading-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridSiteShading" data-evidence-status-id="offgrid-shading-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-shading-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-shading-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridSiteShading" data-evidence-status-id="offgrid-shading-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-shading-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.datasheetEvidenceUpload">Ekipman datasheet / üretici kanıtı</span>
-                <input type="file" id="offgrid-datasheet-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridEquipmentDatasheets" data-evidence-status-id="offgrid-datasheet-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-datasheet-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-datasheet-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridEquipmentDatasheets" data-evidence-status-id="offgrid-datasheet-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-datasheet-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.commissioningEvidenceUpload">Devreye alma raporu</span>
-                <input type="file" id="offgrid-commissioning-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridCommissioningReport" data-evidence-status-id="offgrid-commissioning-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-commissioning-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-commissioning-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridCommissioningReport" data-evidence-status-id="offgrid-commissioning-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-commissioning-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.acceptanceEvidenceUpload">Saha kabul testi</span>
-                <input type="file" id="offgrid-acceptance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAcceptanceTest" data-evidence-status-id="offgrid-acceptance-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-acceptance-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-acceptance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAcceptanceTest" data-evidence-status-id="offgrid-acceptance-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-acceptance-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.monitoringEvidenceUpload">İzleme / sayaç kalibrasyon kanıtı</span>
-                <input type="file" id="offgrid-monitoring-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridMonitoringCalibration" data-evidence-status-id="offgrid-monitoring-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-monitoring-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-monitoring-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridMonitoringCalibration" data-evidence-status-id="offgrid-monitoring-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-monitoring-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.asBuiltEvidenceUpload">As-built proje / koruma ayarları</span>
-                <input type="file" id="offgrid-asbuilt-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAsBuiltDocs" data-evidence-status-id="offgrid-asbuilt-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-asbuilt-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-asbuilt-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAsBuiltDocs" data-evidence-status-id="offgrid-asbuilt-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-asbuilt-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.warrantyEvidenceUpload">Garanti şartları / O&M planı</span>
-                <input type="file" id="offgrid-warranty-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridWarrantyOandM" data-evidence-status-id="offgrid-warranty-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-warranty-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-warranty-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridWarrantyOandM" data-evidence-status-id="offgrid-warranty-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-warranty-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.telemetryEvidenceUpload">30 günlük telemetri exportu</span>
-                <input type="file" id="offgrid-telemetry-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridTelemetry30Day" data-evidence-status-id="offgrid-telemetry-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-telemetry-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-telemetry-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridTelemetry30Day" data-evidence-status-id="offgrid-telemetry-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-telemetry-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.performanceEvidenceUpload">Ölçülen performans baseline</span>
-                <input type="file" id="offgrid-performance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridPerformanceBaseline" data-evidence-status-id="offgrid-performance-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-performance-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-performance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridPerformanceBaseline" data-evidence-status-id="offgrid-performance-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-performance-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.maintenanceEvidenceUpload">Bakım kayıtları</span>
-                <input type="file" id="offgrid-maintenance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridMaintenanceLog" data-evidence-status-id="offgrid-maintenance-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-maintenance-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-maintenance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridMaintenanceLog" data-evidence-status-id="offgrid-maintenance-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-maintenance-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.incidentEvidenceUpload">Olay / kesinti kayıtları</span>
-                <input type="file" id="offgrid-incident-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridIncidentLog" data-evidence-status-id="offgrid-incident-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-incident-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-incident-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridIncidentLog" data-evidence-status-id="offgrid-incident-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-incident-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.monitoringSlaEvidenceUpload">Uzaktan izleme SLA</span>
-                <input type="file" id="offgrid-monitoring-sla-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridRemoteMonitoringSla" data-evidence-status-id="offgrid-monitoring-sla-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-monitoring-sla-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-monitoring-sla-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridRemoteMonitoringSla" data-evidence-status-id="offgrid-monitoring-sla-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-monitoring-sla-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.annualRevalidationEvidenceUpload">Yıllık saha revalidasyon raporu</span>
-                <input type="file" id="offgrid-annual-revalidation-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAnnualRevalidation" data-evidence-status-id="offgrid-annual-revalidation-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-annual-revalidation-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-annual-revalidation-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAnnualRevalidation" data-evidence-status-id="offgrid-annual-revalidation-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-annual-revalidation-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.batteryHealthEvidenceUpload">Batarya SOH / sağlık raporu</span>
-                <input type="file" id="offgrid-battery-health-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridBatteryHealthReport" data-evidence-status-id="offgrid-battery-health-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-battery-health-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-battery-health-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridBatteryHealthReport" data-evidence-status-id="offgrid-battery-health-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-battery-health-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.generatorServiceEvidenceUpload">Jeneratör servis / yakıt kaydı</span>
-                <input type="file" id="offgrid-generator-service-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridGeneratorServiceRecord" data-evidence-status-id="offgrid-generator-service-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-generator-service-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-generator-service-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridGeneratorServiceRecord" data-evidence-status-id="offgrid-generator-service-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-generator-service-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.firmwareBackupEvidenceUpload">Firmware / ayar yedeği</span>
-                <input type="file" id="offgrid-firmware-backup-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridFirmwareSettingsBackup" data-evidence-status-id="offgrid-firmware-backup-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-firmware-backup-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-firmware-backup-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridFirmwareSettingsBackup" data-evidence-status-id="offgrid-firmware-backup-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-firmware-backup-evidence-status"></div>
               </label>
-              <label style="font-size:0.7rem;color:var(--text-muted);display:block">
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.customerSignoffEvidenceUpload">Müşteri işletme onayı</span>
-                <input type="file" id="offgrid-customer-signoff-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridCustomerSignoff" data-evidence-status-id="offgrid-customer-signoff-evidence-status" style="margin-top:4px;width:100%">
-                <div id="offgrid-customer-signoff-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
+                <input class="input-meta-row" type="file" id="offgrid-customer-signoff-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridCustomerSignoff" data-evidence-status-id="offgrid-customer-signoff-evidence-status">
+                <div class="error-msg-hidden-sm" id="offgrid-customer-signoff-evidence-status"></div>
               </label>
             </div>
             <div style="font-size:0.68rem;color:var(--text-muted);margin-top:6px" data-i18n="offgridL2.fieldDataHint">Faz 1 için üç gerçek 8760 seri gerekir. Faz 2 için SHA-256 saha kanıtları gerekir. Faz 4 için kabul dosyaları, Faz 5 için aktif izleme ve bakım kayıtları, Faz 6 için periyodik revalidasyon kanıtları gerekir.</div>
@@ -3291,21 +3291,21 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <!-- Katalog Seçici -->
             <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;margin-bottom:8px;padding:8px 10px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.18);border-radius:8px">
               <div style="flex:1;min-width:120px">
-                <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:3px" data-i18n="offgridL2.catalogCategory">Kategori</div>
+                <div class="text-helper-68-mb-3" data-i18n="offgridL2.catalogCategory">Kategori</div>
                 <select id="offgrid-catalog-category" data-change-action="updateOffgridCatalogOptions"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.78rem;width:100%">
                   <!-- Options populated by JS (i18n-aware) via updateOffgridCatalogOptions() -->
                 </select>
               </div>
               <div style="flex:2;min-width:150px">
-                <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:3px" data-i18n="offgridL2.catalogDevice">Cihaz Seçin</div>
+                <div class="text-helper-68-mb-3" data-i18n="offgridL2.catalogDevice">Cihaz Seçin</div>
                 <select id="offgrid-catalog-select" data-change-action="updateOffgridDevicePreview"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.78rem;width:100%">
                   <!-- Options populated by JS -->
                 </select>
               </div>
               <div style="width:56px">
-                <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:3px" data-i18n="offgridL2.catalogQty">Adet</div>
+                <div class="text-helper-68-mb-3" data-i18n="offgridL2.catalogQty">Adet</div>
                 <input type="number" id="offgrid-catalog-qty" value="1" min="1" max="99"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.78rem;width:100%;text-align:center"/>
               </div>
@@ -3329,12 +3329,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 <thead>
                   <tr style="color:var(--text-muted);border-bottom:1px solid rgba(148,163,184,0.2)">
                     <th style="text-align:left;padding:4px 6px" data-i18n="offgridL2.deviceName">Cihaz</th>
-                    <th style="text-align:right;padding:4px 6px" data-i18n="offgridL2.devicePowerW">Güç (W)</th>
-                    <th style="text-align:right;padding:4px 6px" data-i18n="offgridL2.deviceHours">Saat/Gün</th>
-                    <th style="text-align:right;padding:4px 6px" data-i18n="offgridL2.deviceNightHours">Gece (sa)</th>
-                    <th style="text-align:right;padding:4px 6px" data-i18n="offgridL2.deviceDailyWh">Wh/Gün</th>
-                    <th style="text-align:center;padding:4px 6px" data-i18n="offgridL2.deviceCritical">Kritik?</th>
-                    <th style="text-align:center;padding:4px 6px" data-i18n="offgridL2.deviceCategory">Kategori</th>
+                    <th class="cell-right-tight" data-i18n="offgridL2.devicePowerW">Güç (W)</th>
+                    <th class="cell-right-tight" data-i18n="offgridL2.deviceHours">Saat/Gün</th>
+                    <th class="cell-right-tight" data-i18n="offgridL2.deviceNightHours">Gece (sa)</th>
+                    <th class="cell-right-tight" data-i18n="offgridL2.deviceDailyWh">Wh/Gün</th>
+                    <th class="cell-center-tight" data-i18n="offgridL2.deviceCritical">Kritik?</th>
+                    <th class="cell-center-tight" data-i18n="offgridL2.deviceCategory">Kategori</th>
                     <th class="p-chip-xs"></th>
                   </tr>
                 </thead>
@@ -3342,7 +3342,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 <tfoot>
                   <tr style="border-top:1px solid rgba(148,163,184,0.2);font-weight:600">
                     <td colspan="3" style="padding:4px 6px;color:var(--text-muted)" data-i18n="offgridL2.deviceTotal">Toplam</td>
-                    <td style="text-align:right;padding:4px 6px" id="offgrid-device-total-kwh">—</td>
+                    <td class="cell-right-tight" id="offgrid-device-total-kwh">—</td>
                     <td colspan="3"></td>
                   </tr>
                   <tr>
@@ -3452,7 +3452,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
           <!-- Kötü Hava Dayanıklılık Testi -->
           <div>
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="offgridL2.badWeatherLabel">Kötü Hava Dayanıklılık Testi</div>
+            <div class="text-caption-helper" data-i18n="offgridL2.badWeatherLabel">Kötü Hava Dayanıklılık Testi</div>
             <select id="offgrid-bad-weather-level"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;width:100%"
               data-change-action="updateOffgridL2Settings">
@@ -3471,25 +3471,25 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div style="font-size:0.75rem;font-weight:600;color:#10B981;margin-bottom:8px">Pompa / Sezon Detayı</div>
           <div style="display:flex;flex-wrap:wrap;gap:10px">
             <div>
-              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Pompa Gücü (kW)</div>
+              <div class="text-helper-72-mb-3">Pompa Gücü (kW)</div>
               <input type="number" id="irrig-pump-kw" value="" min="0.1" max="1000" step="0.1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:110px;font-size:0.85rem"
                 data-input-action="updateTariffAssumptions" placeholder="örn. 15"/>
             </div>
             <div>
-              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Günlük Çalışma (saat)</div>
+              <div class="text-helper-72-mb-3">Günlük Çalışma (saat)</div>
               <input type="number" id="irrig-hours-per-day" value="" min="0.5" max="24" step="0.5"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:110px;font-size:0.85rem"
                 data-input-action="updateTariffAssumptions" placeholder="örn. 6"/>
             </div>
             <div>
-              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Sezon Başı (ay 1-12)</div>
+              <div class="text-helper-72-mb-3">Sezon Başı (ay 1-12)</div>
               <input type="number" id="irrig-season-start" value="4" min="1" max="12" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:95px;font-size:0.85rem"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px">Sezon Sonu (ay 1-12)</div>
+              <div class="text-helper-72-mb-3">Sezon Sonu (ay 1-12)</div>
               <input type="number" id="irrig-season-end" value="9" min="1" max="12" step="1"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:95px;font-size:0.85rem"
                 data-input-action="updateTariffAssumptions"/>
@@ -3536,7 +3536,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
         <div class="step5-tariff-quick-grid">
           <div>
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tedarikçi Teklifi</div>
+            <div class="text-caption-helper">Tedarikçi Teklifi</div>
             <select id="supplier-quote-state" data-change-action="updateProposalGovernanceInput"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
               <option value="not-requested" selected>İstenmedi</option>
@@ -3546,7 +3546,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </select>
           </div>
           <div>
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="onGridFlow.costSourceType">Maliyet kaynağı</div>
+            <div class="text-caption-helper" data-i18n="onGridFlow.costSourceType">Maliyet kaynağı</div>
             <select id="cost-source-type" data-change-action="updateTariffAssumptions"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
               <option value="catalog" selected data-i18n="onGridFlow.costSourceCatalog">Katalog / otomatik fiyat</option>
@@ -3554,13 +3554,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <option value="bom-verified" data-i18n="onGridFlow.costSourceBom">BOM ile doğrulanmış tedarikçi teklifi</option>
             </select>
           </div>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
+          <label class="flex-row-muted-sm">
             <input type="checkbox" id="grid-checklist-complete" data-change-action="updateProposalGovernanceInput"> <span data-i18n="governance.gridChecklistComplete">Şebeke başvuru kontrol listesi tamamlandı</span>
           </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
+          <label class="flex-row-muted-sm">
             <input type="checkbox" id="quote-inputs-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.inputsVerified">Teklif varsayımları doğrulandı</span>
           </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
+          <label class="flex-row-muted-sm">
             <input type="checkbox" id="quote-ready-approved" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.quoteReadyApproved">Quote-ready onayı verildi</span>
           </label>
         </div>
@@ -3575,12 +3575,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="step5-subbody">
             <div class="step5-tariff-quick-grid">
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kullanıcı</div>
+                <div class="text-caption-helper">Kullanıcı</div>
                 <input type="text" id="user-name-input" value="local-user" placeholder="Ad Soyad" data-input-action="updateUserIdentityInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Rol</div>
+                <div class="text-caption-helper">Rol</div>
                 <select id="user-role-input" data-change-action="updateUserIdentityInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                   <option value="sales" selected data-i18n="governance.roleSales">Satış</option>
@@ -3590,7 +3590,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 </select>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Onay Durumu</div>
+                <div class="text-caption-helper">Onay Durumu</div>
                 <select id="proposal-approval-state" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                   <option value="draft" selected data-i18n="governance.approvalDraft">Taslak</option>
@@ -3601,53 +3601,53 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 </select>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Onaylayan</div>
+                <div class="text-caption-helper">Onaylayan</div>
                 <input type="text" id="proposal-approved-by" placeholder="İsim / rol" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">BOM Marjı (%)</div>
+                <div class="text-caption-helper">BOM Marjı (%)</div>
                 <input type="number" id="bom-margin-rate" value="18" min="0" max="80" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Risk Payı (%)</div>
+                <div class="text-caption-helper">Risk Payı (%)</div>
                 <input type="number" id="bom-contingency-rate" value="5" min="0" max="50" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Teklif Ref</div>
+                <div class="text-caption-helper">Teklif Ref</div>
                 <input type="text" id="supplier-quote-ref" placeholder="SQ-2026-001" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Teklif Tarihi</div>
+                <div class="text-caption-helper">Teklif Tarihi</div>
                 <input type="date" id="supplier-quote-date" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Teklif Geçerlilik</div>
+                <div class="text-caption-helper">Teklif Geçerlilik</div>
                 <input type="date" id="supplier-quote-valid-until" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tedarikçi Teklif Dosyası</div>
+                <div class="text-caption-helper">Tedarikçi Teklif Dosyası</div>
                 <input type="file" id="supplier-quote-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
                   data-change-action="attachEvidenceFromInput" data-evidence-field="supplierQuote"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.78rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kredi Faizi (%/yıl)</div>
+                <div class="text-caption-helper">Kredi Faizi (%/yıl)</div>
                 <input type="number" id="loan-annual-rate" value="35" min="0" max="200" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kredi Vadesi (yıl)</div>
+                <div class="text-caption-helper">Kredi Vadesi (yıl)</div>
                 <input type="number" id="loan-term-years" value="5" min="1" max="20" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Bakım Sözleşmesi</div>
+                <div class="text-caption-helper">Bakım Sözleşmesi</div>
                 <select id="maintenance-contract-status" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                   <option value="not-offered" selected>Sunulmadı</option>
@@ -3987,14 +3987,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <input type="number" id="tax-invest-rate" min="0" max="45" value="0" step="5"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateTaxInput"/>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px">Bölge 1:%15 · Bölge 2:%20 · Bölge 3:%25 · Bölge 4:%30 · Bölge 5:%40 · Bölge 6:%45</div>
+            <div class="text-helper-72-mt-3">Bölge 1:%15 · Bölge 2:%20 · Bölge 3:%25 · Bölge 4:%30 · Bölge 5:%40 · Bölge 6:%45</div>
           </div>
         </div>
         <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer">
+          <label class="flex-row-md">
             <input type="checkbox" id="tax-kdv" checked data-change-action="updateTaxInput"> KDV İadesi (%20)
           </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer">
+          <label class="flex-row-md">
             <input type="checkbox" id="tax-incentive-cert" data-change-action="updateTaxInput"> Yatırım Teşvik Belgesi var
           </label>
         </div>
@@ -4128,7 +4128,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="kpi-value"><span id="kpi-energy">0</span></div>
       <div class="kpi-unit">kWh / yıl</div>
-      <div class="kpi-label">Yılda Üreteceği Elektrik <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Kurulacak sistemin bir yılda yaklaşık ne kadar elektrik üreteceğini gösterir.</span></span></div>
+      <div class="kpi-label">Yılda Üreteceği Elektrik <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Kurulacak sistemin bir yılda yaklaşık ne kadar elektrik üreteceğini gösterir.</span></span></div>
       <div id="kpi-energy-band" style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;display:none"></div>
     </div>
     <div class="kpi-card kpi-color-success">
@@ -4137,7 +4137,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="kpi-value text-emerald"><span id="kpi-savings">0</span></div>
       <div class="kpi-unit">TL / yıl</div>
-      <div class="kpi-label">Faturaya Yıllık Etkisi <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Üretilen elektriğin faturanızda oluşturduğu yaklaşık yıllık tasarruf etkisidir.</span></span></div>
+      <div class="kpi-label">Faturaya Yıllık Etkisi <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Üretilen elektriğin faturanızda oluşturduğu yaklaşık yıllık tasarruf etkisidir.</span></span></div>
     </div>
     <div class="kpi-card kpi-color-info">
       <div class="kpi-icon-wrap">
@@ -4176,23 +4176,23 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
     </div>
     <div class="fin-row">
-      <span class="fin-label">Daha temkinli geri ödeme <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Paranın zaman içindeki değerini de hesaba katar; bu yüzden daha gerçekçi ama daha temkinli bir süredir.</span></span></span>
+      <span class="fin-label">Daha temkinli geri ödeme <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Paranın zaman içindeki değerini de hesaba katar; bu yüzden daha gerçekçi ama daha temkinli bir süredir.</span></span></span>
       <span class="fin-val" id="fin-discounted-payback">-</span>
     </div>
     <div class="fin-row">
-      <span class="fin-label">25 yılda net kazanç potansiyeli <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Bugünkü değerle bakıldığında, projenin uzun vadede artıda mı ekside mi kalacağını gösterir.</span></span></span>
+      <span class="fin-label">25 yılda net kazanç potansiyeli <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Bugünkü değerle bakıldığında, projenin uzun vadede artıda mı ekside mi kalacağını gösterir.</span></span></span>
       <span class="fin-val positive" id="fin-total">-</span>
     </div>
     <div class="fin-row">
-      <span class="fin-label" id="fin-roi-label">25 yıllık birikimli ROI (nominal) <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Bu oran yıllık getiri değildir; 25 yıl boyunca biriken nominal net nakit akışının başlangıç yatırımına oranını gösterir.</span></span></span>
+      <span class="fin-label" id="fin-roi-label">25 yıllık birikimli ROI (nominal) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Bu oran yıllık getiri değildir; 25 yıl boyunca biriken nominal net nakit akışının başlangıç yatırımına oranını gösterir.</span></span></span>
       <span class="fin-val positive" id="fin-roi">-</span>
     </div>
     <div class="fin-row">
-      <span class="fin-label">Ortalama yıllık yatırım verimi <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Yatırımın yıllık ortalama performansını yüzde olarak düşünmek için kullanılır.</span></span></span>
+      <span class="fin-label">Ortalama yıllık yatırım verimi <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Yatırımın yıllık ortalama performansını yüzde olarak düşünmek için kullanılır.</span></span></span>
       <span class="fin-val positive" id="fin-irr">-</span>
     </div>
     <div class="fin-row">
-      <span class="fin-label">Güneşten üretilen elektriğin ortalama maliyeti <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.65rem;padding:1px 5px">?</span><span class="tooltip-box">Sistemin ürettiği elektriğin size ortalamada kaç TL/kWh seviyesinde mal olduğunu gösterir.</span></span></span>
+      <span class="fin-label">Güneşten üretilen elektriğin ortalama maliyeti <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Sistemin ürettiği elektriğin size ortalamada kaç TL/kWh seviyesinde mal olduğunu gösterir.</span></span></span>
       <span class="fin-val" id="fin-lcoe">-</span>
     </div>
     <div class="fin-row" id="fin-om-row">
@@ -4393,21 +4393,21 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
       <div style="text-align:center;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:14px">
         <div class="kpi-display-success-lg" id="nm-export-kwh">-</div>
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px">yılda şebekeye giden enerji</div>
+        <div class="text-helper-72-mt-3">yılda şebekeye giden enerji</div>
       </div>
       <div style="text-align:center;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:14px">
         <div class="kpi-display-success-lg" id="nm-export-revenue">-</div>
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px">yıllık mahsuplaşma veya satış etkisi</div>
+        <div class="text-helper-72-mt-3">yıllık mahsuplaşma veya satış etkisi</div>
       </div>
       <div style="text-align:center;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:14px">
         <div class="kpi-display-success-lg" id="nm-self-consumption">--%</div>
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px">anında kullanılan oran</div>
+        <div class="text-helper-72-mt-3">anında kullanılan oran</div>
       </div>
     </div>
   </div>
 
   <!-- Section breakdown -->
-  <div class="card" id="section-breakdown-card" style="display:none;margin-top:16px">
+  <div class="card error-msg-hidden-md" id="section-breakdown-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
       Çatı Bazında Dağılım
@@ -4542,7 +4542,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- Hourly profile card -->
-  <div class="card" id="hourly-profile-card" style="display:none;margin-top:16px">
+  <div class="card error-msg-hidden-md" id="hourly-profile-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Saatlik Üretim Profili
@@ -4558,7 +4558,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- Sun path card -->
-  <div class="card" id="sun-path-card" style="display:none;margin-top:16px">
+  <div class="card error-msg-hidden-md" id="sun-path-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       Güneş Yolu Diyagramı
@@ -4570,7 +4570,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- Heatmap card -->
-  <div class="card" id="heatmap-card" style="display:none;margin-top:16px">
+  <div class="card error-msg-hidden-md" id="heatmap-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg>
       Türkiye Aylık Üretim Haritası
@@ -4579,10 +4579,10 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div id="heatmap-container" style="height:360px;border-radius:10px;border:1px solid var(--border)"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-secondary" style="font-size:0.75rem;padding:5px 10px" data-click-action="setHeatmapMonth" data-arg="0" data-arg-type="number">Oca</button>
-        <button class="btn btn-secondary" style="font-size:0.75rem;padding:5px 10px" data-click-action="setHeatmapMonth" data-arg="3" data-arg-type="number">Nis</button>
-        <button class="btn btn-secondary" style="font-size:0.75rem;padding:5px 10px" data-click-action="setHeatmapMonth" data-arg="6" data-arg-type="number">Tem</button>
-        <button class="btn btn-secondary" style="font-size:0.75rem;padding:5px 10px" data-click-action="setHeatmapMonth" data-arg="9" data-arg-type="number">Eki</button>
+        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="0" data-arg-type="number">Oca</button>
+        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="3" data-arg-type="number">Nis</button>
+        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="6" data-arg-type="number">Tem</button>
+        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="9" data-arg-type="number">Eki</button>
       </div>
       <button class="btn btn-primary" id="heatmap-play-btn" data-click-action="toggleHeatmapAnimation" style="padding:7px 16px;font-size:0.82rem">▶ Oynat</button>
     </div>
@@ -4597,7 +4597,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- Scenario analysis card -->
-  <div class="card" id="scenario-card" style="display:none;margin-top:16px">
+  <div class="card error-msg-hidden-md" id="scenario-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Senaryo Analizi — Enflasyon Etkisi
@@ -4627,7 +4627,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- FX projection card -->
-  <div class="card" id="fx-projection-card" style="display:none;margin-top:16px">
+  <div class="card error-msg-hidden-md" id="fx-projection-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       USD/TRY Döviz Kuru Projeksiyonu

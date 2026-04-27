@@ -1748,3 +1748,40 @@
 
 .metric-color-primary { --metric-color: var(--primary); }
 .metric-color-danger  { --metric-color: var(--danger); }
+
+/* ── F1.C.5a semantic classes: high-frequency multi-prop kalıpları ─────
+   En sık tekrar eden inline style kombinasyonları için anlamlı isim.
+   Pixel-perfect korunmuş; variant'lar (border-radius/padding farkı) ayrı
+   class olarak tutuldu — F1.C.5b'de gereken yerde kompozit yapılabilir. */
+
+/* Form helper text */
+.text-caption-helper        { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+.text-helper-block-7        { font-size: 0.7rem;  color: var(--text-muted); display: block; }
+.text-helper-72-mb-3        { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 3px; }
+.text-helper-72-mt-3        { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+.text-helper-78-mt-6        { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
+.text-helper-75-mb-6        { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+.text-helper-68-mb-3        { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 3px; }
+
+/* Surface cards (background + border + radius + padding) */
+.surface-card-sm            { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+.surface-card-7-10          { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; }
+.surface-card-6-7-10        { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; }
+.surface-card-6-6-10        { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+.surface-card-6-5-8         { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; }
+.surface-card-glass         { background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 8px; }
+
+/* Inputs / chips / cells */
+.input-meta-row             { margin-top: 4px; width: 100%; }
+.error-msg-hidden-sm        { display: none; margin-top: 4px; font-size: 0.68rem; }
+.error-msg-hidden-md        { display: none; margin-top: 16px; }
+.error-msg-hidden-mt-14     { display: none; margin-top: 14px; }
+.error-msg-hidden-mt-4      { display: none; margin-top: 4px; }
+.chip-xs-pad                { font-size: 0.65rem; padding: 1px 5px; }
+.chip-sm-pad                { font-size: 0.75rem; padding: 5px 10px; }
+.cell-right-tight           { text-align: right; padding: 4px 6px; }
+.cell-center-tight          { text-align: center; padding: 4px 6px; }
+.flex-row-muted-sm          { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; }
+.flex-row-md                { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; }
+.subtitle-mb-4              { font-size: 0.9rem; margin-bottom: 14px; }
+.success-callout            { text-align: center; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); }
