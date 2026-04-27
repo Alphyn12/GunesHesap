@@ -3765,6 +3765,34 @@ registerActions({
   onTaxToggle,
   updateTaxInput,
 });
+
+// F1.B.2 offgrid-evidence grubu: 51 inline.
+// Çeşit-zengin grup — 17 evidence file input, 3 evidence document input,
+// 14 L2 setting değişikliği, 12 governance input, 2 identity, 2 mode toggle,
+// 1 slider DOM-update wrapper.
+//
+// File input handler'ları element-level data attributes kullanıyor:
+//   <input data-change-action="handleOffgridEvidenceFileUpload"
+//          data-evidence-field="offgridSiteShading"
+//          data-evidence-status-id="offgrid-shading-evidence-status">
+// Bu sözleşme, 17 ayrı wrapper yazmak yerine tek dispatcher satırıyla 17
+// evidence alanını yönetir; yeni alan eklemek HTML değişikliği yetiyor.
+function updateOffgridCriticalFractionFromSlider(_arg, el) {
+  const valEl = document.getElementById('offgrid-critical-fraction-val');
+  if (valEl && el) valEl.textContent = el.value + '%';
+  updateOffgridL2Settings();
+}
+registerActions({
+  handleOffgridEvidenceFileUpload: (_arg, el, e) =>
+    handleOffgridEvidenceFileUpload(e, el?.dataset.evidenceField, el?.dataset.evidenceStatusId),
+  attachEvidenceFromInput: (_arg, el) =>
+    attachEvidenceFromInput(el?.dataset.evidenceField, el),
+  setOffgridCalculationMode,
+  updateOffgridL2Settings,
+  updateOffgridCriticalFractionFromSlider,
+  updateProposalGovernanceInput,
+  updateUserIdentityInput,
+});
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
 window.isInTurkey = isInTurkey;

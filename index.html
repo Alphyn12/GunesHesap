@@ -3029,7 +3029,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tarife Kaynak Dosyası</div>
               <input type="file" id="tariff-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
-                onchange="attachEvidenceFromInput('tariffSource', this)"
+                data-change-action="attachEvidenceFromInput" data-evidence-field="tariffSource"
                 style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.78rem"/>
             </div>
             <div>
@@ -3067,7 +3067,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <option value="verified">Fatura kanıtı doğrulandı</option>
             </select>
             <input type="file" id="bill-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
-              onchange="attachEvidenceFromInput('customerBill', this)"
+              data-change-action="attachEvidenceFromInput" data-evidence-field="customerBill"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.78rem"/>
           </div>
           <div id="evidence-file-status" style="font-size:0.74rem;color:var(--text-muted);margin-top:6px">customerBill: dosya yok | supplierQuote: dosya yok | tariffSource: dosya yok</div>
@@ -3104,16 +3104,16 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="offgrid-block">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px" data-i18n="offgridL2.calculationModeLabel">Hesap Seviyesi</div>
             <div class="offgrid-mode-toggle">
-              <button type="button" data-offgrid-mode-btn="basic" onclick="setOffgridCalculationMode('basic')" class="active">
+              <button type="button" data-offgrid-mode-btn="basic" data-click-action="setOffgridCalculationMode" data-arg="basic" class="active">
                 <strong>Basit hesap</strong>
                 <span>Konut tipini seç; günlük tüketim ve kritik yük varsayımları otomatik gelsin.</span>
               </button>
-              <button type="button" data-offgrid-mode-btn="advanced" onclick="setOffgridCalculationMode('advanced')">
+              <button type="button" data-offgrid-mode-btn="advanced" data-click-action="setOffgridCalculationMode" data-arg="advanced">
                 <strong>İleri hesap</strong>
                 <span>Cihazları tek tek ekle, gece yükünü ve saha/8760 kanıtlarını ayrı modelle.</span>
               </button>
             </div>
-            <select id="offgrid-calculation-mode" style="display:none" onchange="updateOffgridL2Settings()">
+            <select id="offgrid-calculation-mode" style="display:none" data-change-action="updateOffgridL2Settings">
               <option value="basic" data-i18n="offgridL2.calculationModeBasic">Basit: konut profili</option>
               <option value="advanced" data-i18n="offgridL2.calculationModeAdvanced">İleri: cihaz listesi ve 8760 saha verisi</option>
             </select>
@@ -3127,7 +3127,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="offgridL2.autonomyGoalLabel">Otonom Hedef</div>
             <select id="offgrid-autonomy-goal"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;width:100%"
-              onchange="updateOffgridL2Settings()">
+              data-change-action="updateOffgridL2Settings">
               <option value="cost-focus"      data-i18n="offgridL2.goalCostFocus">Maliyet Odaklı (minimum batarya)</option>
               <option value="reliability"     data-i18n="offgridL2.goalReliability">Güvenilirlik Odaklı (hedef ≥%90 tam kapsama)</option>
               <option value="critical-safety" data-i18n="offgridL2.goalCriticalSafety">Kritik Yük Güvencesi (kritik %100, toplam makul)</option>
@@ -3157,7 +3157,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </div>
             <input type="range" id="offgrid-critical-fraction" min="10" max="100" step="5" value="60"
               style="width:100%;accent-color:#8B5CF6"
-              oninput="document.getElementById('offgrid-critical-fraction-val').textContent=this.value+'%'; updateOffgridL2Settings()"/>
+              data-input-action="updateOffgridCriticalFractionFromSlider"/>
             <div id="offgrid-critical-fraction-hint" style="font-size:0.7rem;color:var(--text-muted);margin-top:3px" data-i18n="offgridL2.criticalFractionHint">
               Toplam günlük tüketimin yüzde kaçı kesintisiz çalışmalı? Buzdolabı, modem, güvenlik, temel aydınlatma ve zorunlu pompa yükleri genelde kritik sayılır.
             </div>
@@ -3186,87 +3186,87 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.shadingEvidenceUpload">Saha gölge kanıtı</span>
-                <input type="file" id="offgrid-shading-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridSiteShading', 'offgrid-shading-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-shading-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridSiteShading" data-evidence-status-id="offgrid-shading-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-shading-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.datasheetEvidenceUpload">Ekipman datasheet / üretici kanıtı</span>
-                <input type="file" id="offgrid-datasheet-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridEquipmentDatasheets', 'offgrid-datasheet-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-datasheet-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridEquipmentDatasheets" data-evidence-status-id="offgrid-datasheet-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-datasheet-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.commissioningEvidenceUpload">Devreye alma raporu</span>
-                <input type="file" id="offgrid-commissioning-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridCommissioningReport', 'offgrid-commissioning-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-commissioning-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridCommissioningReport" data-evidence-status-id="offgrid-commissioning-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-commissioning-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.acceptanceEvidenceUpload">Saha kabul testi</span>
-                <input type="file" id="offgrid-acceptance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridAcceptanceTest', 'offgrid-acceptance-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-acceptance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAcceptanceTest" data-evidence-status-id="offgrid-acceptance-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-acceptance-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.monitoringEvidenceUpload">İzleme / sayaç kalibrasyon kanıtı</span>
-                <input type="file" id="offgrid-monitoring-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridMonitoringCalibration', 'offgrid-monitoring-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-monitoring-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridMonitoringCalibration" data-evidence-status-id="offgrid-monitoring-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-monitoring-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.asBuiltEvidenceUpload">As-built proje / koruma ayarları</span>
-                <input type="file" id="offgrid-asbuilt-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridAsBuiltDocs', 'offgrid-asbuilt-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-asbuilt-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAsBuiltDocs" data-evidence-status-id="offgrid-asbuilt-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-asbuilt-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.warrantyEvidenceUpload">Garanti şartları / O&M planı</span>
-                <input type="file" id="offgrid-warranty-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridWarrantyOandM', 'offgrid-warranty-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-warranty-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridWarrantyOandM" data-evidence-status-id="offgrid-warranty-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-warranty-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.telemetryEvidenceUpload">30 günlük telemetri exportu</span>
-                <input type="file" id="offgrid-telemetry-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridTelemetry30Day', 'offgrid-telemetry-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-telemetry-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridTelemetry30Day" data-evidence-status-id="offgrid-telemetry-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-telemetry-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.performanceEvidenceUpload">Ölçülen performans baseline</span>
-                <input type="file" id="offgrid-performance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridPerformanceBaseline', 'offgrid-performance-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-performance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridPerformanceBaseline" data-evidence-status-id="offgrid-performance-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-performance-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.maintenanceEvidenceUpload">Bakım kayıtları</span>
-                <input type="file" id="offgrid-maintenance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridMaintenanceLog', 'offgrid-maintenance-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-maintenance-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridMaintenanceLog" data-evidence-status-id="offgrid-maintenance-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-maintenance-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.incidentEvidenceUpload">Olay / kesinti kayıtları</span>
-                <input type="file" id="offgrid-incident-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridIncidentLog', 'offgrid-incident-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-incident-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridIncidentLog" data-evidence-status-id="offgrid-incident-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-incident-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.monitoringSlaEvidenceUpload">Uzaktan izleme SLA</span>
-                <input type="file" id="offgrid-monitoring-sla-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridRemoteMonitoringSla', 'offgrid-monitoring-sla-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-monitoring-sla-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridRemoteMonitoringSla" data-evidence-status-id="offgrid-monitoring-sla-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-monitoring-sla-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.annualRevalidationEvidenceUpload">Yıllık saha revalidasyon raporu</span>
-                <input type="file" id="offgrid-annual-revalidation-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridAnnualRevalidation', 'offgrid-annual-revalidation-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-annual-revalidation-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridAnnualRevalidation" data-evidence-status-id="offgrid-annual-revalidation-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-annual-revalidation-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.batteryHealthEvidenceUpload">Batarya SOH / sağlık raporu</span>
-                <input type="file" id="offgrid-battery-health-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridBatteryHealthReport', 'offgrid-battery-health-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-battery-health-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridBatteryHealthReport" data-evidence-status-id="offgrid-battery-health-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-battery-health-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.generatorServiceEvidenceUpload">Jeneratör servis / yakıt kaydı</span>
-                <input type="file" id="offgrid-generator-service-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridGeneratorServiceRecord', 'offgrid-generator-service-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-generator-service-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridGeneratorServiceRecord" data-evidence-status-id="offgrid-generator-service-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-generator-service-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.firmwareBackupEvidenceUpload">Firmware / ayar yedeği</span>
-                <input type="file" id="offgrid-firmware-backup-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridFirmwareSettingsBackup', 'offgrid-firmware-backup-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-firmware-backup-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridFirmwareSettingsBackup" data-evidence-status-id="offgrid-firmware-backup-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-firmware-backup-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
               <label style="font-size:0.7rem;color:var(--text-muted);display:block">
                 <span data-i18n="offgridL2.customerSignoffEvidenceUpload">Müşteri işletme onayı</span>
-                <input type="file" id="offgrid-customer-signoff-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" onchange="handleOffgridEvidenceFileUpload(event, 'offgridCustomerSignoff', 'offgrid-customer-signoff-evidence-status')" style="margin-top:4px;width:100%">
+                <input type="file" id="offgrid-customer-signoff-evidence-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" data-change-action="handleOffgridEvidenceFileUpload" data-evidence-field="offgridCustomerSignoff" data-evidence-status-id="offgrid-customer-signoff-evidence-status" style="margin-top:4px;width:100%">
                 <div id="offgrid-customer-signoff-evidence-status" style="display:none;margin-top:4px;font-size:0.68rem"></div>
               </label>
             </div>
@@ -3375,7 +3375,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
               <span style="font-size:0.78rem;font-weight:600;color:#F59E0B" data-i18n="offgridL2.generatorTitle">Jeneratör / Yedek Güç</span>
               <label style="display:flex;align-items:center;gap:6px;margin-left:auto;cursor:pointer">
-                <input type="checkbox" id="offgrid-generator-enabled" onchange="updateOffgridL2Settings()"/>
+                <input type="checkbox" id="offgrid-generator-enabled" data-change-action="updateOffgridL2Settings"/>
                 <span style="font-size:0.72rem;color:var(--text-muted)" data-i18n="offgridL2.generatorEnable">Etkin</span>
               </label>
             </div>
@@ -3385,7 +3385,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div id="offgrid-generator-details" class="offgrid-generator-details" style="display:none">
               <label>
                 <span>Yedek güç seviyesi</span>
-                <select id="offgrid-generator-strategy" onchange="updateOffgridL2Settings()">
+                <select id="offgrid-generator-strategy" data-change-action="updateOffgridL2Settings">
                   <option value="critical-backup">Temel: buzdolabı, modem, ışık gibi kritikler</option>
                   <option value="bad-weather">Güçlü: kötü havada daha uzun dayanım</option>
                   <option value="full-backup">Tam yedek: evin büyük bölümünü destekle</option>
@@ -3394,7 +3394,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </label>
               <label>
                 <span>Yakıt türü</span>
-                <select id="offgrid-generator-fuel-type" onchange="updateOffgridL2Settings()">
+                <select id="offgrid-generator-fuel-type" data-change-action="updateOffgridL2Settings">
                   <option value="diesel">Dizel</option>
                   <option value="gasoline">Benzin</option>
                   <option value="lpg">LPG / Doğalgaz</option>
@@ -3403,7 +3403,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </label>
               <label>
                 <span>Jeneratör büyüklüğü</span>
-                <select id="offgrid-generator-size-preset" onchange="updateOffgridL2Settings()">
+                <select id="offgrid-generator-size-preset" data-change-action="updateOffgridL2Settings">
                   <option value="auto">Otomatik öner</option>
                   <option value="small">Küçük / ekonomik</option>
                   <option value="large">Büyük / konforlu</option>
@@ -3413,36 +3413,36 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <label>
                 <span data-i18n="offgridL2.generatorFuelCost">Yakıt Maliyeti (₺/kWh)</span>
                 <input type="number" id="offgrid-generator-fuel-cost" value="8" min="0" max="100" step="0.5"
-                  oninput="updateOffgridL2Settings()"/>
+                  data-input-action="updateOffgridL2Settings"/>
               </label>
               <label>
                 <span data-i18n="offgridL2.generatorCapexLabel">Tahmini jeneratör maliyeti (₺)</span>
                 <input type="number" id="offgrid-generator-capex" value="" min="0" max="10000000" step="1000"
                   placeholder="örn. 50000"
-                  oninput="updateOffgridL2Settings()"/>
+                  data-input-action="updateOffgridL2Settings"/>
               </label>
               <details class="offgrid-generator-expert">
                 <summary>Uzman ayarları</summary>
                 <div class="offgrid-generator-expert-grid">
                   <label>
                     <span data-i18n="offgridL2.generatorKw">Kapasite (kW)</span>
-                    <input type="number" id="offgrid-generator-kw" value="5" min="0.5" max="500" step="0.5" oninput="updateOffgridL2Settings()"/>
+                    <input type="number" id="offgrid-generator-kw" value="5" min="0.5" max="500" step="0.5" data-input-action="updateOffgridL2Settings"/>
                   </label>
                   <label>
                     <span>Kapasite payı (%)</span>
-                    <input type="number" id="offgrid-generator-reserve-pct" value="20" min="0" max="200" step="5" oninput="updateOffgridL2Settings()"/>
+                    <input type="number" id="offgrid-generator-reserve-pct" value="20" min="0" max="200" step="5" data-input-action="updateOffgridL2Settings"/>
                   </label>
                   <label>
                     <span>Başlatma eşiği (%)</span>
-                    <input type="number" id="offgrid-generator-start-soc-pct" value="25" min="0" max="90" step="5" oninput="updateOffgridL2Settings()"/>
+                    <input type="number" id="offgrid-generator-start-soc-pct" value="25" min="0" max="90" step="5" data-input-action="updateOffgridL2Settings"/>
                   </label>
                   <label>
                     <span>Maks. çalışma (saat/gün)</span>
-                    <input type="number" id="offgrid-generator-max-hours-day" value="8" min="0" max="24" step="0.5" oninput="updateOffgridL2Settings()"/>
+                    <input type="number" id="offgrid-generator-max-hours-day" value="8" min="0" max="24" step="0.5" data-input-action="updateOffgridL2Settings"/>
                   </label>
                   <label>
                     <span>Yıllık servis gideri (₺)</span>
-                    <input type="number" id="offgrid-generator-maintenance-cost" value="0" min="0" max="10000000" step="500" oninput="updateOffgridL2Settings()"/>
+                    <input type="number" id="offgrid-generator-maintenance-cost" value="0" min="0" max="10000000" step="500" data-input-action="updateOffgridL2Settings"/>
                   </label>
                 </div>
               </details>
@@ -3455,7 +3455,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px" data-i18n="offgridL2.badWeatherLabel">Kötü Hava Dayanıklılık Testi</div>
             <select id="offgrid-bad-weather-level"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;width:100%"
-              onchange="updateOffgridL2Settings()">
+              data-change-action="updateOffgridL2Settings">
               <option value=""         data-i18n="offgridL2.badWeatherNone">Simüle etme</option>
               <option value="light"    data-i18n="offgridL2.badWeatherLight">Hafif (5 gün, PV %15'e düşer)</option>
               <option value="moderate" data-i18n="offgridL2.badWeatherModerate">Orta (10 gün, PV %5'e düşer)</option>
@@ -3537,7 +3537,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div class="step5-tariff-quick-grid">
           <div>
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tedarikçi Teklifi</div>
-            <select id="supplier-quote-state" onchange="updateProposalGovernanceInput()"
+            <select id="supplier-quote-state" data-change-action="updateProposalGovernanceInput"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
               <option value="not-requested" selected>İstenmedi</option>
               <option value="requested">İstendi</option>
@@ -3555,7 +3555,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             </select>
           </div>
           <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
-            <input type="checkbox" id="grid-checklist-complete" onchange="updateProposalGovernanceInput()"> <span data-i18n="governance.gridChecklistComplete">Şebeke başvuru kontrol listesi tamamlandı</span>
+            <input type="checkbox" id="grid-checklist-complete" data-change-action="updateProposalGovernanceInput"> <span data-i18n="governance.gridChecklistComplete">Şebeke başvuru kontrol listesi tamamlandı</span>
           </label>
           <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
             <input type="checkbox" id="quote-inputs-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.inputsVerified">Teklif varsayımları doğrulandı</span>
@@ -3576,12 +3576,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <div class="step5-tariff-quick-grid">
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kullanıcı</div>
-                <input type="text" id="user-name-input" value="local-user" placeholder="Ad Soyad" oninput="updateUserIdentityInput()"
+                <input type="text" id="user-name-input" value="local-user" placeholder="Ad Soyad" data-input-action="updateUserIdentityInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Rol</div>
-                <select id="user-role-input" onchange="updateUserIdentityInput()"
+                <select id="user-role-input" data-change-action="updateUserIdentityInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                   <option value="sales" selected data-i18n="governance.roleSales">Satış</option>
                   <option value="engineer" data-i18n="governance.roleEngineer">Mühendis</option>
@@ -3591,7 +3591,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Onay Durumu</div>
-                <select id="proposal-approval-state" onchange="updateProposalGovernanceInput()"
+                <select id="proposal-approval-state" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                   <option value="draft" selected data-i18n="governance.approvalDraft">Taslak</option>
                   <option value="engineering-review" data-i18n="governance.approvalEngineeringReview">Mühendislik İncelemesi</option>
@@ -3602,53 +3602,53 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Onaylayan</div>
-                <input type="text" id="proposal-approved-by" placeholder="İsim / rol" oninput="updateProposalGovernanceInput()"
+                <input type="text" id="proposal-approved-by" placeholder="İsim / rol" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">BOM Marjı (%)</div>
-                <input type="number" id="bom-margin-rate" value="18" min="0" max="80" step="1" oninput="updateProposalGovernanceInput()"
+                <input type="number" id="bom-margin-rate" value="18" min="0" max="80" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Risk Payı (%)</div>
-                <input type="number" id="bom-contingency-rate" value="5" min="0" max="50" step="1" oninput="updateProposalGovernanceInput()"
+                <input type="number" id="bom-contingency-rate" value="5" min="0" max="50" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Teklif Ref</div>
-                <input type="text" id="supplier-quote-ref" placeholder="SQ-2026-001" oninput="updateProposalGovernanceInput()"
+                <input type="text" id="supplier-quote-ref" placeholder="SQ-2026-001" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Teklif Tarihi</div>
-                <input type="date" id="supplier-quote-date" onchange="updateProposalGovernanceInput()"
+                <input type="date" id="supplier-quote-date" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Teklif Geçerlilik</div>
-                <input type="date" id="supplier-quote-valid-until" onchange="updateProposalGovernanceInput()"
+                <input type="date" id="supplier-quote-valid-until" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Tedarikçi Teklif Dosyası</div>
                 <input type="file" id="supplier-quote-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
-                  onchange="attachEvidenceFromInput('supplierQuote', this)"
+                  data-change-action="attachEvidenceFromInput" data-evidence-field="supplierQuote"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);width:100%;font-size:0.78rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kredi Faizi (%/yıl)</div>
-                <input type="number" id="loan-annual-rate" value="35" min="0" max="200" step="1" oninput="updateProposalGovernanceInput()"
+                <input type="number" id="loan-annual-rate" value="35" min="0" max="200" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Kredi Vadesi (yıl)</div>
-                <input type="number" id="loan-term-years" value="5" min="1" max="20" step="1" oninput="updateProposalGovernanceInput()"
+                <input type="number" id="loan-term-years" value="5" min="1" max="20" step="1" data-input-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"/>
               </div>
               <div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Bakım Sözleşmesi</div>
-                <select id="maintenance-contract-status" onchange="updateProposalGovernanceInput()"
+                <select id="maintenance-contract-status" data-change-action="updateProposalGovernanceInput"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.9rem;width:100%">
                   <option value="not-offered" selected>Sunulmadı</option>
                   <option value="offered">Sunuldu</option>
