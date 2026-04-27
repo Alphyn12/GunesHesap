@@ -1730,3 +1730,21 @@
 /* kpi/display headings — multi-prop semantic */
 .kpi-display-primary    { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--primary); }
 .kpi-display-success-lg { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #10B981; }
+
+/* ── F1.C.4 utility classes: CSS var modifiers ─────────────
+   Inline style="--c: X" / --kpi-color / --metric-color örneklerini
+   modifier class olarak yazarız. CSP-safe ve isim seçeneği daha açıklayıcı. */
+.c-primary { --c: var(--primary); }
+.c-success { --c: var(--success); }
+.c-amber   { --c: #FCD34D; }
+.c-cyan    { --c: #06B6D4; }
+.c-orange  { --c: #F59E0B; }
+.c-purple  { --c: #8B5CF6; }
+
+.kpi-color-primary       { --kpi-color: var(--primary); }
+.kpi-color-success       { --kpi-color: #10B981; }
+.kpi-color-success-light { --kpi-color: #34D399; }
+.kpi-color-info          { --kpi-color: #06B6D4; }
+
+.metric-color-primary { --metric-color: var(--primary); }
+.metric-color-danger  { --metric-color: var(--danger); }
