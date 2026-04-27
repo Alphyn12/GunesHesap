@@ -783,7 +783,7 @@ export function computeFinancialTable({
     rows.push({
       year,
       energy: Math.round(degradedEnergy),
-      rate: electricityPrice.toFixed(2),
+      rate: electricityPriceDisplay.toFixed(2),
       effectiveImportRate: electricityPrice.toFixed(2),
       rateBasis: (tariffModel.distributionFee ?? 0) > 0 ? 'import-plus-distribution-fee' : 'import-rate',
       exportRate: escalatedExportRate.toFixed(2),

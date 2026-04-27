@@ -28,7 +28,7 @@ const en = JSON.parse(await readFile(new URL('../locales/en.json', import.meta.u
 const de = JSON.parse(await readFile(new URL('../locales/de.json', import.meta.url), 'utf8'));
 
 assert.match(index, /<title>Solar Rota/);
-assert.match(index, /<div class="logo-text">Solar Rota<\/div>/);
+assert.match(index, /<(?:div|span) class="logo-text">Solar Rota<\/(?:div|span)>/);
 assert.equal(manifest.name, 'Solar Rota');
 assert.equal(manifest.short_name, 'Solar Rota');
 assert.equal(tr.app.title, 'Solar Rota');

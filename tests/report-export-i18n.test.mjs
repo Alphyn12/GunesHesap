@@ -438,7 +438,7 @@ assert.match(reportBody.innerHTML, /AC-Ausgangswirkungsgrad/);
 assert.doesNotMatch(reportBody.innerHTML, /Kullanılabilir çatı alanı/);
 const proposalDe = buildStructuredProposalExport(window.state, window.state.results);
 assert.equal(proposalDe.display.language, 'de');
-assert.equal(proposalDe.display.title, 'Proposal-Handoff-Zusammenfassung');
+assert.equal(proposalDe.display.title, 'Zusammenfassung für die Angebotsübergabe');
 assert.match(proposalDe.display.blockers.join(' '), /PVGIS-Livedaten/);
 assert.match(proposalDe.display.evidenceWarnings.join(' '), /Gültigkeitsdatum fehlt/);
 assert.match(proposalDe.display.evidenceBlockers.join(' '), /Lieferantenangebot: kein verifizierter Nachweis/);

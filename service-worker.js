@@ -1,5 +1,5 @@
-// v34: UI Polish Faz D — locationSelected i18n, panel-preview 2x2, a11y smoke.
-const CACHE_NAME = 'solarRota-v34';
+// v35: Faz 0 — landing.css precache fix.
+const CACHE_NAME = 'solarRota-v35';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
   '/css/components.css',
   '/css/redesign.css',
   '/css/mobile.css',
+  '/css/landing.css',
   '/js/app.js',
   '/js/bill-analysis.js',
   '/js/backend-config.js',
@@ -38,6 +39,7 @@ const STATIC_ASSETS = [
   '/js/location-validation.js',
   '/js/osm-shadow.js',
   '/js/output-i18n.js',
+  '/js/panel-catalog.js',
   '/js/pv-engine-contracts.js',
   '/js/pvlib-bridge.js',
   '/js/proposal-governance.js',
