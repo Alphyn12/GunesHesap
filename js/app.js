@@ -3725,6 +3725,46 @@ registerActions({
   addOffgridDeviceFromCatalog,
   addOffgridDevice,
 });
+
+// F1.B.2 advanced-loads grubu: 36 inline (bill/EV/heatpump/tax + CSV upload).
+// CSV upload handler'ları file input'tan event objesi bekler — register'da
+// (_arg, _el, e) => handleX(e) ile dispatcher'ın 3. parametresini iletiyoruz.
+// Quick-fill butonları slider DOM'unu da güncellemeli — wrapper.
+function updateConsumptionQuickFill(arg) {
+  const n = Number(arg);
+  updateConsumption(n);
+  const s = document.getElementById('consumption-slider');
+  if (s) s.value = String(n);
+}
+registerActions({
+  // Consumption
+  updateConsumption,
+  updateConsumptionQuickFill,
+  // CSV upload (event-arg via 3rd dispatcher param)
+  handleHourlyCsvUpload: (_arg, _el, e) => handleHourlyCsvUpload(e),
+  handleOffgridPvCsvUpload: (_arg, _el, e) => handleOffgridPvCsvUpload(e),
+  handleOffgridLoadCsvUpload: (_arg, _el, e) => handleOffgridLoadCsvUpload(e),
+  handleOffgridCriticalCsvUpload: (_arg, _el, e) => handleOffgridCriticalCsvUpload(e),
+  clearHourlyCsvUpload,
+  clearOffgridPvCsvUpload,
+  clearOffgridLoadCsvUpload,
+  clearOffgridCriticalCsvUpload,
+  // Bill
+  toggleBillBlock,
+  onBillToggle,
+  // EV
+  toggleEVBlock,
+  onEVToggle,
+  updateEVInput,
+  // Heat pump
+  toggleHeatPumpBlock,
+  onHeatPumpToggle,
+  updateHeatPumpInput,
+  // Tax
+  toggleTaxBlock,
+  onTaxToggle,
+  updateTaxInput,
+});
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
 window.isInTurkey = isInTurkey;
