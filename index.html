@@ -1258,7 +1258,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                 <div class="lp-pane-calc">
                   <div class="lp-pane-calc-head">
                     <div>
-                      <div class="lp-pane-eyebrow" style="margin-bottom:10px">SAATLİK SİMÜLASYON</div>
+                      <div class="lp-pane-eyebrow mb-2-5">SAATLİK SİMÜLASYON</div>
                       <div class="lp-pane-calc-title">Yıl boyu 8.760 zaman adımı işleniyor…</div>
                     </div>
                     <div class="lp-pane-calc-pct">
@@ -1294,7 +1294,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <div class="lp-tour-pane" data-step="7">
                 <div class="lp-pane-result-head">
                   <div>
-                    <div class="lp-pane-eyebrow" style="margin-bottom:6px">SONUÇLAR</div>
+                    <div class="lp-pane-eyebrow mb-1-5">SONUÇLAR</div>
                     <div class="lp-pane-h">Antalya · Ticarethane çatı sistemi</div>
                   </div>
                   <span class="lp-pill-ok"><span class="d"></span> ÖN ANALİZ HAZIR</span>
@@ -1322,7 +1322,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                   </div>
                 </div>
                 <div class="lp-pane-resultviz">
-                  <div class="lp-prod-block" style="margin-top:0">
+                  <div class="lp-prod-block mt-0">
                     <div class="lp-prod-head">
                       <span class="lp-eyebrow-sm">Aylık Üretim · saatlik modelli</span>
                       <span class="lp-bar-chip lp-bar-chip-amber">1.580 kWh · Tem</span>
@@ -1836,7 +1836,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
   <div class="settings-panel-section">
     <div class="settings-panel-label" data-i18n="settings.currency">Para Birimi</div>
-    <div class="settings-panel-row" style="margin-bottom:14px">
+    <div class="settings-panel-row mb-3-5">
       <button class="settings-choice-btn currency-btn" data-currency="TRY" data-click-action="switchCurrency" data-arg="TRY">₺ TL</button>
       <button class="settings-choice-btn currency-btn" data-currency="USD" data-click-action="switchCurrency" data-arg="USD">$ USD</button>
     </div>
@@ -2018,7 +2018,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
     <div class="loc-bottom-right">
       <button class="btn btn-secondary" id="step2-back-btn" data-click-action="goToStep" data-arg="1" data-arg-type="number" style="padding:9px 16px;font-size:0.82rem">← Geri</button>
-      <button class="btn btn-primary" id="step2-continue-btn" data-click-action="validateStep2" style="padding:9px 20px">
+      <button class="btn btn-primary p-button-md" id="step2-continue-btn" data-click-action="validateStep2">
         <span class="step2-continue-label">Sonraki Adım</span> →
       </button>
     </div>
@@ -2109,12 +2109,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
 
       <!-- Roof area -->
-      <div class="card" style="margin-bottom:16px">
+      <div class="card mb-4">
         <div class="card-title" style="font-size:0.9rem;margin-bottom:14px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
           Çatı Alanı
         </div>
-        <div class="form-group" style="margin-bottom:8px">
+        <div class="form-group mb-2">
           <label>Kullanılabilir Alan (m²)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Güneş paneli kurulacak kullanılabilir çatı alanı. 1 kWp sistem için yaklaşık 6-7 m² alan gerekir.</span></span>
           </label>
@@ -2130,7 +2130,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
 
       <!-- Tilt -->
-      <div class="card" style="margin-bottom:16px">
+      <div class="card mb-4">
         <div class="card-title" style="font-size:0.9rem;margin-bottom:14px">Eğim & Yön</div>
         <div class="roof-geometry-grid">
           <div class="roof-geometry-panel">
@@ -2223,7 +2223,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
 
       <!-- Shading & Soiling -->
-      <div class="card" style="margin-bottom:16px">
+      <div class="card mb-4">
         <div class="card-title" style="font-size:0.9rem;margin-bottom:14px">Kayıp Faktörleri</div>
         <div class="form-group">
           <label>Gölgelenme Faktörü (%)
@@ -2237,7 +2237,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div style="font-size:0.78rem;color:var(--text-muted)" id="shading-desc">Az gölge</div>
           <div id="osm-double-count-warning" class="on-grid-explain" style="display:none;margin-top:10px"></div>
         </div>
-        <div class="form-group" style="margin-top:16px">
+        <div class="form-group mt-4">
           <label>Kirlenme Faktörü (%)
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Toz, kum ve kirlilik nedeniyle oluşan enerji kaybı yüzdesi.</span></span>
           </label>
@@ -2266,7 +2266,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
 
       <!-- OSM Shadow -->
-      <div class="card" style="margin-bottom:16px">
+      <div class="card mb-4">
         <div class="card-title" style="font-size:0.9rem;margin-bottom:10px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
           OSM Çevre Bina Gölge Analizi
@@ -2286,7 +2286,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
 
       <!-- Multi-roof -->
-      <div class="card" style="margin-bottom:16px">
+      <div class="card mb-4">
         <div class="multi-roof-header">
           <div class="multi-roof-header-copy">
             <div class="card-title" style="margin-bottom:4px;font-size:0.9rem">
@@ -2345,7 +2345,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <div class="equipment-layout">
     <div class="equipment-main">
       <!-- Panel selection -->
-      <div class="card" style="margin-bottom:16px">
+      <div class="card mb-4">
         <div class="card-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
           <span data-i18n="step4.panelType">Panel Tipi Seçin</span>
@@ -2394,7 +2394,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
 
       <!-- Inverter selection -->
-      <div class="card" style="margin-bottom:16px" id="inverter-section">
+      <div class="card mb-4" id="inverter-section">
         <div class="card-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 12h8M12 8v8"/></svg>
           <span data-i18n="step4.inverterType">İnverter Tipi</span>
@@ -2418,7 +2418,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <div class="card equipment-battery-card" id="battery-block">
         <div class="equipment-battery-head">
           <div class="equipment-battery-head-copy">
-            <div class="card-title" style="margin-bottom:8px">
+            <div class="card-title mb-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4"/><line x1="8" y1="14" x2="8" y2="14"/></svg>
               <span data-i18n="step4.batteryStorage">Batarya Depolama (BESS)</span>
             </div>
@@ -2458,22 +2458,22 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <span>Teknik veri sayfası elinizdeyse aşağıdaki alanlarla projeyi manuel modelleyin.</span>
             </div>
             <div class="battery-custom-grid">
-              <div class="form-group" style="margin:0">
+              <div class="form-group m-0">
                 <label>Kapasite (kWh)</label>
                 <input type="number" id="bat-capacity" min="1" max="50" value="5" step="0.1" data-input-action="updateBatteryCustom"/>
               </div>
-              <div class="form-group" style="margin:0">
+              <div class="form-group m-0">
                 <label>Deşarj Derinliği DoD (%)</label>
                 <input type="number" id="bat-dod" min="50" max="100" value="80" step="5" data-input-action="updateBatteryCustom"/>
               </div>
-              <div class="form-group" style="margin:0">
+              <div class="form-group m-0">
                 <label>Round-trip Verimlilik (%)
                   <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Şarj edilen enerjinin ne kadarı deşarjda geri alınır. Ev tipi LFP sistemlerde modelleme için çoğunlukla %90–95 bandı kullanılır.</span></span>
                 </label>
                 <input type="number" id="bat-eff-input" min="75" max="97" value="90" step="1" data-input-action="syncBatteryEfficiencyInputs" data-arg-prop="value" data-sync-source="number"/>
               </div>
             </div>
-            <div class="form-group" style="margin-bottom:0">
+            <div class="form-group mb-0">
               <label>Modelleme için kullanılan round-trip verimi</label>
               <div class="range-wrap">
                 <span class="range-value" id="bat-eff-val">90%</span>
@@ -2810,7 +2810,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <div class="step5-inline-note"><strong>Önerilen kullanım:</strong> Önce tarife rejimini, baz alış fiyatını, ihracat/mahsup fiyatını ve mahsuplaşma modunu girin. SKTT, sözleşmeli fiyat ve kur gibi uzman alanları yalnızca elinizde net sözleşme veya resmi kaynak varsa değiştirin.</div>
 
     <!-- Electricity Tariff -->
-    <div class="form-group" style="margin-bottom:18px">
+    <div class="form-group mb-4-5">
       <label>Elektrik Tarifesi
         <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Elektrik faturanızdaki birim fiyat ve abone tipi. Konut, ticari ve sanayi tarifeleri farklı birim fiyat ve KDV oranlarına sahiptir.</span></span>
       </label>
@@ -2914,7 +2914,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <div id="off-grid-cost-warn" style="display:none;margin-top:4px;font-size:0.75rem;color:#F59E0B;max-width:260px" data-i18n="offGrid.costMissingWarn">Maliyet girilmedi — 2.5× şebeke tarifesi varsayılıyor.</div>
       </div>
 
-      <details class="step5-subdetails" style="margin-top:14px">
+      <details class="step5-subdetails mt-3-5">
         <summary class="step5-subsummary">
           <div>
             <strong>Uzman Tarife Alanları</strong>
@@ -3052,7 +3052,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);margin-top:8px;cursor:pointer">
             <input type="checkbox" id="tariff-tax-included" checked data-change-action="updateTariffAssumptions"> Birim fiyat vergi/dağıtım dahil kabul edilsin
           </label>
-          <div class="step5-tariff-quick-grid" style="margin-top:10px">
+          <div class="step5-tariff-quick-grid mt-2-5">
             <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);cursor:pointer">
               <input type="checkbox" id="quote-bill-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.billVerified">Fatura/tüketim verisi doğrulandı</span>
             </label>
@@ -3135,7 +3135,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
 
           <!-- Basit Mod: Konut Profili + Kritik Yük Oranı -->
-          <div id="offgrid-simple-mode-wrap" style="margin-bottom:14px">
+          <div class="mb-3-5" id="offgrid-simple-mode-wrap">
             <div id="offgrid-fill-roof-simple-note" class="offgrid-simple-intro is-hidden">
               <strong>Maksimum çatı kapasitesi seçili</strong>
               <span>Bu modda sistem, konut tipi veya enerji ihtiyacı seçtirmeden çatının net kullanılabilir alanına göre panel kapasitesini hesaplar. Tüketim profili yalnızca batarya, jeneratör ve kapsama yorumlarında arka plan varsayımı olarak kalır.</span>
@@ -3274,7 +3274,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </div>
 
           <!-- Cihaz Listesi (İleri Mod) -->
-          <div id="offgrid-device-section" style="margin-bottom:14px">
+          <div class="mb-3-5" id="offgrid-device-section">
             <div style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:8px" data-i18n="offgridL2.deviceListTitle">İleri Cihaz Bazlı Yük Modeli</div>
             <div class="offgrid-advanced-note">
               Her cihaz için güç, günlük çalışma süresi, gece çalışma süresi ve kritik olup olmadığı ayrı girilir. Bu modda hesap motoru günlük kWh alanı yerine cihaz listesini kullanır; cihaz yoksa yedek olarak günlük kWh profiline döner.
@@ -3335,7 +3335,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
                     <th style="text-align:right;padding:4px 6px" data-i18n="offgridL2.deviceDailyWh">Wh/Gün</th>
                     <th style="text-align:center;padding:4px 6px" data-i18n="offgridL2.deviceCritical">Kritik?</th>
                     <th style="text-align:center;padding:4px 6px" data-i18n="offgridL2.deviceCategory">Kategori</th>
-                    <th style="padding:4px 6px"></th>
+                    <th class="p-chip-xs"></th>
                   </tr>
                 </thead>
                 <tbody id="offgrid-device-tbody"></tbody>
@@ -3514,7 +3514,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="step5-inline-note" id="scenario-guidance-panel"></div>
 
     <!-- Proposal Governance -->
-    <div class="advanced-feature-block" id="proposal-governance-block" style="margin-bottom:18px">
+    <div class="advanced-feature-block mb-4-5" id="proposal-governance-block">
       <div class="feature-toggle-header">
         <div>
           <div style="font-weight:700;color:var(--text);font-size:0.9rem" data-i18n="governance.title">Teklif yönetişimi</div>
@@ -3523,7 +3523,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="feature-toggle-body">
         <div class="step5-inline-note"><strong>Bu bölüm neyi etkiler?</strong> Buradaki alanlar teknik üretim hesabını değil, teklifin güvenini, iç onay akışını ve ticari olgunluğunu etkiler. İlk görüşmede yalnızca temel kanıt durumlarını işaretlemek yeterlidir.</div>
-        <div class="step5-tariff-tips" style="margin-top:0;margin-bottom:12px">
+        <div class="step5-tariff-tips mt-0 mb-3">
           <div class="step5-tariff-tip">
             <strong>Önce bunu doldurun</strong>
             <span>Tedarikçi teklifi durumu, maliyet kaynağı, teklif varsayımları doğrulandı ve şebeke kontrol listesi çoğu profesyonel ön teklif için yeterli başlangıçtır.</span>
@@ -3565,7 +3565,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           </label>
         </div>
 
-        <details class="step5-subdetails" style="margin-top:14px">
+        <details class="step5-subdetails mt-3-5">
           <summary class="step5-subsummary">
             <div>
               <strong>Onay ve Ofis Detayları</strong>
@@ -3734,7 +3734,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <strong style="color:#10B981">2026 Lisanssız Üretim:</strong> Fazla üretim saatlik mahsuplaşma ve tüketim bazlı ihracat sınırıyla değerlendirilir.<br>
           <strong style="color:#06B6D4;margin-top:6px;display:block">Not:</strong> Sözleşme, bağlantı görüşü, tüketim limiti ve depolama kuralları proje bazında doğrulanmalıdır.
         </div>
-        <div class="form-group" style="margin-bottom:0">
+        <div class="form-group mb-0">
           <label style="font-size:0.8rem">USD/TRY Kuru
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Para birimi dönüşümü için kullanılır.</span></span>
           </label>
@@ -3788,7 +3788,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <strong style="color:var(--primary)">Profesyonel hesap:</strong> Yıllık bakım, sigorta ve inverter yenileme maliyetlerini 25 yıllık projeksiyona dahil eder.
         </div>
         <div class="roof-section-grid">
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Yıllık Bakım (O&M) Oranı (%)
               <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Toplam sistem maliyetinin yıllık bakım gideri oranı. Sektör ortalaması %1–1.5 arasındadır.</span></span>
             </label>
@@ -3796,7 +3796,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateOmRateFromInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Yıllık Sigorta Oranı (%)
               <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Sistem sigortası yıllık maliyeti. %0 yaparak devre dışı bırakabilirsiniz.</span></span>
             </label>
@@ -3804,7 +3804,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateInsuranceRateFromInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Yıllık Yük Artışı (%)
               <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Her yıl tüketiminizin artış oranı. EV veya ısı pompası ekliyorsanız %5–15 girebilirsiniz. Varsayılan %0 (sabit tüketim).</span></span>
             </label>
@@ -3857,19 +3857,19 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateEVInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Günlük Km</label>
             <input type="number" id="ev-daily-km" min="0" max="1000" value="50"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateEVInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Şarj Gücü (kW AC)</label>
             <input type="number" id="ev-charge-kw" min="3.7" max="22" step="0.1" value="7.4"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateEVInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Şarj Zamanı</label>
             <select id="ev-charge-time" data-change-action="updateEVInput"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem">
@@ -3877,20 +3877,20 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <option value="night">Gece</option>
             </select>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Yakıt Fiyatı (₺/L)</label>
             <input type="number" id="ev-fuel-price" min="10" max="200" value="45"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateEVInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Benzin Tüketimi (L/100km)</label>
             <input type="number" id="ev-fuel-l100" min="3" max="25" step="0.1" value="8"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateEVInput"/>
           </div>
         </div>
-        <div id="ev-preview" style="margin-top:10px"></div>
+        <div class="mt-2-5" id="ev-preview"></div>
       </div>
     </div>
 
@@ -3912,13 +3912,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="feature-toggle-body is-hidden" id="hp-block">
         <div class="roof-section-grid">
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Kullanım Alanı (m²)</label>
             <input type="number" id="hp-area" min="20" max="2000" value="120"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateHeatPumpInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Yalıtım Kalitesi</label>
             <select id="hp-insulation" data-change-action="updateHeatPumpInput"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem">
@@ -3927,7 +3927,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <option value="good">İyi</option>
             </select>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Isıtma Tipi</label>
             <select id="hp-type" data-change-action="updateHeatPumpInput"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem">
@@ -3936,7 +3936,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
               <option value="both" selected>Isıtma + Soğutma</option>
             </select>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Mevcut Isıtma</label>
             <select id="hp-current" data-change-action="updateHeatPumpInput"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem">
@@ -3968,21 +3968,21 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div class="feature-toggle-body is-hidden" id="tax-block">
         <div class="roof-section-grid">
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Kurumlar Vergisi Oranı (%)</label>
             <input type="number" id="tax-rate" min="0" max="50" value="25" step="1"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateTaxInput"/>
           </div>
-          <div class="form-group" style="margin:0">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Amortisman Süresi (Yıl)</label>
             <input type="number" id="tax-amort" min="1" max="25" value="10"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
               data-input-action="updateTaxInput"/>
           </div>
         </div>
-        <div class="roof-section-grid" style="margin-top:12px">
-          <div class="form-group" style="margin:0">
+        <div class="roof-section-grid mt-3">
+          <div class="form-group m-0">
             <label style="font-size:0.8rem">Yatırım Katkı Oranı (%)</label>
             <input type="number" id="tax-invest-rate" min="0" max="45" value="0" step="5"
               style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);width:100%;font-size:0.9rem"
@@ -3998,7 +3998,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
             <input type="checkbox" id="tax-incentive-cert" data-change-action="updateTaxInput"> Yatırım Teşvik Belgesi var
           </label>
         </div>
-        <div id="tax-preview" style="margin-top:12px"></div>
+        <div class="mt-3" id="tax-preview"></div>
       </div>
     </div>
     </div>
@@ -4007,7 +4007,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
   </details>
 
-  <div class="nav-btns" style="margin-top:28px">
+  <div class="nav-btns mt-7">
     <button class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number">← Geri</button>
     <button class="btn btn-primary" id="calc-btn" data-testid="calculate-results" data-click-action="validateStep5">Sonraki Adım →</button>
   </div>
@@ -4162,7 +4162,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <div class="on-grid-result-layers is-hidden" id="on-grid-result-layers"></div>
 
   <div class="fin-box">
-    <div class="card-title" style="margin-bottom:8px">Yatırım Özeti</div>
+    <div class="card-title mb-2">Yatırım Özeti</div>
     <div class="result-helper">Bu bölüm sistemin yaklaşık kurulum bütçesini ve zaman içinde kendini nasıl geri ödeyebileceğini sade biçimde özetler.</div>
     <div class="fin-row">
       <span class="fin-label">Tahmini kurulum bütçesi</span>
@@ -4426,7 +4426,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
 
   <!-- PR gauge -->
-  <div class="pr-gauge-wrap card" style="margin-top:16px;padding:28px">
+  <div class="pr-gauge-wrap card mt-4 p-7">
     <div class="card-title" style="justify-content:center;margin-bottom:8px">Sistem Verim Skoru <span class="tooltip-wrap"><span class="tooltip-icon" style="font-size:0.7rem;padding:1px 6px">?</span><span class="tooltip-box">Bu skor, sistemin teorik potansiyeline ne kadar yakın çalıştığını özetler. Yüksek olması iyi bir yerleşim ve düşük kayıp anlamına gelir.</span></span></div>
     <div class="result-helper" style="text-align:center;max-width:560px;margin:0 auto 18px">Bu gösterge, panel yerleşimi, sıcaklık, gölge ve diğer kayıpların toplam etkisini tek bir bakışta anlamanızı sağlar.</div>
     <svg id="pr-gauge-svg" viewBox="0 0 200 120" width="200" height="120" style="overflow:visible;display:block;margin:0 auto">
@@ -4455,7 +4455,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div id="pr-gauge-label" style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:8px"></div>
   </div>
 
-  <div class="card" style="margin-top:16px">
+  <div class="card mt-4">
     <div class="card-title">Kolay Okunan Sistem Özeti</div>
     <div class="result-helper">Aşağıdaki tablo teknik jargon yerine, sonucu hızlı anlamanız için en önemli noktaları kısa açıklamalarla özetler.</div>
     <div class="ui-scroll-hint" data-i18n="common.scrollHint">Tabloyu yatay kaydırarak tüm sütunları görün.</div>
@@ -4756,7 +4756,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </h2>
       <button data-click-action="closeComparison" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.4rem;padding:4px 8px">✕</button>
     </div>
-    <div style="padding:24px">
+    <div class="p-6">
       <div id="comparison-scenarios" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px"></div>
       <div id="comparison-result-table" style="overflow-x:auto"></div>
     </div>
@@ -4777,7 +4777,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
         <button data-click-action="closeDashboard" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.4rem;padding:4px 8px">✕</button>
       </div>
     </div>
-    <div id="dashboard-body" style="padding:24px"></div>
+    <div class="p-6" id="dashboard-body"></div>
   </div>
 </div>
 
