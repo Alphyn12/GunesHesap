@@ -2822,3 +2822,22 @@
 .osm-helper-72-divider    { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 6px; }
 .osm-loading-row          { display: flex; align-items: center; gap: 8px; color: var(--accent); }
 .spin-1s                  { animation: spin 1s linear infinite; }
+/* ── F1.C.7 batch 4: glare (Leaflet popup CSP-safe) ── */
+.glare-marker-rozet { width: 24px; height: 24px; background: #EF4444; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); font-family: 'Inter', sans-serif; }
+.glare-popup        { font-family: 'Inter', sans-serif; min-width: 150px; }
+.glare-popup-coord  { font-size: 0.8rem; color: #666; }
+.glare-popup-remove { margin-top: 6px; padding: 3px 8px; font-size: 0.75rem; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
+.glare-empty        { color: var(--text-muted); font-size: 0.82rem; }
+.glare-bar-chart    { display: flex; gap: 3px; align-items: flex-end; height: 50px; margin-bottom: 4px; padding: 0 2px; }
+.glare-bar-cell     { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.glare-bar-fill     { width: 14px; height: var(--h, 0px); background: var(--c, #334155); border-radius: 3px 3px 0 0; transition: height 0.3s; }
+.glare-bar-hour     { font-size: 0.62rem; color: var(--text-muted); }
+.glare-target-row   { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--border-subtle); }
+.glare-target-coord { font-size: 0.76rem; color: var(--text-muted); }
+.glare-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-bottom: 10px; font-size: 0.82rem; }
+.glare-summary-strong-c { color: var(--c); }
+.glare-summary-strong-d { color: var(--text); }
+.glare-axis-label   { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; }
+.glare-risky-line   { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+.glare-targets-title{ font-size: 0.78rem; margin-bottom: 4px; }
+.glare-footnote     { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 6px; }

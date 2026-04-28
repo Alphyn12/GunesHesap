@@ -78,24 +78,24 @@ function drawTargets(targets) {
   window.glareLayer.clearLayers();
   targets.forEach((t, i) => {
     const icon = L.divIcon({
-      html: `<div style="
-        width:24px;height:24px;
-        background:#EF4444;border:2px solid #fff;border-radius:50%;
-        display:flex;align-items:center;justify-content:center;
-        font-size:11px;font-weight:700;color:#fff;
-        box-shadow:0 2px 6px rgba(0,0,0,0.5);
-        font-family:'Inter',sans-serif;">${i + 1}</div>`,
+      html: `<div class="glare-marker-rozet">${i + 1}</div>`,
       className: '',
       iconSize: [24, 24],
       iconAnchor: [12, 12]
     });
-    L.marker([t.lat, t.lng], { icon })
-      .bindPopup(`<div style="font-family:'Inter',sans-serif;min-width:150px">
+    const marker = L.marker([t.lat, t.lng], { icon })
+      .bindPopup(`<div class="glare-popup">
         <strong>${t.name || `Gözlem Noktası ${i + 1}`}</strong><br>
-        <span style="font-size:0.8rem;color:#666">${t.lat.toFixed(5)}, ${t.lng.toFixed(5)}</span><br>
-        <button onclick="removeGlareTarget(${i})" style="margin-top:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;border:1px solid #ccc;border-radius:4px;background:#fff">Sil</button>
+        <span class="glare-popup-coord">${t.lat.toFixed(5)}, ${t.lng.toFixed(5)}</span><br>
+        <button class="glare-popup-remove" data-i="${i}">Sil</button>
       </div>`, { maxWidth: 200 })
       .addTo(window.glareLayer);
+    // F1.C.7 batch 4: CSP-safe popup button — popupopen event listener attaches
+    // a real DOM click handler instead of inline onclick attribute.
+    marker.on('popupopen', e => {
+      const btn = e.popup.getElement()?.querySelector('.glare-popup-remove');
+      if (btn) btn.addEventListener('click', () => removeGlareTarget(+btn.dataset.i));
+    });
   });
 }
 
@@ -112,7 +112,7 @@ function renderGlare(result) {
   if (!el) return;
 
   if (!result.rows.length) {
-    el.innerHTML = `<div style="color:var(--text-muted);font-size:0.82rem">Gözlem noktası yok. Haritadan nokta ekleyin.</div>`;
+    el.innerHTML = `<div class="glare-empty">Gözlem noktası yok. Haritadan nokta ekleyin.</div>`;
     return;
   }
 
@@ -127,15 +127,15 @@ function renderGlare(result) {
     }
   });
 
-  // Bar chart — saat bazlı
+  // Bar chart — saat bazlı (height ve background dynamic — data-h/c + setProperty)
   const bars = Object.entries(hourScores)
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([hour, score]) => {
       const h = Math.max(4, (score / 100) * 40);
       const c = scoreColor(score);
-      return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-        <div style="width:14px;height:${h}px;background:${c};border-radius:3px 3px 0 0;transition:height 0.3s" title="${hour}:00 — ${score.toFixed(0)}"></div>
-        <div style="font-size:0.62rem;color:var(--text-muted)">${hour}</div>
+      return `<div class="glare-bar-cell">
+        <div class="glare-bar-fill" data-h="${h}px" data-c="${c}" title="${hour}:00 — ${score.toFixed(0)}"></div>
+        <div class="glare-bar-hour">${hour}</div>
       </div>`;
     }).join('');
 
@@ -147,30 +147,37 @@ function renderGlare(result) {
   // Hedef listesi
   const targets = window.state?.glareTargets || [];
   const targetList = targets.map((t, i) =>
-    `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border-subtle)">
+    `<div class="glare-target-row">
       <span><strong>${i + 1}.</strong> ${t.name || 'Gözlem Noktası'}</span>
-      <span style="font-size:0.76rem;color:var(--text-muted)">${t.lat.toFixed(4)}, ${t.lng.toFixed(4)}</span>
+      <span class="glare-target-coord">${t.lat.toFixed(4)}, ${t.lng.toFixed(4)}</span>
     </div>`
   ).join('');
 
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-bottom:10px;font-size:0.82rem">
-      <div><span style="color:var(--text-muted)">Risk:</span> <strong style="color:${color}">${riskLabel} (${result.riskScore.toFixed(0)}/100)</strong></div>
-      <div><span style="color:var(--text-muted)">Riskli slot:</span> <strong style="color:var(--text)">${result.riskyHours.length}</strong></div>
-      <div><span style="color:var(--text-muted)">Gözlem noktası:</span> <strong style="color:var(--text)">${targets.length}</strong></div>
+    <div class="glare-summary-grid">
+      <div><span class="text-muted">Risk:</span> <strong class="glare-summary-strong-c" data-c="${color}">${riskLabel} (${result.riskScore.toFixed(0)}/100)</strong></div>
+      <div><span class="text-muted">Riskli slot:</span> <strong class="glare-summary-strong-d">${result.riskyHours.length}</strong></div>
+      <div><span class="text-muted">Gözlem noktası:</span> <strong class="glare-summary-strong-d">${targets.length}</strong></div>
     </div>
-    <div style="display:flex;gap:3px;align-items:flex-end;height:50px;margin-bottom:4px;padding:0 2px">
+    <div class="glare-bar-chart">
       ${bars}
     </div>
-    <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px">Saat (05–20)</div>
-    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px">
+    <div class="glare-axis-label">Saat (05–20)</div>
+    <div class="glare-risky-line">
       <strong>Riskli saatler:</strong> ${riskyList}
     </div>
-    ${targets.length ? `<div style="font-size:0.78rem;margin-bottom:4px"><strong>Gözlem noktaları:</strong></div>${targetList}` : ''}
-    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:8px;border-top:1px solid var(--border-subtle);padding-top:6px">
+    ${targets.length ? `<div class="glare-targets-title"><strong>Gözlem noktaları:</strong></div>${targetList}` : ''}
+    <div class="glare-footnote">
       Mühendislik ön tahmin modeli (15 dk aralıklı) · Kesin havalimanı/yol glare etüdü yerine geçmez.
     </div>
   `;
+  // F1.C.7: dynamic height/background CSS var aktarımı (bar fill + risk strong)
+  if (typeof el.querySelectorAll === 'function') {
+    el.querySelectorAll('[data-h]').forEach(node =>
+      node.style.setProperty('--h', node.dataset.h));
+    el.querySelectorAll('[data-c]').forEach(node =>
+      node.style.setProperty('--c', node.dataset.c));
+  }
 }
 
 export function runGlareAnalysis() {
