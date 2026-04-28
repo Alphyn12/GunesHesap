@@ -59,7 +59,8 @@
       "Bash(sed 's/\"$//')",
       "Bash(awk '{print length}')",
       "Bash(awk '{sum+=$1} END {print \"Toplam:\", sum, \"Ortam:\", sum/276}')",
-      "Bash(sort -t: -k2 -rn)"
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(awk -F: '{s+=$2} END {print s}')"
     ]
   }
 }
