@@ -25,6 +25,13 @@ function moneyRate(value, unit = 'kWh') {
   return converted.toLocaleString(currency === 'USD' ? 'en-US' : 'tr-TR', { maximumFractionDigits: currency === 'USD' ? 3 : 2 }) + ` ${currency}/${unit}`;
 }
 
+function setVisible(el, visible, display = '') {
+  if (window.setElementVisible) return window.setElementVisible(el, visible, display);
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+  el.style.display = visible ? display : 'none';
+}
+
 function getSaved() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -147,7 +154,7 @@ export function updateDashboard() {
   if (btn) {
     const label = window.i18n?.t?.('dashboard.saved') || 'Kayıtlı Hesaplar';
     btn.textContent = `${label} (${saved.length})`;
-    btn.style.display = saved.length > 0 ? '' : 'none';
+    setVisible(btn, saved.length > 0);
   }
 }
 

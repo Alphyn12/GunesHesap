@@ -1,11 +1,11 @@
-// v38: Faz 7 — high-resolution off-grid field import module and UI assets added.
-const CACHE_NAME = 'solarRota-v38';
+// v39: Faz 0 — canonical logo, datasheet sizing module and UI readiness assets.
+const CACHE_NAME = 'solarRota-v39';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/new_logo.png',
+  '/new_version_logo.png',
   '/css/components.css',
   '/css/redesign.css',
   '/css/mobile.css',
@@ -23,6 +23,7 @@ const STATIC_ASSETS = [
   '/js/crm-export.js',
   '/js/dashboard.js',
   '/js/data.js',
+  '/js/datasheet-sizing.js',
   '/js/device-catalog.js',
   '/js/eng-report.js',
   '/js/ev-charging.js',

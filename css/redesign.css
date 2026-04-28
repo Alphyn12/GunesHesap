@@ -1406,6 +1406,7 @@ h2, .h2, .step-heading-title {
    ═══════════════════════════════════════════════════════════ */
 
 /* Override step-pane active for hero (needs flex) */
+.step-pane:not(.active) { display: none !important; }
 #step-1.active { display: flex; flex-direction: column; align-items: center; }
 
 /* Step 3 config section spacing */

@@ -4,6 +4,13 @@
 // ═══════════════════════════════════════════════════════════
 import { EV_MODELS } from './data.js';
 
+function setVisible(el, visible, display = '') {
+  if (window.setElementVisible) return window.setElementVisible(el, visible, display);
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+  el.style.display = visible ? display : 'none';
+}
+
 export function buildEVModels() {
   const sel = document.getElementById('ev-type');
   if (!sel) return;
@@ -21,7 +28,7 @@ export function onEVModelChange() {
   if (!model) return;
 
   const customGroup = document.getElementById('ev-custom-group');
-  if (customGroup) customGroup.style.display = key === 'custom' ? 'block' : 'none';
+  setVisible(customGroup, key === 'custom', 'block');
 
   // Otomatik tüketim ve bilgi doldur
   const kwhEl = document.getElementById('ev-kwh100');
@@ -56,7 +63,7 @@ export function onEVToggle(checked) {
   const state = window.state;
   state.evEnabled = checked;
   const block = document.getElementById('ev-block');
-  if (block) block.style.display = checked ? 'block' : 'none';
+  setVisible(block, checked, 'block');
   if (checked) {
     if (!state.ev) state.ev = {};
     buildEVModels();

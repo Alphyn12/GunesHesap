@@ -107,6 +107,23 @@ function dispatchAction(eventType, e) {
 ['click', 'change', 'input'].forEach(t =>
   document.addEventListener(t, e => dispatchAction(t, e), false));
 
+function setElementVisible(el, visible, display = '') {
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+  if (visible) {
+    el.removeAttribute('hidden');
+    el.style.display = display;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function isElementVisible(el) {
+  return !!el && !el.classList.contains('is-hidden') && el.style.display !== 'none';
+}
+
+window.setElementVisible = setElementVisible;
+
 function installThirdPartyConsoleNoiseGuard() {
   if (window.__solarRotaConsoleNoiseGuardInstalled) return;
   window.__solarRotaConsoleNoiseGuardInstalled = true;
@@ -163,8 +180,9 @@ function openSettings() {
   const overlay = document.getElementById('settings-overlay');
   if (!panel) return;
   settingsReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  panel.style.display = 'block';
-  overlay.style.display = 'block';
+  setElementVisible(panel, true, 'block');
+  setElementVisible(overlay, true, 'block');
+  panel.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => { panel.style.transform = 'translateX(0)'; });
   syncSettingsPanel();
   setTimeout(() => document.getElementById('settings-close-btn')?.focus(), 120);
@@ -175,8 +193,9 @@ function closeSettings() {
   const overlay = document.getElementById('settings-overlay');
   if (!panel) return;
   panel.style.transform = 'translateX(100%)';
-  overlay.style.display = 'none';
-  setTimeout(() => { panel.style.display = 'none'; }, 300);
+  panel.setAttribute('aria-hidden', 'true');
+  setElementVisible(overlay, false);
+  setTimeout(() => { setElementVisible(panel, false); }, 300);
   if (settingsReturnFocus?.isConnected) settingsReturnFocus.focus();
   settingsReturnFocus = null;
 }
@@ -922,7 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    if (document.getElementById('settings-panel')?.style.display === 'block') closeSettings();
+    if (isElementVisible(document.getElementById('settings-panel'))) closeSettings();
     if (document.getElementById('comparison-modal')?.style.display !== 'none') closeComparison();
     if (document.getElementById('dashboard-modal')?.style.display !== 'none') closeDashboard();
   });
@@ -1126,7 +1145,7 @@ function updateScenarioUI() {
   const visibility = scenario.visibleBlocks || {};
   const toggleBlock = (id, visible = true) => {
     const el = document.getElementById(id);
-    if (el) el.style.display = visible ? '' : 'none';
+    setElementVisible(el, visible);
   };
   toggleBlock('nm-block', visibility.netMetering !== false);
   toggleBlock('battery-block', visibility.battery !== false);
@@ -1160,7 +1179,7 @@ function syncStep5AdvancedForScenario() {
       el.style.display = isOffGrid ? 'none' : '';
     });
   const offgridAdvanced = document.getElementById('offgrid-advanced-options');
-  if (offgridAdvanced) offgridAdvanced.style.display = isOffGrid ? '' : 'none';
+  setElementVisible(offgridAdvanced, isOffGrid);
   const costWrap = document.getElementById('off-grid-cost-wrap');
   const offgridCostAnchor = document.getElementById('offgrid-cost-anchor');
   if (costWrap && offgridCostAnchor && isOffGrid && costWrap.parentElement !== offgridCostAnchor) {
@@ -1173,9 +1192,9 @@ function syncScenarioControls() {
   ensureOffgridL2Placement();
   syncStep5AdvancedForScenario();
   const onGridPanel = document.getElementById('on-grid-flow-panel');
-  if (onGridPanel) onGridPanel.style.display = s.scenarioKey === 'on-grid' ? '' : 'none';
+  setElementVisible(onGridPanel, s.scenarioKey === 'on-grid');
   const advancedCard = document.getElementById('step5-advanced-card');
-  if (advancedCard) advancedCard.style.display = '';
+  setElementVisible(advancedCard, true);
   const setVal = (id, value) => {
     const el = document.getElementById(id);
     if (el && value !== undefined && value !== null) el.value = value;
@@ -1200,15 +1219,15 @@ function syncScenarioControls() {
   updateOnGridFlowSummary();
   // Show off-grid cost input only when off-grid scenario is active
   const offGridWrap = document.getElementById('off-grid-cost-wrap');
-  if (offGridWrap) offGridWrap.style.display = s.scenarioKey === 'off-grid' ? '' : 'none';
+  setElementVisible(offGridWrap, s.scenarioKey === 'off-grid');
   // Warn when off-grid cost is missing (calc will silently use tariff × 2.5)
   const offGridWarn = document.getElementById('off-grid-cost-warn');
-  if (offGridWarn) offGridWarn.style.display = (s.scenarioKey === 'off-grid' && !s.offGridCostPerKwh) ? '' : 'none';
+  setElementVisible(offGridWarn, s.scenarioKey === 'off-grid' && !s.offGridCostPerKwh);
   const dailyConsumptionBlock = document.getElementById('step5-daily-consumption-block');
-  if (dailyConsumptionBlock) dailyConsumptionBlock.style.display = s.scenarioKey === 'on-grid' ? 'none' : '';
+  setElementVisible(dailyConsumptionBlock, s.scenarioKey !== 'on-grid');
   // Off-Grid Level 2 panel göster/gizle
   const offgridL2Wrap = document.getElementById('offgrid-l2-wrap');
-  if (offgridL2Wrap) offgridL2Wrap.style.display = s.scenarioKey === 'off-grid' ? '' : 'none';
+  setElementVisible(offgridL2Wrap, s.scenarioKey === 'off-grid');
   // Level 2 form alanlarını geri yükle
   if (s.scenarioKey === 'off-grid') {
     if (!['bill-offset', 'fill-roof'].includes(s.designTarget)) s.designTarget = 'fill-roof';
@@ -1244,7 +1263,7 @@ function syncScenarioControls() {
     const genMaintenanceEl = document.getElementById('offgrid-generator-maintenance-cost');
     if (genMaintenanceEl) genMaintenanceEl.value = s.offgridGeneratorMaintenanceCostTry || 0;
     const genDetails = document.getElementById('offgrid-generator-details');
-    if (genDetails) genDetails.style.display = s.offgridGeneratorEnabled ? 'grid' : 'none';
+    setElementVisible(genDetails, !!s.offgridGeneratorEnabled, 'grid');
     const bwEl = document.getElementById('offgrid-bad-weather-level');
     if (bwEl) bwEl.value = s.offgridBadWeatherLevel || '';
     syncOffgridDesignTargetCards();
@@ -1936,7 +1955,7 @@ function renderOnGridMonthlyInputs() {
   wrap.innerHTML = MONTHS.map((month, idx) => `
     <label class="on-grid-month-input">
       <span>${month.slice(0, 3)}</span>
-      <input type="number" min="0" step="1" value="${Math.round(monthly[idx] || 0)}" data-on-grid-month="${idx}" oninput="updateOnGridMonthlyConsumption()">
+      <input type="number" min="0" step="1" value="${Math.round(monthly[idx] || 0)}" data-on-grid-month="${idx}" data-input-action="updateOnGridMonthlyConsumption">
     </label>
   `).join('');
 }
@@ -2058,7 +2077,7 @@ function setOnGridInputMode(mode = 'basic') {
     btn.classList.toggle('active', btn.dataset.onGridModeBtn === window.state.onGridInputMode);
   });
   const advanced = document.getElementById('on-grid-advanced-fields');
-  if (advanced) advanced.style.display = window.state.onGridInputMode === 'advanced' ? '' : 'none';
+  setElementVisible(advanced, window.state.onGridInputMode === 'advanced');
   const advancedCard = document.getElementById('step5-advanced-card');
   if (advancedCard) advancedCard.open = window.state.onGridInputMode === 'advanced';
   if (window.state.onGridInputMode === 'advanced') {
@@ -3372,11 +3391,11 @@ function renderRoofSections() {
           <label>Alan (m²)</label>
           <input type="number" id="sec-area-${sec.id}" value="${sec.area}" min="5" max="500"
             class="roof-section-input"
-            oninput="updateSecArea(${sec.id},this.value)"/>
+            data-input-action="updateSecAreaFromInput" data-arg="${sec.id}" data-arg-type="number"/>
         </div>
         <div class="roof-section-field">
           <label>Yön</label>
-          <select id="sec-dir-${sec.id}" onchange="updateSecDir(${sec.id},this)"
+          <select id="sec-dir-${sec.id}" data-change-action="updateSecDirFromSelect" data-arg="${sec.id}" data-arg-type="number"
             class="roof-section-select">
             ${dirOpts}
           </select>
@@ -3385,13 +3404,13 @@ function renderRoofSections() {
           <label>Eğim (°)</label>
           <input type="number" id="sec-tilt-${sec.id}" value="${sec.tilt}" min="0" max="90"
             class="roof-section-input"
-            oninput="updateSecTilt(${sec.id},this.value)"/>
+            data-input-action="updateSecTiltFromInput" data-arg="${sec.id}" data-arg-type="number"/>
         </div>
         <div class="roof-section-field">
           <label>Gölgelenme (%)</label>
           <input type="number" id="sec-shade-${sec.id}" value="${sec.shadingFactor}" min="0" max="80"
             class="roof-section-input"
-            oninput="updateSecShade(${sec.id},this.value)"/>
+            data-input-action="updateSecShadeFromInput" data-arg="${sec.id}" data-arg-type="number"/>
         </div>
       </div>
       <div class="roof-section-footer">Öneri: Ayrı yüzey eklemeyi sadece gerçekten farklı yön veya gölge koşulu varsa kullanın.</div>`;
@@ -3475,7 +3494,7 @@ function toggleBatteryBlock() {
 function onBatteryToggle(checked) {
   window.state.batteryEnabled = checked;
   const inputs = document.getElementById('battery-inputs');
-  if (inputs) inputs.style.display = checked ? 'block' : 'none';
+  setElementVisible(inputs, checked, 'block');
   normalizeBatterySelection();
   if (checked && !document.getElementById('bat-models-wrap').innerHTML) {
     renderBatteryModels();
@@ -3486,7 +3505,7 @@ function onBatteryToggle(checked) {
   } else {
     const summary = document.getElementById('battery-summary');
     if (summary) {
-      summary.style.display = 'none';
+      setElementVisible(summary, false);
       summary.innerHTML = '';
     }
   }
@@ -3531,7 +3550,7 @@ function syncBatteryCustomInputs() {
   const battery = window.state.battery || BATTERY_MODELS.custom;
   const isCustom = battery.model === 'custom';
   const customWrap = document.getElementById('bat-custom-inputs');
-  if (customWrap) customWrap.style.display = isCustom ? 'block' : 'none';
+  setElementVisible(customWrap, isCustom, 'block');
   const capEl = document.getElementById('bat-capacity');
   const dodEl = document.getElementById('bat-dod');
   const effEl = document.getElementById('bat-eff');
@@ -3604,7 +3623,7 @@ function updateBatteryCustom() {
   window.state.battery = { ...base, model: 'custom', name: BATTERY_MODELS.custom.name, spec: BATTERY_MODELS.custom.spec, price_try: 0 };
   document.querySelectorAll('.bat-model-btn').forEach(b => b.classList.toggle('selected', b.dataset.batteryModel === 'custom'));
   const customWrap = document.getElementById('bat-custom-inputs');
-  if (customWrap) customWrap.style.display = 'block';
+  setElementVisible(customWrap, true, 'block');
   updateBatCapacity(capValue ?? window.state.battery.capacity);
   updateBatDod(dodValue ?? Math.round(window.state.battery.dod * 100));
   updateBatEff(effValue ?? Math.round(window.state.battery.efficiency * 100));
@@ -3618,7 +3637,7 @@ function updateBatterySummary() {
   const summary = document.getElementById('battery-summary');
   if (!summary) return;
   if (!window.state.batteryEnabled) {
-    summary.style.display = 'none';
+    setElementVisible(summary, false);
     summary.innerHTML = '';
     return;
   }
@@ -3628,7 +3647,7 @@ function updateBatterySummary() {
   const merged = { ...base, ...selected };
   const usableCapacity = Math.max(0, Number(merged.usableCapacity ?? ((merged.capacity || 0) * (merged.dod ?? 1))));
   const modelEfficiency = Math.round(Number(merged.efficiency || 0.9) * 100);
-  summary.style.display = 'grid';
+  setElementVisible(summary, true, 'grid');
   summary.innerHTML = `
     <div class="battery-summary-head">
       <div>
@@ -3667,7 +3686,7 @@ function onNMToggle(checked) {
   }
   window.state.netMeteringEnabled = checked;
   const inputs = document.getElementById('nm-inputs');
-  if (inputs) inputs.style.display = checked ? 'block' : 'none';
+  setElementVisible(inputs, checked, 'block');
 }
 
 function toggleOMBlock() {
@@ -3844,6 +3863,7 @@ registerActions({
   setOnGridDesignTarget,
   updateOnGridAssumptionsAndTariff,
   fillOnGridMonthlyFromAnnualFromUI,
+  updateOnGridMonthlyConsumption,
 });
 
 // F1.B.2 landing/FAQ/tour grubu: 24 inline.
@@ -3877,6 +3897,10 @@ registerActions({
   updateGroundAlbedo,
   toggleMultiRoof,
   addRoofSection,
+  updateSecAreaFromInput: (arg, el) => updateSecArea(arg, el?.value),
+  updateSecDirFromSelect: (arg, el) => updateSecDir(arg, el),
+  updateSecTiltFromInput: (arg, el) => updateSecTilt(arg, el?.value),
+  updateSecShadeFromInput: (arg, el) => updateSecShade(arg, el?.value),
   onBatteryToggle,
   updateBatteryCustom,
   toggleNMBlock,
@@ -4254,13 +4278,13 @@ function syncOffgridL2ModeUI() {
   const fieldSection = document.getElementById('offgrid-field-data-section');
   const deviceSection = document.getElementById('offgrid-device-section');
   const liveSummary = document.getElementById('offgrid-live-summary');
-  if (simpleWrap) simpleWrap.style.display = mode === 'basic' ? '' : 'none';
-  if (fieldSection) fieldSection.style.display = mode === 'advanced' ? '' : 'none';
-  if (deviceSection) deviceSection.style.display = mode === 'advanced' ? '' : 'none';
+  setElementVisible(simpleWrap, mode === 'basic');
+  setElementVisible(fieldSection, mode === 'advanced');
+  setElementVisible(deviceSection, mode === 'advanced');
   if (mode === 'advanced' && fieldSection && deviceSection && deviceSection.nextElementSibling !== fieldSection) {
     deviceSection.insertAdjacentElement('afterend', fieldSection);
   }
-  if (liveSummary && mode !== 'advanced') liveSummary.style.display = 'none';
+  if (liveSummary && mode !== 'advanced') setElementVisible(liveSummary, false);
   document.querySelectorAll('[data-offgrid-mode-btn]').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-offgrid-mode-btn') === mode);
   });
@@ -4378,7 +4402,7 @@ function updateOffgridL2Settings() {
   s.offgridBadWeatherLevel = bwEl ? bwEl.value : '';
   // Jeneratör detay alanlarını göster/gizle
   const genDetails = document.getElementById('offgrid-generator-details');
-  if (genDetails) genDetails.style.display = s.offgridGeneratorEnabled ? 'grid' : 'none';
+  setElementVisible(genDetails, !!s.offgridGeneratorEnabled, 'grid');
   updateOffgridGeneratorPreview();
   syncOffgridL2ModeUI();
   persistState();

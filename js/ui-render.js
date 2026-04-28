@@ -36,6 +36,13 @@ function moneyRate(value, unit = 'kWh') {
   return converted.toLocaleString(ctx.locale, { maximumFractionDigits: ctx.currency === 'USD' ? 3 : 2 }) + ` ${ctx.suffix}/${unit}`;
 }
 
+function setVisible(el, visible, display = '') {
+  if (window.setElementVisible) return window.setElementVisible(el, visible, display);
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+  el.style.display = visible ? display : 'none';
+}
+
 // Faz-3 D7: explicit weather-provenance labels so a "8760-hour simulation" badge
 // can never imply "real meteorology" when the actual data is a clear-sky scaling
 // or deterministic PSH model. Mirrors the synthetic set guarded by the
@@ -475,11 +482,11 @@ export function renderResults() {
 function renderBESSResults(bess) {
   const section = document.getElementById('bess-result-section');
   if (!section) return;
-  if (!bess) { section.style.display = 'none'; return; }
+  if (!bess) { setVisible(section, false); return; }
   const isOffGrid = window.state?.scenarioKey === 'off-grid';
   const detailRow = document.getElementById('bess-detail-row');
   const noteStrip = document.getElementById('bess-note-strip');
-  section.style.display = 'block';
+  setVisible(section, true, 'block');
   document.getElementById('bess-model-badge').textContent = bess.modelName || 'Batarya';
   document.getElementById('bess-independence').textContent = `${bess.gridIndependence}%`;
   document.getElementById('bess-night').textContent = `${bess.nightCoverage}%`;
@@ -551,10 +558,10 @@ function renderOffgridL2Results(offgridL2Results, state) {
   if (!section) return;
 
   if (state?.scenarioKey !== 'off-grid' || !offgridL2Results) {
-    section.style.display = 'none';
+    setVisible(section, false);
     return;
   }
-  section.style.display = 'block';
+  setVisible(section, true, 'block');
 
   const L = offgridL2Results;
   const locale = localeTag();
@@ -607,7 +614,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
   const genResultDetails = document.getElementById('offgrid-generator-result-details');
   if (genResultWrap && genResultDetails) {
     if (L.generatorEnabled) {
-      genResultWrap.style.display = '';
+      setVisible(genResultWrap, true);
       const hoursStr = Math.round(L.generatorRunHoursPerYear).toLocaleString(locale);
       const kwhStr   = Math.round(L.generatorKwh).toLocaleString(locale);
       const narrative = i18n.t('offgridL2.genNarrativeActive')
@@ -638,7 +645,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
         <div class="offgrid-body-copy">${escapeHtml(narrative)}</div>
       `;
     } else {
-      genResultWrap.style.display = 'none';
+      setVisible(genResultWrap, false);
     }
   }
 
@@ -648,7 +655,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
   if (bwWrap && bwDetails) {
     const bw = L.badWeatherScenario;
     if (bw) {
-      bwWrap.style.display = '';
+      setVisible(bwWrap, true);
       const levelKey = 'offgridL2.badWeather_' + bw.weatherLevel;
       const critDrop = bw.criticalCoverageDropPct.toFixed(1);
       const totalDrop = bw.totalCoverageDropPct.toFixed(1);
@@ -692,7 +699,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
         ${addGenPart}
       `;
     } else {
-      bwWrap.style.display = 'none';
+      setVisible(bwWrap, false);
     }
   }
 
@@ -702,7 +709,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
   if (stressWrap && stressDetails) {
     const stress = L.fieldStressAnalysis;
     if (stress?.scenarios?.length) {
-      stressWrap.style.display = '';
+      setVisible(stressWrap, true);
       const worstCritical = stress.worstCriticalScenario || null;
       const worstTotal = stress.worstTotalScenario || null;
       const maxUnmetCritical = stress.maxUnmetCriticalScenario || null;
@@ -737,7 +744,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
         <div class="offgrid-body-copy">${escapeHtml(i18n.t('offgridL2.stressCardNote'))}</div>
       `;
     } else {
-      stressWrap.style.display = 'none';
+      setVisible(stressWrap, false);
     }
   }
 
@@ -747,7 +754,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
   if (designWrap && designBody) {
     const correction = L.designCorrections || null;
     if (correction) {
-      designWrap.style.display = '';
+      setVisible(designWrap, true);
       const severityTone = correction.severity === 'high'
         ? 'var(--danger)'
         : correction.severity === 'medium' ? '#F97316' : 'var(--primary)';
@@ -785,7 +792,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
         ${reasons.length ? `<div class="offgrid-list-title">${escapeHtml(i18n.t('offgridL2.designCorrectionReasonTitle'))}</div><ul class="offgrid-list">${reasons.map(reason => `<li>${escapeHtml(i18n.t(`offgridL2.designCorrectionReason_${reason}`))}</li>`).join('')}</ul>` : ''}
       `;
     } else {
-      designWrap.style.display = 'none';
+      setVisible(designWrap, false);
     }
   }
 
@@ -813,7 +820,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
   const extMetricsEl = document.getElementById('offgrid-extended-metrics');
   const extMetricsBody = document.getElementById('offgrid-extended-metrics-body');
   if (extMetricsEl && extMetricsBody) {
-    extMetricsEl.style.display = '';
+    setVisible(extMetricsEl, true);
     const items = [
       { label: i18n.t('offgridL2.resultTotalLoad'), value: `${Math.round(L.annualTotalLoadKwh || 0).toLocaleString(locale)} kWh/yıl`, note: 'Tüm yıl boyunca beklenen toplam tüketim' },
       L.annualCriticalLoadKwh > 0 ? { label: i18n.t('offgridL2.resultCriticalLoad'), value: `${Math.round(L.annualCriticalLoadKwh).toLocaleString(locale)} kWh/yıl`, note: 'Kesintide öncelikli tutulacak kritik kısım' } : '',
@@ -841,7 +848,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
     if (L.loadMode === 'device-list' && L.deviceCount > 0) {
       const totalWh = L.annualTotalLoadKwh > 0 ? (L.annualTotalLoadKwh / 365 * 1000).toFixed(0) : '—';
       const critWh  = L.annualCriticalLoadKwh > 0 ? (L.annualCriticalLoadKwh / 365 * 1000).toFixed(0) : '0';
-      deviceMetricsEl.style.display = '';
+      setVisible(deviceMetricsEl, true);
       if (deviceMetricsBody) {
         deviceMetricsBody.innerHTML = `
           <div class="offgrid-chip-grid">
@@ -856,12 +863,12 @@ function renderOffgridL2Results(offgridL2Results, state) {
       }
     } else {
       if (L.loadMode === 'hourly-8760') {
-        deviceMetricsEl.style.display = '';
+        setVisible(deviceMetricsEl, true);
         if (deviceMetricsBody) {
           deviceMetricsBody.innerHTML = `<div class="offgrid-body-copy">${escapeHtml(i18n.t('offgridL2.loadSourceHourly'))}</div>`;
         }
       } else {
-        deviceMetricsEl.style.display = 'none';
+        setVisible(deviceMetricsEl, false);
       }
     }
   }
@@ -876,7 +883,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
         ? 'offgridL2.genNarrativeUnmetWithGenerator'
         : 'offgridL2.honestUnmetWarning')
         .replace('{unmet}', unmetKwh.toLocaleString(locale));
-      unmetWarnEl.style.display = '';
+      setVisible(unmetWarnEl, true);
       if (unmetWarnBody) {
         unmetWarnBody.innerHTML = `
           <div class="offgrid-stat-grid">
@@ -887,7 +894,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
         `;
       }
     } else {
-      unmetWarnEl.style.display = 'none';
+      setVisible(unmetWarnEl, false);
     }
   }
 
@@ -912,7 +919,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
     const tierLabel = i18n.t(`offgridL2.accuracyTier_${accuracy?.tier || L.accuracyTier || 'basic-synthetic'}`);
     const modeLabel = i18n.t(`offgridL2.calculationMode_${accuracy?.calculationMode || L.calculationMode || 'basic'}`);
     const mainAccuracyBlocker = accuracy?.blockers?.[0] || '';
-    sourceTransEl.style.display = '';
+    setVisible(sourceTransEl, true);
     const gateReadyState = gate => {
       const readyKey = Object.keys(gate || {}).find(k => /^phase\d+Ready$/.test(k));
       return readyKey ? gate?.[readyKey] : null;
@@ -985,9 +992,9 @@ function renderNMResults(nm, enabled) {
   const section = document.getElementById('nm-result-section');
   if (!section) return;
   const scenarioAllowsExport = window.state?.scenarioContext?.visibleBlocks?.netMetering !== false;
-  if (!nm || !enabled || !scenarioAllowsExport) { section.style.display = 'none'; return; }
+  if (!nm || !enabled || !scenarioAllowsExport) { setVisible(section, false); return; }
   const activeLocale = localeTag();
-  section.style.display = 'block';
+  setVisible(section, true, 'block');
   document.getElementById('nm-license-badge').textContent = enabled ? nm.systemType : 'Satış kapalı';
   document.getElementById('nm-export-kwh').textContent = `${nm.paidGridExport.toLocaleString(activeLocale)} / ${nm.annualGridExport.toLocaleString(activeLocale)}`;
   document.getElementById('nm-export-revenue').textContent = money(nm.annualExportRevenue);
@@ -1050,7 +1057,7 @@ function renderOnGridResultLayers(state, r) {
   const wrap = document.getElementById('on-grid-result-layers');
   if (!wrap) return;
   if (state.scenarioKey !== 'on-grid') {
-    wrap.style.display = 'none';
+    setVisible(wrap, false);
     wrap.innerHTML = '';
     return;
   }
@@ -1193,7 +1200,7 @@ function renderOnGridResultLayers(state, r) {
     }
   }
 
-  wrap.style.display = '';
+  setVisible(wrap, true);
   wrap.innerHTML = `
     <section class="on-grid-result-card">
       <h3>${escapeHtml(i18n.t('onGridResult.technicalTitle'))}</h3>

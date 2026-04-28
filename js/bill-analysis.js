@@ -5,6 +5,13 @@
 import { MONTHS } from './data.js';
 import { COMMON_YEAR_MONTH_DAYS } from './calc-core.js';
 
+function setVisible(el, visible, display = '') {
+  if (window.setElementVisible) return window.setElementVisible(el, visible, display);
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+  el.style.display = visible ? display : 'none';
+}
+
 const bt = key => window.i18n?.t?.(key) || key;
 
 const SEASON_WEIGHTS = [0.7, 0.75, 0.9, 1.0, 1.1, 1.2, 1.25, 1.2, 1.0, 0.9, 0.75, 0.65];
@@ -143,7 +150,7 @@ export function onBillToggle(checked) {
   const state = window.state;
   state.billAnalysisEnabled = checked;
   const block = document.getElementById('bill-inputs-block');
-  if (block) block.style.display = checked ? 'block' : 'none';
+  setVisible(block, checked, 'block');
   if (checked) initBillAnalysis();
 }
 

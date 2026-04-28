@@ -17,7 +17,7 @@ assert.ok(/solarRota-v\d+/.test(sw), 'cache name must be bumped when active asse
 for (const required of [
   '/',
   '/index.html',
-  '/new_logo.png',
+  '/new_version_logo.png',
   '/css/components.css',
   '/css/redesign.css',
   '/css/mobile.css',

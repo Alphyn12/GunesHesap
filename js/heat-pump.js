@@ -4,6 +4,13 @@
 // ═══════════════════════════════════════════════════════════
 import { HEAT_PUMP_DATA } from './data.js';
 
+function setVisible(el, visible, display = '') {
+  if (window.setElementVisible) return window.setElementVisible(el, visible, display);
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+  el.style.display = visible ? display : 'none';
+}
+
 export function toggleHeatPumpBlock() {
   const tog = document.getElementById('hp-toggle');
   if (tog) { tog.checked = !tog.checked; onHeatPumpToggle(tog.checked); }
@@ -13,7 +20,7 @@ export function onHeatPumpToggle(checked) {
   const state = window.state;
   state.heatPumpEnabled = checked;
   const block = document.getElementById('hp-block');
-  if (block) block.style.display = checked ? 'block' : 'none';
+  setVisible(block, checked, 'block');
   if (checked && !state.heatPump) {
     state.heatPump = {
       area: 120,

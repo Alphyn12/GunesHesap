@@ -3,6 +3,13 @@
 // Solar Rota v2.0
 // ═══════════════════════════════════════════════════════════
 
+function setVisible(el, visible, display = '') {
+  if (window.setElementVisible) return window.setElementVisible(el, visible, display);
+  if (!el) return;
+  el.classList.toggle('is-hidden', !visible);
+  el.style.display = visible ? display : 'none';
+}
+
 export function toggleTaxBlock() {
   const tog = document.getElementById('tax-toggle');
   if (tog) { tog.checked = !tog.checked; onTaxToggle(tog.checked); }
@@ -12,7 +19,7 @@ export function onTaxToggle(checked) {
   const state = window.state;
   state.taxEnabled = checked;
   const block = document.getElementById('tax-block');
-  if (block) block.style.display = checked ? 'block' : 'none';
+  setVisible(block, checked, 'block');
   if (checked && !state.tax) {
     state.tax = {
       corporateTaxRate: 25,
