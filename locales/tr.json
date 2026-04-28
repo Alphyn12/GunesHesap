@@ -550,6 +550,8 @@
     "year": "Yıl",
     "production": "Üretim",
     "tariff": "Tarife",
+    "tariffEffective": "Etkili Tarife",
+    "tariffEffectiveHint": "Dağıtım ücreti dahil — tasarruf hesabında kullanılan oran",
     "savings": "Tasarruf",
     "expenses": "Gider",
     "cumulative": "Kümülatif",

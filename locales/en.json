@@ -546,6 +546,8 @@
     "year": "Year",
     "production": "Production",
     "tariff": "Tariff",
+    "tariffEffective": "Effective Tariff",
+    "tariffEffectiveHint": "Includes distribution fee — rate used in savings calculation",
     "savings": "Savings",
     "expenses": "Expenses",
     "cumulative": "Cumulative",

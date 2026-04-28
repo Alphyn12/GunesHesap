@@ -100,6 +100,11 @@ export function renderEngReport() {
     ? i18n.t('offgridL2.financialBasisProxyWarning')
     : '';
 
+  // F2.2: Tarife görünür-vs-etkili sütun ayrımı — sadece dağıtım ücreti
+  // gerçekten farklı oran üretiyorsa ek sütun göster.
+  const showEffectiveTariff = Array.isArray(r.yearlyTable) && r.yearlyTable.some(y =>
+    y.rateBasis === 'import-plus-distribution-fee' && y.rate !== y.effectiveImportRate);
+
   let html = `
   <div class="eng-report-intro">
     <section class="eng-intro-card">
@@ -322,13 +327,14 @@ NPVₜ = NCFₜ ÷ (1+d)ᵗ    d=${(r.discountRate*100).toFixed(0)}%
 ${escapeHtml(report('totalProduction25y'))}: ${fmt(totalEnergy25y)} kWh</div>
     <div class="year-table-wrap">
       <table class="year-table">
-        <thead><tr><th>${escapeHtml(report('year'))}</th><th>${escapeHtml(report('production'))} (kWh)</th><th>${escapeHtml(report('tariff'))}</th><th>${escapeHtml(report('savings'))}</th><th>${escapeHtml(report('expenses'))}</th><th>Net</th><th>${escapeHtml(report('cumulative'))}</th><th>NPV</th></tr></thead>
+        <thead><tr><th>${escapeHtml(report('year'))}</th><th>${escapeHtml(report('production'))} (kWh)</th><th>${escapeHtml(report('tariff'))}</th>${showEffectiveTariff ? `<th title="${escapeHtml(report('tariffEffectiveHint'))}">${escapeHtml(report('tariffEffective'))}</th>` : ''}<th>${escapeHtml(report('savings'))}</th><th>${escapeHtml(report('expenses'))}</th><th>Net</th><th>${escapeHtml(report('cumulative'))}</th><th>NPV</th></tr></thead>
         <tbody>
           ${r.yearlyTable.map(y => `
           <tr ${y.year === Math.round(Number(r.grossSimplePaybackYear || r.paybackYear)) ? 'class="payback-row"' : ''}>
             <td>${y.year}${y.year === Math.round(Number(r.grossSimplePaybackYear || r.paybackYear)) ? ' ✓' : ''}</td>
             <td>${fmt(y.energy)}</td>
-            <td>${y.effectiveImportRate || y.rate}</td>
+            <td>${y.rate}</td>
+            ${showEffectiveTariff ? `<td>${y.effectiveImportRate}</td>` : ''}
             <td>${money(y.savings)}</td>
             <td class="text-danger">${y.expenses > 0 ? '-' + money(y.expenses) : '0'}</td>
             <td>${money(y.netCashFlow)}</td>

@@ -546,6 +546,8 @@
     "year": "Jahr",
     "production": "Produktion",
     "tariff": "Tarif",
+    "tariffEffective": "Effektiver Tarif",
+    "tariffEffectiveHint": "Inkl. Verteilungsgebühr — in der Ersparnisberechnung verwendeter Satz",
     "savings": "Ersparnis",
     "expenses": "Kosten",
     "cumulative": "Kumuliert",
