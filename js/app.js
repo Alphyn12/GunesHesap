@@ -54,6 +54,7 @@ import { escapeHtml } from './security.js';
 import { buildBackendUrl } from './backend-config.js';
 import { isSpreadsheetFilename, parseHighResolutionLoadText, parseInverterEventLogText } from './offgrid-field-import.js';
 import { runDatasheetSizing, attachDatasheetSizingHandlers } from './datasheet-sizing.js';
+import { validateHourlyProfile8760 } from './consumption-evidence.js';
 
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
@@ -1627,7 +1628,7 @@ function clearHourlyCsvUpload() {
   persistState();
 }
 
-function parseSingleColumn8760Csv(text) {
+function parseSingleColumn8760Csv(text, validationOptions = {}) {
   if (!String(text || '').trim()) throw new Error('Dosya boş veya okunamadı.');
   const rows = String(text).trim().split(/\r?\n/);
   const values = [];
@@ -1649,7 +1650,16 @@ function parseSingleColumn8760Csv(text) {
     throw new Error(`Satır ${firstBadRow.row}: sayısal olmayan değer "${firstBadRow.value}". Format: tek kolon, 8760 sayı satırı.`);
   }
   if (values.length < 8760) throw new Error(`Yetersiz veri: 8760 satır gerekli, ${values.length} geçerli satır bulundu.`);
-  return values.slice(0, 8760);
+  const profile = values.slice(0, 8760);
+  const validation = validateHourlyProfile8760(profile, validationOptions);
+  if (!validation.ok) throw new Error(validation.errors.join(' '));
+  return profile;
+}
+
+function offgrid8760ValidationForKind(kind) {
+  if (kind === 'pv') return { minAnnualKwh: 1, minPositiveHours: 24 };
+  if (kind === 'critical-load') return { minAnnualKwh: 0.1, minPositiveHours: 1 };
+  return { minAnnualKwh: 12, minPositiveHours: 24 };
 }
 
 async function analyzeOffgridFieldImport(file, kind) {
@@ -1723,10 +1733,22 @@ async function loadOffgridFieldImport(event, {
   try {
     const summary = await analyzeOffgridFieldImport(file, kind);
     setFieldImportSummary(kind, summary);
+    let derivedApplied = false;
+    let derivedRejectReason = '';
     if (applyDerived8760ToStateKey && Array.isArray(summary.derivedHourly8760) && summary.derivedHourly8760.length === 8760) {
-      window.state[applyDerived8760ToStateKey] = summary.derivedHourly8760.slice();
-      if (applyDerived8760ToStateKey === 'hourlyConsumption8760') window.state.hourlyProfileSource = 'hourly-uploaded';
-      if (applyDerived8760ToStateKey === 'offgridCriticalLoad8760') window.state.offgridCriticalLoad8760 = summary.derivedHourly8760.slice();
+      const validation = validateHourlyProfile8760(summary.derivedHourly8760, {
+        label: successLabel,
+        ...offgrid8760ValidationForKind(kind)
+      });
+      if (validation.ok) {
+        window.state[applyDerived8760ToStateKey] = summary.derivedHourly8760.slice();
+        if (applyDerived8760ToStateKey === 'hourlyConsumption8760') window.state.hourlyProfileSource = 'hourly-uploaded';
+        if (applyDerived8760ToStateKey === 'offgridCriticalLoad8760') window.state.offgridCriticalLoad8760 = summary.derivedHourly8760.slice();
+        derivedApplied = true;
+      } else {
+        window.state[applyDerived8760ToStateKey] = null;
+        derivedRejectReason = validation.errors.join(' ');
+      }
     }
     const evidenceResult = evidenceType
       ? await attachEvidenceFile(window.state, evidenceType, file, currentUser())
@@ -1734,8 +1756,10 @@ async function loadOffgridFieldImport(event, {
     const evidenceNote = evidenceResult.ok && evidenceResult.metadata?.sha256
       ? ` | Kanıt SHA: ${evidenceResult.metadata.sha256.slice(0, 12)}`
       : evidenceResult.ok ? '' : ` | Kanıt kaydedilemedi: ${evidenceResult.errors.join(' ')}`;
-    const derivedNote = summary.derivedHourly8760Ready
+    const derivedNote = derivedApplied
       ? ' | 8760 türetildi ve dispatch girdisine yazıldı'
+      : derivedRejectReason
+        ? ` | 8760 türetildi ama dispatch için reddedildi: ${derivedRejectReason}`
       : ` | ${Number(summary.durationDays || 0).toFixed(1)} gün saha profili`;
     setCsvStatus(statusId, clearId, true, `✓ ${successLabel} | ${fieldImportSummaryText(summary)}${derivedNote}${evidenceNote}`);
     renderEvidenceFileStatus();
@@ -1749,19 +1773,20 @@ async function loadOffgridFieldImport(event, {
   }
 }
 
-function loadOffgrid8760Csv(event, { stateKey, sourceKey, evidenceType, inputId, statusId, clearId, successLabel }) {
+function loadOffgrid8760Csv(event, { stateKey, sourceKey, evidenceType, inputId, statusId, clearId, successLabel, validation = {} }) {
   const file = event?.target?.files?.[0];
   if (!file) return;
   setCsvStatus(statusId, clearId, true, '⏳ Dosya okunuyor...');
   const reader = new FileReader();
   reader.onload = async e => {
     try {
-      const values = parseSingleColumn8760Csv(e.target.result || '');
+      const values = parseSingleColumn8760Csv(e.target.result || '', { label: successLabel, ...validation });
       window.state[stateKey] = values;
       if (stateKey === 'hourlyConsumption8760') window.state.hourlyProfileSource = 'hourly-uploaded';
       if (sourceKey) window.state[sourceKey] = file.name || successLabel;
       const annual = Math.round(values.reduce((a, b) => a + b, 0));
       const peak = Math.max(...values).toFixed(2);
+      const positiveHours = values.filter(value => value > 1e-9).length;
       let evidenceNote = '';
       if (evidenceType) {
         const evidenceResult = await attachEvidenceFile(window.state, evidenceType, file, currentUser());
@@ -1769,7 +1794,7 @@ function loadOffgrid8760Csv(event, { stateKey, sourceKey, evidenceType, inputId,
           ? ` | Kanıt SHA: ${evidenceResult.metadata.sha256.slice(0, 12)}`
           : ` | Kanıt kaydedilemedi: ${evidenceResult.errors.join(' ')}`;
       }
-      setCsvStatus(statusId, clearId, true, `✓ ${successLabel} | Yıllık: ${annual.toLocaleString()} kWh | Pik: ${peak} kWh/h${evidenceNote}`);
+      setCsvStatus(statusId, clearId, true, `✓ ${successLabel} | Yıllık: ${annual.toLocaleString()} kWh | Pik: ${peak} kWh/h | Pozitif saat: ${positiveHours.toLocaleString()}${evidenceNote}`);
       renderEvidenceFileStatus();
       persistState();
     } catch (err) {
@@ -1792,7 +1817,8 @@ function handleOffgridPvCsvUpload(event) {
     inputId: 'offgrid-pv-csv-upload',
     statusId: 'offgrid-pv-csv-status',
     clearId: 'offgrid-pv-csv-clear',
-    successLabel: 'PV 8760 profili yüklendi'
+    successLabel: 'PV 8760 profili yüklendi',
+    validation: offgrid8760ValidationForKind('pv')
   });
 }
 
@@ -1803,7 +1829,8 @@ function handleOffgridLoadCsvUpload(event) {
     inputId: 'offgrid-load-csv-upload',
     statusId: 'offgrid-load-csv-status',
     clearId: 'offgrid-load-csv-clear',
-    successLabel: 'Toplam yük 8760 profili yüklendi'
+    successLabel: 'Toplam yük 8760 profili yüklendi',
+    validation: offgrid8760ValidationForKind('load')
   });
 }
 
@@ -1838,7 +1865,8 @@ function handleOffgridCriticalCsvUpload(event) {
     inputId: 'offgrid-critical-csv-upload',
     statusId: 'offgrid-critical-csv-status',
     clearId: 'offgrid-critical-csv-clear',
-    successLabel: 'Kritik yük 8760 profili yüklendi'
+    successLabel: 'Kritik yük 8760 profili yüklendi',
+    validation: offgrid8760ValidationForKind('critical-load')
   });
 }
 

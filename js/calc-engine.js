@@ -28,7 +28,7 @@ import {
   buildOffgridFieldRevalidationGate,
   buildTariffSourceGovernance
 } from './evidence-governance.js';
-import { hasCompleteHourlyProfile8760, hasMeaningfulMonthlyConsumption } from './consumption-evidence.js';
+import { hasCompleteHourlyProfile8760, hasMeaningfulHourlyProfile8760, hasMeaningfulMonthlyConsumption } from './consumption-evidence.js';
 import { buildPvEngineRequest } from './pv-engine-contracts.js';
 import { sourceMetaForCurrentCalculation } from './solar-engine-adapter.js';
 import { scenarioSourceQualityNote } from './scenario-workflows.js';
@@ -1030,7 +1030,8 @@ export async function runCalculation() {
 
     // Yük profili oluştur. Basit mod profil/günlük kWh kullanır; ileri modda gerçek 8760 yük cihaz listesinin önüne geçer.
     const useAdvancedOffgridInputs = state.offgridCalculationMode === 'advanced';
-    const hasRealHourlyLoad = useAdvancedOffgridInputs && hasCompleteHourlyProfile8760(state.hourlyConsumption8760);
+    const hasRealHourlyLoad = useAdvancedOffgridInputs
+      && hasMeaningfulHourlyProfile8760(state.hourlyConsumption8760, { minAnnualKwh: 12, minPositiveHours: 24 });
     const realCriticalHourly = completeHourlyArray(state.offgridCriticalLoad8760)
       || completeHourlyArray(state.criticalLoad8760);
     const offgridLoadProfile = buildOffgridLoadProfile(

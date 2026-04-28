@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════
 import { getLoadProfile } from './calc-core.js';
 import { CITY_SUMMER_TEMPS, HOURLY_SOLAR_PROFILE } from './data.js';
+import { hasMeaningfulHourlyProfile8760, summarizeHourlyProfile8760 } from './consumption-evidence.js';
 
 function getLoadSeasonForMonth(monthIdx) {
   if (monthIdx === 11 || monthIdx <= 1) return 'winter';
@@ -102,6 +103,10 @@ const DEFAULT_FIELD_MODEL_THRESHOLDS = {
   unmetCriticalMaxKwh: 1,
   generatorCriticalPeakReservePct: 0.10
 };
+
+const REAL_PV_PROFILE_RULE = { minAnnualKwh: 1, minPositiveHours: 24 };
+const REAL_LOAD_PROFILE_RULE = { minAnnualKwh: 12, minPositiveHours: 24 };
+const REAL_CRITICAL_PROFILE_RULE = { minAnnualKwh: 0.1, minPositiveHours: 1 };
 
 // Cihaz kategorisi başına 24 saatlik şablonlar (her biri normalize edilir, toplamları ≈1.0)
 // Fiziksel anlam: tipik günlük kullanım ağırlığı saat başına
@@ -253,6 +258,34 @@ function clone8760(arr) {
 
 function sum(arr) {
   return arr.reduce((a, b) => a + Math.max(0, Number(b) || 0), 0);
+}
+
+function summarizeComplete8760(arr) {
+  return isComplete8760(arr)
+    ? summarizeHourlyProfile8760(clone8760(arr))
+    : null;
+}
+
+function isMeaningful8760(arr, rule) {
+  return isComplete8760(arr)
+    && hasMeaningfulHourlyProfile8760(clone8760(arr), rule);
+}
+
+function summaryMeetsRule(summary, rule) {
+  return !!summary
+    && summary.annualKwh >= rule.minAnnualKwh
+    && summary.positiveHours >= rule.minPositiveHours
+    && summary.peakKwh > (rule.minPeakKwh || 0);
+}
+
+function hourlyQuality(summary) {
+  if (!summary) return null;
+  return {
+    annualKwh: summary.annualKwh,
+    peakKwh: summary.peakKwh,
+    positiveHours: summary.positiveHours,
+    zeroHours: summary.zeroHours
+  };
 }
 
 function monthTotalsFromHourly8760(hourly8760 = []) {
@@ -531,7 +564,10 @@ function dispatchSummaryForStress(key, scenario, dispatch, peakCriticalKw) {
 }
 
 export function buildOffgridPvDispatchProfile(options = {}) {
-  const realHourly = isComplete8760(options.realHourlyPv8760)
+  const realSummary = isMeaningful8760(options.realHourlyPv8760, REAL_PV_PROFILE_RULE)
+    ? summarizeComplete8760(options.realHourlyPv8760)
+    : null;
+  const realHourly = realSummary
     ? clone8760(options.realHourlyPv8760)
     : null;
   if (realHourly) {
@@ -547,7 +583,10 @@ export function buildOffgridPvDispatchProfile(options = {}) {
       resolution: 'hourly',
       missingHours: 0,
       dispatchBus: 'ac-load-bus-kwh',
-      synthetic: false
+      synthetic: false,
+      fieldInputQuality: {
+        production: hourlyQuality(realSummary)
+      }
     };
   }
 
@@ -577,6 +616,9 @@ export function buildOffgridPvDispatchProfile(options = {}) {
     missingHours: fallbackComplete ? 0 : HOURS_PER_YEAR,
     dispatchBus: 'ac-load-bus-kwh',
     synthetic: true,
+    fieldInputQuality: {
+      production: hourlyQuality(summarizeComplete8760(pvHourly8760))
+    },
     syntheticWeatherModel: clusteredSynthetic.metadata?.syntheticWeatherModel || null,
     syntheticWeatherMetadata: clusteredSynthetic.metadata || null
   };
@@ -592,23 +634,35 @@ export function evaluateOffgridFieldGuaranteeReadiness({
   const blockers = [];
   const limitations = [];
   const satisfied = [];
+  const productionSummary = productionProfile.fieldInputQuality?.production
+    || summarizeComplete8760(productionProfile.pvHourly8760);
+  const loadSummary = loadProfile.fieldInputQuality?.totalLoad
+    || summarizeComplete8760(loadProfile.totalHourly8760);
+  const criticalSummary = loadProfile.fieldInputQuality?.criticalLoad
+    || summarizeComplete8760(loadProfile.criticalHourly8760);
+  const hasFieldPv = productionProfile.hasRealHourlyProduction
+    && summaryMeetsRule(productionSummary, REAL_PV_PROFILE_RULE);
+  const hasFieldLoad = loadProfile.hasRealHourlyLoad
+    && summaryMeetsRule(loadSummary, REAL_LOAD_PROFILE_RULE);
+  const hasFieldCriticalLoad = loadProfile.criticalLoadBasis === 'real-hourly-critical-load'
+    && summaryMeetsRule(criticalSummary, REAL_CRITICAL_PROFILE_RULE);
 
-  if (productionProfile.hasRealHourlyProduction) {
+  if (hasFieldPv) {
     satisfied.push('real-hourly-pv-8760');
   } else {
-    blockers.push('Gerçek 8760 saatlik PV üretim serisi yok; dispatch aylık üretimden türetilmiş sentetik profil kullanıyor.');
+    blockers.push('Gerçek ve anlamlı 8760 saatlik PV üretim serisi yok; sıfır/boş seri Faz 1 girdisi olamaz.');
   }
 
-  if (loadProfile.hasRealHourlyLoad) {
+  if (hasFieldLoad) {
     satisfied.push('real-hourly-load-8760');
   } else {
-    blockers.push('Gerçek 8760 saatlik saha yük profili yok; yük cihaz kütüphanesi veya günlük tüketimden sentetik üretiliyor.');
+    blockers.push('Gerçek ve anlamlı 8760 saatlik saha yük profili yok; yük cihaz kütüphanesi veya günlük tüketimden sentetik üretiliyor.');
   }
 
-  if (loadProfile.criticalLoadBasis === 'real-hourly-critical-load') {
+  if (hasFieldCriticalLoad) {
     satisfied.push('real-hourly-critical-load');
   } else {
-    blockers.push('Kritik yük saatlik ölçülmüş/kanıtlı ayrı profil değil; kritik kapsama garanti metriği olamaz.');
+    blockers.push('Kritik yük saatlik ölçülmüş ve anlamlı ayrı profil değil; kritik kapsama garanti metriği olamaz.');
   }
 
   if (Number.isFinite(Number(battery.maxChargePowerKw)) && Number.isFinite(Number(battery.maxDischargePowerKw))) {
@@ -637,7 +691,12 @@ export function evaluateOffgridFieldGuaranteeReadiness({
     guaranteeLevel: phase1Ready ? 'engineering-input-ready-not-field-guarantee' : 'pre-feasibility-only',
     blockers,
     limitations,
-    satisfied
+    satisfied,
+    inputQuality: {
+      production: hourlyQuality(productionSummary),
+      load: hourlyQuality(loadSummary),
+      criticalLoad: hourlyQuality(criticalSummary)
+    }
   };
 }
 
@@ -1151,11 +1210,14 @@ export function buildOffgridLoadProfile(devices, options = {}) {
     : [];
   const inventory = buildDeviceSummary(validDevices);
 
-  if (isComplete8760(options.hourlyLoad8760)) {
+  if (isMeaningful8760(options.hourlyLoad8760, REAL_LOAD_PROFILE_RULE)) {
     const totalHourly8760 = clone8760(options.hourlyLoad8760);
-    const criticalHourly8760 = isComplete8760(options.criticalHourly8760)
+    const hasRealCriticalHourly = isMeaningful8760(options.criticalHourly8760, REAL_CRITICAL_PROFILE_RULE);
+    const criticalHourly8760 = hasRealCriticalHourly
       ? clampCriticalToLoad(clone8760(options.criticalHourly8760), totalHourly8760)
       : buildCriticalFromFraction(totalHourly8760, options.criticalFraction);
+    const totalQuality = summarizeComplete8760(totalHourly8760);
+    const criticalQuality = summarizeComplete8760(criticalHourly8760);
     const annualTotalKwh = sum(totalHourly8760);
     const annualCriticalKwh = sum(criticalHourly8760);
     const peaks = fallbackPeakFromEnergy(totalHourly8760, criticalHourly8760);
@@ -1168,8 +1230,13 @@ export function buildOffgridLoadProfile(devices, options = {}) {
       deviceSummary: inventory.deviceSummary,
       mode: 'hourly-8760',
       loadSource: options.hourlyLoadSource || 'real-hourly-8760',
-      criticalLoadBasis: isComplete8760(options.criticalHourly8760) ? 'real-hourly-critical-load' : 'fraction-of-real-hourly-load',
+      criticalLoadBasis: hasRealCriticalHourly ? 'real-hourly-critical-load' : 'fraction-of-real-hourly-load',
       hasRealHourlyLoad: true,
+      fieldInputQuality: {
+        totalLoad: hourlyQuality(totalQuality),
+        criticalLoad: hourlyQuality(criticalQuality),
+        realCriticalLoad: hasRealCriticalHourly
+      },
       deviceCount: validDevices.length,
       criticalDeviceCount: inventory.criticalDeviceCount
     };

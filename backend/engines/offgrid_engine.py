@@ -12,6 +12,9 @@ MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 DAY_HOURS = {6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}
 NIGHT_HOURS = {0, 1, 2, 3, 4, 5, 18, 19, 20, 21, 22, 23}
 PV_DAYLIGHT_HOURS = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+REAL_PV_PROFILE_RULE = {"min_annual_kwh": 1.0, "min_positive_hours": 24}
+REAL_LOAD_PROFILE_RULE = {"min_annual_kwh": 12.0, "min_positive_hours": 24}
+REAL_CRITICAL_PROFILE_RULE = {"min_annual_kwh": 0.1, "min_positive_hours": 1}
 
 RESIDENTIAL_LOAD = [
     0.02, 0.02, 0.02, 0.02, 0.02, 0.03, 0.05, 0.06, 0.04, 0.03, 0.03, 0.03,
@@ -184,6 +187,36 @@ def complete_hourly(values: Any) -> list[float] | None:
 
 def sum_positive(values: list[float]) -> float:
     return sum(max(0.0, finite(value, 0.0)) for value in values)
+
+
+def hourly_summary_8760(values: Any) -> dict[str, float] | None:
+    hourly = complete_hourly(values)
+    if hourly is None:
+        return None
+    positive_hours = sum(1 for value in hourly if value > 1e-9)
+    return {
+        "annualKwh": sum_positive(hourly),
+        "peakKwh": max(hourly) if hourly else 0.0,
+        "positiveHours": positive_hours,
+        "zeroHours": HOURS_PER_YEAR - positive_hours,
+    }
+
+
+def summary_meets_rule(summary: dict[str, float] | None, rule: dict[str, float]) -> bool:
+    return bool(
+        summary
+        and summary["annualKwh"] >= rule["min_annual_kwh"]
+        and summary["positiveHours"] >= rule["min_positive_hours"]
+        and summary["peakKwh"] > rule.get("min_peak_kwh", 0.0)
+    )
+
+
+def meaningful_hourly(values: Any, rule: dict[str, float]) -> list[float] | None:
+    hourly = complete_hourly(values)
+    if hourly is None:
+        return None
+    summary = hourly_summary_8760(hourly)
+    return hourly if summary_meets_rule(summary, rule) else None
 
 
 def get_load_season_for_month(month_idx: int) -> str:
@@ -926,8 +959,8 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
     load = request.load
     governance_extra = getattr(request.governance, "model_extra", {}) or {}
     field_import_summary = governance_extra.get("fieldImports") or None
-    hourly_load = complete_hourly(getattr(load, "hourlyConsumption8760", None))
-    critical_real = complete_hourly(getattr(load, "offgridCriticalLoad8760", None))
+    hourly_load = meaningful_hourly(getattr(load, "hourlyConsumption8760", None), REAL_LOAD_PROFILE_RULE)
+    critical_real = meaningful_hourly(getattr(load, "offgridCriticalLoad8760", None), REAL_CRITICAL_PROFILE_RULE)
     critical_fraction = clamp(finite(getattr(load, "offgridCriticalFraction", None), 0.45), 0.0, 1.0)
 
     if hourly_load:
@@ -945,6 +978,11 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
             "criticalPeakKw8760": critical_peak,
             "annualTotalKwh": sum_positive(hourly_load),
             "annualCriticalKwh": sum_positive(critical_hourly),
+            "fieldInputQuality": {
+                "totalLoad": hourly_summary_8760(hourly_load),
+                "criticalLoad": hourly_summary_8760(critical_hourly),
+                "realCriticalLoad": critical_real is not None,
+            },
             "deviceSummary": [],
             "syntheticPeakModel": None,
             "deviceCount": len(getattr(load, "offgridDevices", None) or []),
@@ -1080,7 +1118,7 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
 
 
 def build_offgrid_pv_profile(request: EngineRequest, production: dict[str, Any]) -> dict[str, Any]:
-    request_hourly = complete_hourly(getattr(request.load, "hourlyProduction8760", None))
+    request_hourly = meaningful_hourly(getattr(request.load, "hourlyProduction8760", None), REAL_PV_PROFILE_RULE)
     if request_hourly:
         return {
             "pvHourly8760": request_hourly,
@@ -1095,8 +1133,11 @@ def build_offgrid_pv_profile(request: EngineRequest, production: dict[str, Any])
             "missingHours": 0,
             "dispatchBus": "ac-load-bus-kwh",
             "synthetic": False,
+            "fieldInputQuality": {
+                "production": hourly_summary_8760(request_hourly),
+            },
         }
-    backend_hourly = complete_hourly(production.get("hourlyEnergyKwh") or production.get("hourly_kwh"))
+    backend_hourly = meaningful_hourly(production.get("hourlyEnergyKwh") or production.get("hourly_kwh"), REAL_PV_PROFILE_RULE)
     if backend_hourly:
         return {
             "pvHourly8760": backend_hourly,
@@ -1111,6 +1152,9 @@ def build_offgrid_pv_profile(request: EngineRequest, production: dict[str, Any])
             "missingHours": 0,
             "dispatchBus": "ac-load-bus-kwh",
             "synthetic": False,
+            "fieldInputQuality": {
+                "production": hourly_summary_8760(backend_hourly),
+            },
         }
     monthly = production.get("monthlyEnergyKwh") or production.get("monthly_kwh") or [0.0] * 12
     monthly = [max(0.0, finite(value, 0.0)) for value in monthly[:12]]
@@ -1132,6 +1176,9 @@ def build_offgrid_pv_profile(request: EngineRequest, production: dict[str, Any])
         "missingHours": 0,
         "dispatchBus": "ac-load-bus-kwh",
         "synthetic": True,
+        "fieldInputQuality": {
+            "production": hourly_summary_8760(clustered_hourly),
+        },
         "syntheticWeatherModel": weather_meta["syntheticWeatherModel"],
         "syntheticWeatherMetadata": weather_meta,
     }
@@ -1538,18 +1585,36 @@ def run_stress_scenarios(pv_hourly: list[float], load_profile: dict[str, Any], b
 
 def evaluate_field_readiness(production_profile: dict[str, Any], load_profile: dict[str, Any], battery: dict[str, Any], dispatch_options: dict[str, Any]) -> dict[str, Any]:
     blockers = []
-    if not production_profile["hasRealHourlyProduction"]:
-        blockers.append("Gercek 8760 saatlik PV uretim serisi yok; dispatch sentetik profile dayaniyor.")
-    if not load_profile["hasRealHourlyLoad"]:
-        blockers.append("Gercek 8760 saatlik saha yuk profili yok; yuk sentetik uretiliyor.")
-    if load_profile["criticalLoadBasis"] != "real-hourly-critical-load":
-        blockers.append("Kritik yuk ayri olculmus saatlik profile dayanmiyor.")
+    satisfied = []
+    production_summary = (production_profile.get("fieldInputQuality") or {}).get("production") or hourly_summary_8760(production_profile.get("pvHourly8760"))
+    load_summary = (load_profile.get("fieldInputQuality") or {}).get("totalLoad") or hourly_summary_8760(load_profile.get("totalHourly8760"))
+    critical_summary = (load_profile.get("fieldInputQuality") or {}).get("criticalLoad") or hourly_summary_8760(load_profile.get("criticalHourly8760"))
+    has_field_pv = bool(production_profile["hasRealHourlyProduction"] and summary_meets_rule(production_summary, REAL_PV_PROFILE_RULE))
+    has_field_load = bool(load_profile["hasRealHourlyLoad"] and summary_meets_rule(load_summary, REAL_LOAD_PROFILE_RULE))
+    has_field_critical = bool(load_profile["criticalLoadBasis"] == "real-hourly-critical-load" and summary_meets_rule(critical_summary, REAL_CRITICAL_PROFILE_RULE))
+    if has_field_pv:
+        satisfied.append("real-hourly-pv-8760")
+    else:
+        blockers.append("Gercek ve anlamli 8760 saatlik PV uretim serisi yok; sifir/bos seri Faz 1 girdisi olamaz.")
+    if has_field_load:
+        satisfied.append("real-hourly-load-8760")
+    else:
+        blockers.append("Gercek ve anlamli 8760 saatlik saha yuk profili yok; yuk sentetik uretiliyor.")
+    if has_field_critical:
+        satisfied.append("real-hourly-critical-load")
+    else:
+        blockers.append("Kritik yuk saatlik olculmus ve anlamli ayri profile dayanmiyor.")
+    has_battery_power_limits = finite(battery.get("maxChargePowerKw"), 0.0) > 0 and finite(battery.get("maxDischargePowerKw"), 0.0) > 0
     if finite(battery.get("maxChargePowerKw"), 0.0) <= 0:
         blockers.append("Batarya sarj kW limiti tanimli degil.")
     if finite(battery.get("maxDischargePowerKw"), 0.0) <= 0:
         blockers.append("Batarya desarj kW limiti tanimli degil.")
+    if has_battery_power_limits:
+        satisfied.append("battery-charge-discharge-power-limits")
     if finite(dispatch_options.get("inverterAcLimitKw"), 0.0) <= 0:
         blockers.append("Inverter AC limiti acik tanimli degil.")
+    else:
+        satisfied.append("inverter-ac-limit")
     phase1_ready = len(blockers) == 0
     return {
         "version": "OFFGRID-FIELD-GATE-2026.04-v1",
@@ -1561,7 +1626,12 @@ def evaluate_field_readiness(production_profile: dict[str, Any], load_profile: d
         "limitations": [
             "Batarya yaslanmasi, sicaklik derating ve saha kabul zinciri bu backend parity adiminda hala ileri model alanidir."
         ],
-        "satisfied": [],
+        "satisfied": satisfied,
+        "inputQuality": {
+            "production": production_summary,
+            "load": load_summary,
+            "criticalLoad": critical_summary,
+        },
     }
 
 

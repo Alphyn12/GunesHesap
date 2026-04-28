@@ -1,5 +1,5 @@
 // Evidence/source governance helpers for quote-ready proposal workflow.
-import { hasMeaningfulConsumptionEvidence } from './consumption-evidence.js';
+import { hasMeaningfulConsumptionEvidence, hasMeaningfulHourlyProfile8760 } from './consumption-evidence.js';
 import { i18n } from './i18n.js';
 import { localizeMessageList, statusLabel } from './output-i18n.js';
 
@@ -98,12 +98,6 @@ function hasValidatedFile(record = {}) {
   return Array.isArray(record.files) && record.files.some(file => file.sha256 && file.validationStatus !== 'rejected');
 }
 
-function hasCompleteHourly8760(value) {
-  return Array.isArray(value)
-    && value.length >= 8760
-    && value.slice(0, 8760).every(v => Number.isFinite(Number(v)) && Number(v) >= 0);
-}
-
 function runtimeEvidenceStatus(existing, hasRuntimeData) {
   if (existing?.status) return existing.status;
   return hasRuntimeData ? 'review-required' : 'missing';
@@ -178,13 +172,15 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
     const fieldImports = state.offgridFieldImports || {};
     const highResLoad = fieldImports.highResolutionLoad || {};
     const inverterEventLog = fieldImports.inverterEventLog || {};
-    const hasDerivedHighResLoad8760 = Array.isArray(highResLoad.derivedHourly8760) && highResLoad.derivedHourly8760.length === 8760;
-    const hasRealPvProduction = offgrid.productionDispatchMetadata?.hasRealHourlyProduction === true
-      || hasCompleteHourly8760(state.offgridPvHourly8760)
-      || hasCompleteHourly8760(state.hourlyProduction8760);
-    const hasRealLoad = hasCompleteHourly8760(state.hourlyConsumption8760) || hasDerivedHighResLoad8760;
-    const hasRealCriticalLoad = hasCompleteHourly8760(state.offgridCriticalLoad8760)
-      || hasCompleteHourly8760(state.criticalLoad8760);
+    const hasDerivedHighResLoad8760 = hasMeaningfulHourlyProfile8760(highResLoad.derivedHourly8760, { minAnnualKwh: 12, minPositiveHours: 24 });
+    const hasRealPvFromResult = offgrid.productionDispatchMetadata?.hasRealHourlyProduction === true
+      && Number(offgrid.productionDispatchMetadata?.annualKwh || 0) >= 1;
+    const hasRealPvProduction = hasRealPvFromResult
+      || hasMeaningfulHourlyProfile8760(state.offgridPvHourly8760, { minAnnualKwh: 1, minPositiveHours: 24 })
+      || hasMeaningfulHourlyProfile8760(state.hourlyProduction8760, { minAnnualKwh: 1, minPositiveHours: 24 });
+    const hasRealLoad = hasMeaningfulHourlyProfile8760(state.hourlyConsumption8760, { minAnnualKwh: 12, minPositiveHours: 24 }) || hasDerivedHighResLoad8760;
+    const hasRealCriticalLoad = hasMeaningfulHourlyProfile8760(state.offgridCriticalLoad8760, { minAnnualKwh: 0.1, minPositiveHours: 1 })
+      || hasMeaningfulHourlyProfile8760(state.criticalLoad8760, { minAnnualKwh: 0.1, minPositiveHours: 1 });
     const hasSiteVerifiedShading = state.shadingQuality === 'site-verified';
 
     registry.offgridPvProduction = normalizeEvidenceRecord(evidence.offgridPvProduction, {

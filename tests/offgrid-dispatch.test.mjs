@@ -177,6 +177,19 @@ describe('buildOffgridLoadProfile — real 8760 source priority', () => {
     nearly(result.annualTotalKwh, hourly.reduce((a, b) => a + b, 0), 0.01, 'real 8760 sum');
     nearly(result.annualCriticalKwh, result.annualTotalKwh * 0.4, 0.01, 'critical fallback fraction');
   });
+
+  it('sıfır 8760 yük serisini gerçek saha yükü saymaz', () => {
+    const devices = [{ name: 'Pompa', category: 'pump', powerW: 2000, hoursPerDay: 6, isCritical: false }];
+    const result = buildOffgridLoadProfile(devices, {
+      hourlyLoad8760: new Array(8760).fill(0),
+      criticalHourly8760: new Array(8760).fill(0),
+      hourlyLoadSource: 'hourly-uploaded',
+      criticalFraction: 0.4
+    });
+    assert.notEqual(result.mode, 'hourly-8760');
+    assert.equal(result.hasRealHourlyLoad, false);
+    assert.notEqual(result.criticalLoadBasis, 'real-hourly-critical-load');
+  });
 });
 
 describe('buildOffgridPvDispatchProfile — üretim source-of-truth', () => {
@@ -203,6 +216,17 @@ describe('buildOffgridPvDispatchProfile — üretim source-of-truth', () => {
     assert.equal(result.synthetic, true);
     assert.equal(result.productionDispatchProfile, 'monthly-production-derived-synthetic-8760');
     nearly(result.annualKwh, 12 * 365, 0.01, 'fallback pv annual');
+  });
+
+  it('sıfır 8760 PV serisini gerçek üretim kanıtı saymaz', () => {
+    const fallbackRows = makeLoadHourly(12).map(production => ({ production }));
+    const result = buildOffgridPvDispatchProfile({
+      realHourlyPv8760: new Array(8760).fill(0),
+      fallbackHourlyRows: fallbackRows
+    });
+
+    assert.equal(result.hasRealHourlyProduction, false);
+    assert.equal(result.productionDispatchProfile, 'monthly-production-derived-synthetic-8760');
   });
 
   it('sentetik fallback PV aylık toplamı koruyup günler arası kümeli oynaklık üretir', () => {
@@ -340,6 +364,28 @@ describe('evaluateOffgridFieldGuaranteeReadiness — Faz 1 gate', () => {
     assert.equal(readiness.phase1Ready, true);
     assert.equal(readiness.status, 'phase-1-input-ready');
     assert.equal(readiness.fieldGuaranteeReady, false);
+  });
+
+  it('tam uzunlukta ama sıfır 8760 serileri Faz 1 input-ready yapmaz', () => {
+    const zeros = new Array(8760).fill(0);
+    const productionProfile = buildOffgridPvDispatchProfile({ realHourlyPv8760: zeros });
+    const loadProfile = buildOffgridLoadProfile([], {
+      hourlyLoad8760: zeros,
+      criticalHourly8760: zeros,
+      fallbackDailyKwh: 8,
+      criticalFraction: 0.5
+    });
+    const readiness = evaluateOffgridFieldGuaranteeReadiness({
+      productionProfile,
+      loadProfile,
+      battery: { maxChargePowerKw: 5, maxDischargePowerKw: 5 },
+      dispatchOptions: { inverterAcLimitKw: 5 }
+    });
+
+    assert.equal(productionProfile.hasRealHourlyProduction, false);
+    assert.equal(loadProfile.hasRealHourlyLoad, false);
+    assert.equal(readiness.phase1Ready, false);
+    assert.ok(readiness.blockers.some(item => item.includes('anlamlı 8760')));
   });
 });
 

@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import {
   hasCompleteHourlyProfile8760,
+  hasMeaningfulHourlyProfile8760,
   hasMeaningfulConsumptionEvidence,
-  hasMeaningfulMonthlyConsumption
+  hasMeaningfulMonthlyConsumption,
+  validateHourlyProfile8760
 } from '../js/consumption-evidence.js';
 import { sanitizeDashboardRecord } from '../js/dashboard.js';
 import { isLocationInTurkey } from '../js/location-validation.js';
@@ -13,6 +15,11 @@ assert.equal(hasMeaningfulConsumptionEvidence({ monthlyConsumption: new Array(12
 assert.equal(hasMeaningfulConsumptionEvidence({ hourlyConsumption8760: new Array(24).fill(1) }), false);
 assert.equal(hasCompleteHourlyProfile8760(new Array(8760).fill(1)), true);
 assert.equal(hasCompleteHourlyProfile8760(new Array(8759).fill(1)), false);
+assert.equal(hasMeaningfulHourlyProfile8760(new Array(8760).fill(0)), false);
+assert.equal(hasMeaningfulConsumptionEvidence({ hourlyConsumption8760: new Array(8760).fill(0) }), false);
+assert.equal(hasMeaningfulConsumptionEvidence({ hourlyConsumption8760: new Array(8760).fill(1) }), true);
+assert.equal(validateHourlyProfile8760(new Array(8760).fill(0), { label: 'test' }).ok, false);
+assert.equal(validateHourlyProfile8760(new Array(8760).fill(1), { label: 'test' }).ok, true);
 
 const imported = sanitizeDashboardRecord({
   id: '7',

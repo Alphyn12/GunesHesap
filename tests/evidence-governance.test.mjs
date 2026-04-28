@@ -24,6 +24,26 @@ const emptyMonthlyRegistry = buildEvidenceRegistry(
 );
 assert.equal(emptyMonthlyRegistry.registry.customerBill.status, 'missing');
 
+const zeroOffgridRuntimeRegistry = buildEvidenceRegistry(
+  {
+    scenarioKey: 'off-grid',
+    hourlyConsumption8760: new Array(8760).fill(0),
+    offgridPvHourly8760: new Array(8760).fill(0),
+    offgridCriticalLoad8760: new Array(8760).fill(0),
+    evidence: {}
+  },
+  {
+    offgridL2Results: {
+      productionDispatchMetadata: { hasRealHourlyProduction: true, annualKwh: 0 },
+      fieldGuaranteeReadiness: { phase1Ready: false }
+    }
+  },
+  { today: '2026-04-13' }
+);
+assert.equal(zeroOffgridRuntimeRegistry.registry.offgridPvProduction.status, 'missing');
+assert.equal(zeroOffgridRuntimeRegistry.registry.offgridLoadProfile.status, 'missing');
+assert.equal(zeroOffgridRuntimeRegistry.registry.offgridCriticalLoadProfile.status, 'missing');
+
 const registry = buildEvidenceRegistry(
   {
     hasSignedCustomerBillData: true,

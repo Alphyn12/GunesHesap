@@ -2,7 +2,9 @@ from fastapi.testclient import TestClient
 import pytest
 
 from backend.engines.pvlib_engine import PVLIB_AVAILABLE
+from backend.engines.offgrid_engine import build_backend_offgrid_results
 from backend.main import app
+from backend.models.engine_contracts import EngineRequest
 
 
 client = TestClient(app)
@@ -219,6 +221,25 @@ def test_backend_offgrid_calculate_returns_dispatch_results():
     assert len(data["offgridL2Results"]["hourly8760"]) == 8760
     assert data["offgridL2Results"]["criticalLoadCoverage"] >= 0
     assert data["offgridL2Results"]["fieldGuaranteeReadiness"]["status"] in {"blocked", "phase-1-input-ready"}
+
+
+def test_backend_offgrid_zero_hourly_profiles_are_not_phase1_ready():
+    request = offgrid_sample_request()
+    zeros = [0.0] * 8760
+    request["load"]["hourlyConsumption8760"] = zeros
+    request["load"]["offgridCriticalLoad8760"] = zeros
+    request["load"]["hourlyProduction8760"] = zeros
+    production = {
+        "hourlyEnergyKwh": zeros,
+        "monthlyEnergyKwh": [0.0] * 12,
+        "systemPowerKwp": 0.0,
+    }
+    result = build_backend_offgrid_results(EngineRequest(**request), production)
+
+    assert result is not None
+    assert result["productionDispatchMetadata"]["hasRealHourlyProduction"] is False
+    assert result["hasRealHourlyLoad"] is False
+    assert result["fieldGuaranteeReadiness"]["phase1Ready"] is False
 
 
 def test_backend_offgrid_returns_field_design_corrections():
