@@ -53,6 +53,7 @@ import { DEVICE_CATALOG, DEVICE_CATEGORIES, DEVICE_CATEGORY_LABELS, catalogItemT
 import { escapeHtml } from './security.js';
 import { buildBackendUrl } from './backend-config.js';
 import { isSpreadsheetFilename, parseHighResolutionLoadText, parseInverterEventLogText } from './offgrid-field-import.js';
+import { runDatasheetSizing, attachDatasheetSizingHandlers } from './datasheet-sizing.js';
 
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
@@ -3047,6 +3048,10 @@ function updateEquipmentSelectionSummary() {
   if (panelEl) panelEl.textContent = panelCatalog?.displayName || panel?.name || '—';
   if (inverterEl) inverterEl.textContent = inverter?.name || '—';
   if (batteryEl) batteryEl.textContent = batteryLabel;
+  // Panel veya invertör değiştiğinde datasheet kartını yenile (yalnızca Adım 4 görünürken).
+  if (window.state?.step === 4 && document.getElementById('datasheet-sizing-card')) {
+    runDatasheetSizing();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3106,6 +3111,10 @@ function goToStep(n) {
       if (window.showHeatmapCard) window.showHeatmapCard();
       if (window.renderScenarioAnalysis) window.renderScenarioAnalysis();
     }, 600);
+  }
+  if (n === 4) {
+    attachDatasheetSizingHandlers();
+    runDatasheetSizing();
   }
   toEl.classList.add('active');
   if (main) main.classList.toggle('immersive-flow', n === 2 || n === 3);

@@ -6,7 +6,8 @@ export const BACKEND_CONFIG = {
   pvCalculatePath: '/api/pv/calculate',
   pvlibCompatPath: '/api/pvlib/calculate',
   financialPath: '/api/financial/proposal',
-  pvgisProxyPath: '/api/pvgis-proxy'
+  pvgisProxyPath: '/api/pvgis-proxy',
+  panelThermalCheckPath: '/api/panel/thermal-check'
 };
 
 function cleanBaseUrl(value) {

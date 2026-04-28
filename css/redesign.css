@@ -2318,3 +2318,104 @@ h2, .h2, .step-heading-title {
   .action-btns { flex-direction: column; }
   .action-btns .btn { width: 100%; }
 }
+
+/* ─── Datasheet & İnverter Boyutlandırma kartı (Adım 4) ─────────────────── */
+#datasheet-sizing-card .datasheet-sizing-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#datasheet-sizing-card .datasheet-sizing-edit-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle, rgba(255,255,255,.12));
+  color: var(--text, inherit);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+#datasheet-sizing-card .datasheet-sizing-edit-btn:hover,
+#datasheet-sizing-card .datasheet-sizing-edit-btn:focus-visible {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.25);
+  outline: none;
+}
+#datasheet-sizing-card .datasheet-sizing-grid {
+  margin-top: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+#datasheet-sizing-card .datasheet-sizing-table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  font-size: .85rem;
+}
+#datasheet-sizing-card .datasheet-sizing-table th,
+#datasheet-sizing-card .datasheet-sizing-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,.08));
+}
+#datasheet-sizing-card .datasheet-sizing-table th {
+  font-weight: 600;
+  color: var(--text-muted, rgba(255,255,255,.65));
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+#datasheet-sizing-card .datasheet-sizing-note {
+  margin-top: 10px;
+  font-size: .78rem;
+  color: var(--text-muted, rgba(255,255,255,.6));
+  line-height: 1.5;
+}
+#datasheet-sizing-card .datasheet-sizing-form {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle, rgba(255,255,255,.08));
+}
+#datasheet-sizing-card .datasheet-sizing-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+#datasheet-sizing-card .datasheet-sizing-form label {
+  display: grid;
+  gap: 4px;
+  font-size: .78rem;
+  color: var(--text-muted, rgba(255,255,255,.65));
+}
+#datasheet-sizing-card .datasheet-sizing-form input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle, rgba(255,255,255,.12));
+  background: rgba(0,0,0,.18);
+  color: var(--text, inherit);
+  font-size: .9rem;
+}
+#datasheet-sizing-card .datasheet-sizing-form input:focus-visible {
+  outline: 2px solid var(--accent, #5b9dff);
+  outline-offset: 1px;
+}
+#datasheet-sizing-card .datasheet-sizing-error {
+  margin: 10px 0 0;
+  font-size: .82rem;
+  color: var(--danger, #ff6b6b);
+}
+#datasheet-sizing-card .datasheet-sizing-form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+#datasheet-sizing-card[data-thermal-state="loading"] {
+  opacity: .65;
+}
+@media(max-width:720px) {
+  #datasheet-sizing-card .datasheet-sizing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

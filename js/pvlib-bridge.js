@@ -54,6 +54,26 @@ export function callPvlibService(state = {}, options = {}) {
   return callPythonEngineeringBackend(state, { ...options, endpoint });
 }
 
+export async function callPanelThermalCheck(payload, { endpoint = buildBackendUrl(BACKEND_CONFIG.panelThermalCheckPath), fetchImpl = globalThis.fetch, timeoutMs = BACKEND_CONFIG.connectTimeoutMs } = {}) {
+  if (typeof fetchImpl !== 'function') throw new Error('fetch unavailable');
+  const res = await fetchWithTimeout(fetchImpl, endpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  }, timeoutMs);
+  if (res.status === 422) {
+    let detail = 'invalid datasheet input';
+    try {
+      const body = await res.json();
+      if (body && typeof body.detail === 'string') detail = body.detail;
+    } catch { /* non-JSON 422 */ }
+    return { ok: false, status: 422, error: detail };
+  }
+  if (!res.ok) throw new Error(`panel thermal-check HTTP ${res.status}`);
+  const data = await res.json();
+  return { ok: true, status: res.status, data };
+}
+
 export function describePvlibBridge() {
   return {
     status: PVLIB_BRIDGE_STATUS,

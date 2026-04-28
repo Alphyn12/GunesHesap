@@ -1863,6 +1863,66 @@
       </div>
     </div>
 
+    <!-- Datasheet & İnverter Boyutlandırma -->
+    <div class="card mb-4" id="datasheet-sizing-card" data-thermal-state="idle">
+      <div class="card-title text-md-mb-2 datasheet-sizing-head">
+        <span data-i18n="step4.datasheetSizing.title">Datasheet &amp; İnverter Boyutlandırma</span>
+        <button type="button" class="datasheet-sizing-edit-btn" id="datasheet-sizing-edit-toggle" aria-expanded="false" data-i18n="step4.datasheetSizing.edit">Düzenle</button>
+      </div>
+      <div class="equipment-section-intro">
+        <div class="equipment-section-copy">
+          <strong data-i18n="step4.datasheetSizing.lead">Sıcaklık &amp; invertör güvenlik kontrolü</strong>
+          <span data-i18n="step4.datasheetSizing.sub">−10 / +25 / +60 °C senaryolarında Voc, Vmp ve panel gücü düzeltmesi; invertör için math.floor ile güvenli maksimum seri panel sayısı ve en sıcak senaryoda gerçekçi tepe güç.</span>
+        </div>
+      </div>
+      <div class="equipment-summary-grid datasheet-sizing-grid">
+        <div class="equipment-summary-item">
+          <span data-i18n="step4.datasheetSizing.coldVocLabel">Voc (−10 °C)</span>
+          <strong id="datasheet-sizing-cold-voc">—</strong>
+        </div>
+        <div class="equipment-summary-item">
+          <span data-i18n="step4.datasheetSizing.hotPmaxLabel">Pmax (+60 °C)</span>
+          <strong id="datasheet-sizing-hot-pmax">—</strong>
+        </div>
+        <div class="equipment-summary-item">
+          <span data-i18n="step4.datasheetSizing.safeStringLabel">Güvenli seri (max)</span>
+          <strong id="datasheet-sizing-safe-strings">—</strong>
+        </div>
+        <div class="equipment-summary-item">
+          <span data-i18n="step4.datasheetSizing.peakPowerLabel">Gerçekçi tepe güç</span>
+          <strong id="datasheet-sizing-peak-power">—</strong>
+        </div>
+      </div>
+      <table class="datasheet-sizing-table">
+        <thead>
+          <tr>
+            <th data-i18n="step4.datasheetSizing.colTemp">Sıcaklık</th>
+            <th data-i18n="step4.datasheetSizing.colVoc">Voc</th>
+            <th data-i18n="step4.datasheetSizing.colVmp">Vmp</th>
+            <th data-i18n="step4.datasheetSizing.colPmax">Pmax</th>
+          </tr>
+        </thead>
+        <tbody id="datasheet-sizing-scenario-tbody"></tbody>
+      </table>
+      <p class="datasheet-sizing-note" id="datasheet-sizing-note"></p>
+      <form class="datasheet-sizing-form" id="datasheet-sizing-form" hidden>
+        <div class="datasheet-sizing-form-grid">
+          <label><span data-i18n="step4.datasheetSizing.formVoc">Voc STC (V)</span><input type="number" name="vocStcV" step="0.01" min="0.01" required></label>
+          <label><span data-i18n="step4.datasheetSizing.formVocCoeff">Voc katsayısı (%/°C)</span><input type="number" name="vocCoeffPctPerC" step="0.001" required></label>
+          <label><span data-i18n="step4.datasheetSizing.formVmp">Vmp STC (V)</span><input type="number" name="vmpStcV" step="0.01" min="0.01" required></label>
+          <label><span data-i18n="step4.datasheetSizing.formPmaxW">Pmax STC (W)</span><input type="number" name="pmaxStcW" step="1" min="1" required></label>
+          <label><span data-i18n="step4.datasheetSizing.formPmaxCoeff">Pmax katsayısı (%/°C)</span><input type="number" name="pmaxCoeffPctPerC" step="0.001" required></label>
+          <label><span data-i18n="step4.datasheetSizing.formInvMaxV">İnverter max DC giriş (V)</span><input type="number" name="inverterMaxInputV" step="1" min="1" required></label>
+          <label><span data-i18n="step4.datasheetSizing.formInvMpptV">İnverter MPPT optimal (V)</span><input type="number" name="inverterMpptOptimalV" step="1" min="1" required></label>
+        </div>
+        <p class="form-error datasheet-sizing-error" id="datasheet-sizing-error" hidden></p>
+        <div class="datasheet-sizing-form-actions">
+          <button type="button" id="datasheet-sizing-reset" class="btn-secondary" data-i18n="step4.datasheetSizing.reset">Varsayılana dön</button>
+          <button type="submit" class="btn-primary" data-i18n="step4.datasheetSizing.recalc">Yeniden hesapla</button>
+        </div>
+      </form>
+    </div>
+
     <!-- Sticky summary card -->
     <div class="equipment-summary-card">
       <div class="equipment-summary-headline">
