@@ -1277,7 +1277,10 @@ function syncScenarioControls() {
 function selectScenario(key) {
   const next = applyScenarioDefaults(window.state, key);
   Object.assign(window.state, next);
-  window.state.maxUnlockedStep = 1;
+  // Senaryo seçilmesi adım 1'in tamamlandığını gösterir; adım 2'yi unlock et.
+  // (scenario değişimi sonrası downstream state'i sıfırlama; daha ileride
+  //  kullanıcı varsa tekrar her stepte validation yapar.)
+  window.state.maxUnlockedStep = 2;
   clearStepInlineAlert(1);
   appendAuditEntry(window.state, 'scenario.selected', {
     scenarioKey: window.state.scenarioKey,
