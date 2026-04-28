@@ -1,5 +1,6 @@
-// v36: Faz 1 / F1.B.0 — inline <script> bloğu js/landing-bootstrap.js'a çıkarıldı.
-const CACHE_NAME = 'solarRota-v36';
+// v37: Faz 1 / F1.D+F1.F — inline <style> bloğu components.css'e taşındı,
+//      CSP 'unsafe-inline' kaldırıldı, Nominatim connect-src'ye eklendi.
+const CACHE_NAME = 'solarRota-v37';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',

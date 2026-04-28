@@ -2,6 +2,73 @@
    COMPONENTS.CSS — Solar Rota v2.0 Modüler Bileşenler
    ═══════════════════════════════════════════════════════════ */
 
+/* ── F1.F: index.html inline <style> bloğundan taşınan FOUC-kritik
+   reset, :root vars, theme-light override, body, scrollbar, keyframes.
+   Bu kurallar dış CSS olmadan tarayıcı flicker üretebileceği için
+   en üstte tutuldu. */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Core palette */
+  --primary:#F59E0B;--primary-dark:#D97706;--primary-glow:rgba(245,158,11,0.25);
+  --accent:#06B6D4;--accent-dark:#0891B2;--accent-glow:rgba(6,182,212,0.2);
+  --secondary:#1C1C1E;--surface:#242426;--surface-light:#2C2C2E;
+  --surface-glass:rgba(255,255,255,0.04);
+  --text:#F5F5F7;--text-muted:#B1B1B6;
+  --success:#10B981;--danger:#EF4444;
+  --border:#3A3A3C;--border-subtle:rgba(255,255,255,0.07);
+  --radius:14px;--radius-lg:20px;--radius-xl:28px;--radius-2xl:40px;
+  --transition:0.3s ease;--transition-bounce:0.4s cubic-bezier(0.34,1.56,0.64,1);
+  --font-display:'Space Grotesk','Inter',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.5),0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.6),0 2px 8px rgba(0,0,0,0.4);
+  --shadow-glow-primary:0 0 24px rgba(245,158,11,0.3),0 4px 16px rgba(0,0,0,0.5);
+  --shadow-glow-accent:0 0 24px rgba(6,182,212,0.25),0 4px 16px rgba(0,0,0,0.5);
+  --shadow-card:0 1px 0 rgba(255,255,255,0.04) inset,0 8px 32px rgba(0,0,0,0.5),0 2px 8px rgba(0,0,0,0.4);
+  /* Scenario colors */
+  --scenario-ongrid:#F59E0B;--scenario-offgrid:#8B5CF6;--scenario-irrigation:#10B981;
+  --scenario-heatpump:#EC4899;--scenario-mobile:#06B6D4;--scenario-ev:#3B82F6;
+  /* Hero */
+  --hero-gradient:linear-gradient(135deg,#1C1C1E 0%,#242426 50%,#1C1C1E 100%);
+  --header-h:138px;
+}
+[data-theme="light"]{
+  --secondary:#F2F2F7;--surface:#FFFFFF;--surface-light:#E5E5EA;
+  --surface-glass:rgba(0,0,0,0.03);
+  --text:#1C1C1E;--text-muted:#6C6C70;
+  --border:#C7C7CC;--border-subtle:rgba(0,0,0,0.08);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.08);
+  --shadow-glow-primary:0 0 24px rgba(245,158,11,0.25),0 4px 16px rgba(0,0,0,0.1);
+  --shadow-glow-accent:0 0 24px rgba(6,182,212,0.2),0 4px 16px rgba(0,0,0,0.1);
+  --shadow-card:0 1px 0 rgba(255,255,255,0.9) inset,0 4px 16px rgba(0,0,0,0.1),0 2px 8px rgba(0,0,0,0.06);
+  --hero-gradient:linear-gradient(135deg,#F2F2F7 0%,#E5E5EA 50%,#F2F2F7 100%);
+}
+.settings-choice-btn{flex:1;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-light);color:var(--text);cursor:pointer;font-size:0.85rem;transition:0.2s;text-align:center;font-family:var(--font-body)}
+.settings-choice-btn:hover{background:var(--primary);color:#000;border-color:var(--primary)}
+.settings-choice-btn.active{background:var(--primary);color:#000;border-color:var(--primary);font-weight:700}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);background:var(--secondary);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,158,11,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 110%,rgba(6,182,212,0.06) 0%,transparent 55%);
+  animation:bgDrift 18s ease-in-out infinite alternate;
+}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes bgDrift{0%{background-position:0% 0%}50%{background-position:2% 2%}100%{background-position:-1% 1%}}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.022;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px;
+}
+body>*{position:relative;z-index:1}
+body>main{z-index:auto}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--secondary)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
 /* ── BÖLÜM TANITIM METNİ ────────────────────────────────── */
 .section-intro {
   font-size: 0.82rem;

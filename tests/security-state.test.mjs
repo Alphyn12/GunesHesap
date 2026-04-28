@@ -1,5 +1,34 @@
 import assert from 'node:assert/strict';
+import { readFile, readdir } from 'node:fs/promises';
 import { createShareStateSnapshot, escapeHtml, sanitizeLocalState, sanitizeSharedState } from '../js/security.js';
+
+// ── F1 invariant: HTML/CSS/JS inline + CSP unsafe-inline ─────────────────
+const indexHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const vercelJson = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
+
+assert.doesNotMatch(indexHtml, /\son(click|change|input|submit|focus|blur|keydown|toggle|load|mouseover|mouseenter|mouseleave)\s*=/,
+  'F1 invariant: index.html must not contain inline event handlers');
+assert.doesNotMatch(indexHtml, /\sstyle\s*=\s*"/,
+  'F1 invariant: index.html must not contain inline style="" attributes');
+assert.doesNotMatch(indexHtml, /<script(?![^>]*\bsrc=)/,
+  'F1 invariant: index.html must not contain inline <script> blocks');
+assert.doesNotMatch(indexHtml, /<style[^>]*>/,
+  'F1 invariant: index.html must not contain inline <style> blocks');
+assert.doesNotMatch(vercelJson, /'unsafe-inline'/,
+  "F1 invariant: vercel.json CSP must not contain 'unsafe-inline'");
+assert.match(vercelJson, /https:\/\/nominatim\.openstreetmap\.org/,
+  'F1 invariant: vercel.json connect-src must include Nominatim');
+
+const jsDir = new URL('../js/', import.meta.url);
+const jsFiles = (await readdir(jsDir)).filter(f => f.endsWith('.js'));
+for (const f of jsFiles) {
+  const content = await readFile(new URL(f, jsDir), 'utf8');
+  assert.doesNotMatch(content, /\sstyle\s*=\s*"/,
+    `F1 invariant: js/${f} must not inject inline style="" via templates`);
+  assert.doesNotMatch(content, /\sonclick\s*=\s*"/,
+    `F1 invariant: js/${f} must not inject inline onclick="" via templates`);
+}
+
 
 assert.equal(escapeHtml('<img src=x onerror=alert(1)>'), '&lt;img src=x onerror=alert(1)&gt;');
 
