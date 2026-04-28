@@ -621,7 +621,7 @@ function initMap() {
 
   // ── Konum işaretçisi ────────────────────────────────────
   const markerIcon = L.divIcon({
-    html: `<div style="width:22px;height:22px;background:#F59E0B;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
+    html: `<div class="city-marker-rozet"></div>`,
     className: '', iconSize: [22, 22], iconAnchor: [11, 11]
   });
   marker = L.marker([39.0, 35.0], { icon: markerIcon, draggable: true }).addTo(map);
@@ -841,7 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initMap(); } catch(e) {
     console.error('initMap hatası:', e);
     document.getElementById('map').innerHTML =
-      `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#F59E0B;font-size:0.85rem;padding:20px;text-align:center">⚠ Harita yüklenemedi: ${e.message}</div>`;
+      `<div class="map-load-error">⚠ Harita yüklenemedi: ${e.message}</div>`;
   }
   buildPanelCards();
   buildCompass();
@@ -1042,14 +1042,14 @@ function renderScenarioCards() {
       const color = SCENARIO_COLORS?.[scenario.key] || 'var(--primary)';
       const forWhom = i18n.t(`scenarios.${scenario.key === 'on-grid' ? 'onGrid' : 'offGrid'}.forWhom`);
       const forWhomHtml = forWhom && forWhom !== `scenarios.${scenario.key === 'on-grid' ? 'onGrid' : 'offGrid'}.forWhom`
-        ? `<span class="scenario-card-for-whom"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;margin-top:1px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${forWhom}</span>`
+        ? `<span class="scenario-card-for-whom"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="svg-shrink-mt-1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${forWhom}</span>`
         : '';
       return `
     <button type="button" class="scenario-choice-card${window.state.scenarioKey === scenario.key ? ' selected' : ''}"
             data-scenario-key="${scenario.key}"
             data-testid="scenario-card-${scenario.key}"
             aria-pressed="${window.state.scenarioKey === scenario.key ? 'true' : 'false'}"
-            style="--card-color:${color}">
+            data-card-color="${color}">
       <div class="scenario-card-icon">${icon}</div>
       <strong class="scenario-card-title">${scenario.label}</strong>
       <span class="scenario-card-desc">${scenario.description}</span>
@@ -1058,6 +1058,7 @@ function renderScenarioCards() {
     }).join('');
   wrap.querySelectorAll('[data-scenario-key]').forEach(btn => {
     btn.addEventListener('click', () => selectScenario(btn.dataset.scenarioKey));
+    if (btn.dataset.cardColor) btn.style.setProperty('--card-color', btn.dataset.cardColor);
   });
 }
 
@@ -3201,7 +3202,7 @@ function renderRoofSections() {
           <div class="roof-section-title"><span class="roof-section-index">${secNum}</span> Ek Çatı Yüzeyi</div>
           <div class="roof-section-subtitle">Bu yüzey ana çatıdan bağımsız yön, eğim ve gölge değerleriyle hesaplanır.</div>
         </div>
-        <button class="remove-section-btn" onclick="removeRoofSection(${sec.id})">
+        <button class="remove-section-btn" data-click-action="removeRoofSection" data-arg="${sec.id}" data-arg-type="number">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           Kaldır
         </button>
@@ -3902,6 +3903,15 @@ registerActions({
   billClear,
   // import8760Csv expects a File; dispatcher el is the input, files[0] is the file
   import8760Csv: (_arg, el) => import8760Csv(el?.files?.[0]),
+  // F1.C.7 batch 5 — app.js dynamic content
+  removeRoofSection,
+  selectOffgridResidentialProfile,
+  removeOffgridDevice,
+  // Off-grid device table multi-arg — index + field from element dataset
+  updateOffgridDeviceField: (arg, el) => {
+    if (!el) return;
+    updateOffgridDevice(+el.dataset.index, el.dataset.field, arg);
+  },
 });
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
@@ -4000,7 +4010,7 @@ function renderOffgridResidentialProfiles() {
   if (!grid) return;
   const selectedKey = window.state.offgridLoadProfileKey || 'family-home';
   grid.innerHTML = OFFGRID_RESIDENTIAL_PROFILES.map(profile => `
-    <button type="button" class="offgrid-profile-card${profile.key === selectedKey ? ' selected' : ''}" onclick="selectOffgridResidentialProfile('${_escHtml(profile.key)}')">
+    <button type="button" class="offgrid-profile-card${profile.key === selectedKey ? ' selected' : ''}" data-click-action="selectOffgridResidentialProfile" data-arg="${_escHtml(profile.key)}">
       <div class="offgrid-profile-card-title">
         <span>${_escHtml(profile.title)}</span>
         <small>${profile.dailyKwh} kWh/gün</small>
@@ -4291,9 +4301,9 @@ function updateOffgridDevicePreview() {
 
   previewEl.style.display = '';
   previewEl.innerHTML = `
-    <strong style="color:var(--text)">${_escHtml(item.name)}</strong>
-    <span style="margin-left:8px;opacity:0.6">${_escHtml(catLabels[item.category] || item.category)}</span>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+    <strong class="text-color-default">${_escHtml(item.name)}</strong>
+    <span class="ml-2 opacity-60">${_escHtml(catLabels[item.category] || item.category)}</span>
+    <div class="flex-wrap-row-mt-1">
       <span>${i18n.t('offgridL2.devicePreviewPower')}: <strong>${item.powerW}W</strong></span>
       <span>${i18n.t('offgridL2.devicePreviewDefaultHours')}: <strong>${item.defaultHoursPerDay}h/gün</strong></span>
       <span>${i18n.t('offgridL2.devicePreviewUsage')}: <strong>${_escHtml(usageLabel)}</strong></span>
@@ -4376,31 +4386,31 @@ function renderOffgridDeviceTable() {
     estimatedNightWh += nightWh;
     if (d.isCritical) { critDailyWh += dailyWh; critCount++; }
 
-    return `<tr class="offgrid-device-row" style="border-bottom:1px solid rgba(148,163,184,0.1)">
-      <td class="ogd-cell ogd-cell--name" data-label="${_escHtml(nameLabel)}" style="padding:3px 6px"><input type="text" value="${_escHtml(d.name || '')}" placeholder="${_escHtml(nameLabel)}" aria-label="${_escHtml(nameLabel)}"
-        style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--text);width:100px;font-size:0.75rem"
-        oninput="updateOffgridDevice(${i},'name',this.value)"/></td>
-      <td class="ogd-cell ogd-cell--power" data-label="${_escHtml(powerLabel)}" style="padding:3px 6px;text-align:right"><input type="number" value="${powerW||100}" min="1" max="100000" aria-label="${_escHtml(powerLabel)}"
-        style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--text);width:68px;font-size:0.75rem;text-align:right"
-        oninput="updateOffgridDevice(${i},'powerW',this.value)"/></td>
-      <td class="ogd-cell ogd-cell--hours" data-label="${_escHtml(hoursLabel)}" style="padding:3px 6px;text-align:right"><input type="number" value="${hours||4}" min="0.1" max="24" step="0.25" aria-label="${_escHtml(hoursLabel)}"
-        style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--text);width:55px;font-size:0.75rem;text-align:right"
-        oninput="updateOffgridDevice(${i},'hoursPerDay',this.value)"/></td>
-      <td class="ogd-cell ogd-cell--night" data-label="${_escHtml(nightLabel)}" style="padding:3px 6px;text-align:right"><input type="number" value="${nightH||0}" min="0" max="24" step="0.25" aria-label="${_escHtml(nightLabel)}"
-        style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--text);width:50px;font-size:0.75rem;text-align:right"
-        oninput="updateOffgridDevice(${i},'nightHoursPerDay',this.value)"/></td>
-      <td class="ogd-cell ogd-cell--total" data-label="Wh/Gün" style="padding:3px 6px;text-align:right;font-weight:600;color:var(--text);font-size:0.75rem">${_whLabel(dailyWh)}${_escHtml(perDayLabel)}</td>
-      <td class="ogd-cell ogd-cell--critical" data-label="${_escHtml(criticalLabel)}" style="padding:3px 6px;text-align:center"><input type="checkbox" ${d.isCritical ? 'checked' : ''}
+    return `<tr class="offgrid-device-row ogd-row">
+      <td class="ogd-cell ogd-cell--name ogd-cell-pad" data-label="${_escHtml(nameLabel)}"><input type="text" value="${_escHtml(d.name || '')}" placeholder="${_escHtml(nameLabel)}" aria-label="${_escHtml(nameLabel)}"
+        class="ogd-input ogd-input--name"
+        data-input-action="updateOffgridDeviceField" data-arg-prop="value" data-index="${i}" data-field="name"/></td>
+      <td class="ogd-cell ogd-cell--power ogd-cell-pad-right" data-label="${_escHtml(powerLabel)}"><input type="number" value="${powerW||100}" min="1" max="100000" aria-label="${_escHtml(powerLabel)}"
+        class="ogd-input ogd-input--power"
+        data-input-action="updateOffgridDeviceField" data-arg-prop="value" data-index="${i}" data-field="powerW"/></td>
+      <td class="ogd-cell ogd-cell--hours ogd-cell-pad-right" data-label="${_escHtml(hoursLabel)}"><input type="number" value="${hours||4}" min="0.1" max="24" step="0.25" aria-label="${_escHtml(hoursLabel)}"
+        class="ogd-input ogd-input--hours"
+        data-input-action="updateOffgridDeviceField" data-arg-prop="value" data-index="${i}" data-field="hoursPerDay"/></td>
+      <td class="ogd-cell ogd-cell--night ogd-cell-pad-right" data-label="${_escHtml(nightLabel)}"><input type="number" value="${nightH||0}" min="0" max="24" step="0.25" aria-label="${_escHtml(nightLabel)}"
+        class="ogd-input ogd-input--night"
+        data-input-action="updateOffgridDeviceField" data-arg-prop="value" data-index="${i}" data-field="nightHoursPerDay"/></td>
+      <td class="ogd-cell ogd-cell--total ogd-total-cell" data-label="Wh/Gün">${_whLabel(dailyWh)}${_escHtml(perDayLabel)}</td>
+      <td class="ogd-cell ogd-cell--critical ogd-cell-pad-center" data-label="${_escHtml(criticalLabel)}"><input type="checkbox" ${d.isCritical ? 'checked' : ''}
         aria-label="${_escHtml(criticalLabel)}"
-        onchange="updateOffgridDevice(${i},'isCritical',this.checked)"
-        style="accent-color:#EF4444;cursor:pointer"/></td>
-      <td class="ogd-cell ogd-cell--category" data-label="${_escHtml(categoryLabel)}" style="padding:3px 6px"><select aria-label="${_escHtml(categoryLabel)}"
-        style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 4px;color:var(--text);font-size:0.72rem"
-        onchange="updateOffgridDevice(${i},'category',this.value)">
+        class="ogd-checkbox"
+        data-change-action="updateOffgridDeviceField" data-arg-prop="checked" data-index="${i}" data-field="isCritical"/></td>
+      <td class="ogd-cell ogd-cell--category ogd-cell-pad" data-label="${_escHtml(categoryLabel)}"><select aria-label="${_escHtml(categoryLabel)}"
+        class="ogd-input ogd-input--cat"
+        data-change-action="updateOffgridDeviceField" data-arg-prop="value" data-index="${i}" data-field="category">
         ${DEVICE_CATEGORIES.map(c => `<option value="${c}" ${(d.category||'generic')===c?'selected':''}>${_escHtml(catLabels[c]||c)}</option>`).join('')}
       </select></td>
-      <td class="ogd-cell ogd-cell--remove" style="padding:3px 6px"><button onclick="removeOffgridDevice(${i})" aria-label="${_escHtml(removeLabel)}"
-        style="background:rgba(239,68,68,0.1);color:#EF4444;border:none;border-radius:4px;padding:2px 8px;font-size:0.72rem;cursor:pointer">✕</button></td>
+      <td class="ogd-cell ogd-cell--remove ogd-cell-pad"><button data-click-action="removeOffgridDevice" data-arg="${i}" data-arg-type="number" aria-label="${_escHtml(removeLabel)}"
+        class="ogd-remove-btn">✕</button></td>
     </tr>`;
   }).join('');
 
@@ -4424,7 +4434,7 @@ function _renderOffgridLiveSummary(deviceCount, totalDailyWh, critDailyWh, critC
   el.style.display = '';
 
   const stat = (label, val, color) =>
-    `<span style="color:var(--text-muted)">${_escHtml(label)}: <strong style="color:${color||'var(--text)'}">${_escHtml(val)}</strong></span>`;
+    `<span class="text-muted">${_escHtml(label)}: <strong class="dyn-color-strong" data-c="${color||'var(--text)'}">${_escHtml(val)}</strong></span>`;
 
   body.innerHTML = [
     stat(i18n.t('offgridL2.liveSummaryDevices'), String(deviceCount), '#8B5CF6'),
@@ -4433,4 +4443,9 @@ function _renderOffgridLiveSummary(deviceCount, totalDailyWh, critDailyWh, critC
     critCount > 0   ? stat(i18n.t('offgridL2.liveSummaryCriticalDevices'), String(critCount), '#EF4444') : '',
     nightWh > 0     ? stat(i18n.t('offgridL2.liveSummaryNightLoad'), _whLabel(nightWh) + i18n.t('units.perDay'), '#8B5CF6') : '',
   ].filter(Boolean).join('');
+  // F1.C.7: dynamic color setProperty
+  if (typeof body.querySelectorAll === 'function') {
+    body.querySelectorAll('[data-c]').forEach(node =>
+      node.style.setProperty('--c', node.dataset.c));
+  }
 }

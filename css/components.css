@@ -2841,3 +2841,39 @@
 .glare-risky-line   { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
 .glare-targets-title{ font-size: 0.78rem; margin-bottom: 4px; }
 .glare-footnote     { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 6px; }
+/* ── F1.C.7 batch 5: tax ── */
+.tax-table-td         { padding: 5px 10px; border-bottom: 1px solid rgba(71,85,105,0.2); }
+.tax-table-td--success{ color: var(--success); }
+.tax-callout          { background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 0.78rem; line-height: 1.7; }
+.tax-callout-title    { font-weight: 600; color: var(--primary); margin-bottom: 6px; }
+.tax-stat-grid        { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.tax-stat-value-1-1   { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.tax-stat-value-1-1--success { color: var(--success); }
+.tax-stat-value-1-1--accent  { color: var(--accent); }
+.tax-stat-value-1-1--primary { color: var(--primary); }
+.tax-table-wrap       { overflow-x: auto; }
+.tax-table            { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.tax-table-tr-header  { background: var(--surface); }
+.tax-table-th         { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; }
+/* ── F1.C.7 batch 5: app.js — divIcon, error msg, off-grid device table ── */
+.city-marker-rozet  { width: 22px; height: 22px; background: #F59E0B; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+.map-load-error     { display: flex; align-items: center; justify-content: center; height: 100%; color: #F59E0B; font-size: 0.85rem; padding: 20px; text-align: center; }
+.svg-shrink-mt-1    { flex-shrink: 0; margin-top: 1px; }
+.scenario-card-color { --card-color: var(--c); }
+.ml-2               { margin-left: 8px; }
+.flex-wrap-row-mt-1 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+/* off-grid device table */
+.ogd-input            { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; color: var(--text); font-size: 0.75rem; }
+.ogd-input--name      { width: 100px; }
+.ogd-input--power     { width: 68px; text-align: right; }
+.ogd-input--hours     { width: 55px; text-align: right; }
+.ogd-input--night     { width: 50px; text-align: right; }
+.ogd-input--cat       { padding: 2px 4px; font-size: 0.72rem; }
+.ogd-row              { border-bottom: 1px solid rgba(148,163,184,0.1); }
+.ogd-cell-pad         { padding: 3px 6px; }
+.ogd-cell-pad-right   { padding: 3px 6px; text-align: right; }
+.ogd-cell-pad-center  { padding: 3px 6px; text-align: center; }
+.ogd-total-cell       { padding: 3px 6px; text-align: right; font-weight: 600; color: var(--text); font-size: 0.75rem; }
+.ogd-checkbox         { accent-color: #EF4444; cursor: pointer; }
+.ogd-remove-btn       { background: rgba(239,68,68,0.1); color: #EF4444; border: none; border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; cursor: pointer; }
+.dyn-color-strong     { color: var(--c, var(--text)); }
