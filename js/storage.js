@@ -23,7 +23,7 @@ const STATE_KEYS = [
   'offgridGeneratorStartSocPct', 'offgridGeneratorMaxHoursPerDay',
   'offgridGeneratorMaintenanceCostTry',
   'offgridBadWeatherLevel', 'offgridPvHourly8760', 'offgridPvHourlySource',
-  'offgridCriticalLoad8760', 'offgridFieldGuaranteeMode',
+  'offgridCriticalLoad8760', 'offgridFieldImports', 'offgridFieldGuaranteeMode',
   'offgridBatteryMaxChargeKw', 'offgridBatteryMaxDischargeKw',
   'offgridInverterAcKw', 'offgridInverterSurgeMultiplier',
   'exportSettlementMode', 'previousYearConsumptionKwh', 'currentYearConsumptionKwh',

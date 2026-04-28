@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 
 from backend.engines.engine_router import calculate_pv
 from backend.engines.panel_thermal_engine import calculate_panel_thermal_sizing
@@ -13,6 +13,7 @@ from backend.models.engine_contracts import (
     PanelThermalResponse,
 )
 from backend.services.financial_service import calculate_financial_proposal
+from backend.services.offgrid_field_import_service import analyze_field_import
 from backend.services.pvgis_proxy import fetch_pvgis_via_proxy, validate_pvgis_params
 
 
@@ -37,6 +38,24 @@ def pvlib_calculate(request: EngineRequest) -> EngineResponse:
 @router.post("/api/financial/proposal", response_model=EngineResponse)
 def financial_proposal(request: EngineRequest) -> EngineResponse:
     return calculate_financial_proposal(request)
+
+
+@router.post("/api/offgrid/field-import")
+async def offgrid_field_import(
+    kind: str = Query(..., pattern="^(load|critical-load|inverter-log)$"),
+    file: UploadFile = File(...),
+) -> Dict[str, Any]:
+    try:
+        content = await file.read()
+        result = analyze_field_import(file.filename or "field-import.csv", content, kind)
+        return {
+            "ok": True,
+            "kind": kind,
+            "filename": file.filename or "field-import.csv",
+            "summary": result,
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("/api/panel/thermal-check", response_model=PanelThermalResponse)

@@ -8,6 +8,7 @@ export const OFFGRID_FIELD_EVIDENCE_VERSION = 'GH-OFFGRID-FIELD-EVID-2026.04-v1'
 export const OFFGRID_FIELD_ACCEPTANCE_VERSION = 'GH-OFFGRID-FIELD-ACCEPT-2026.04-v1';
 export const OFFGRID_FIELD_OPERATION_VERSION = 'GH-OFFGRID-FIELD-OPS-2026.04-v1';
 export const OFFGRID_FIELD_REVALIDATION_VERSION = 'GH-OFFGRID-FIELD-REVALIDATE-2026.04-v1';
+export const OFFGRID_FIELD_IMPORT_VERSION = 'GH-OFFGRID-FIELD-IMPORT-2026.04-v1';
 
 export const OFFGRID_FIELD_EVIDENCE_REQUIREMENTS = [
   { key: 'offgridPvProduction', label: 'Off-grid PV 8760 production evidence', maxAgeDays: 365 },
@@ -39,6 +40,11 @@ export const OFFGRID_FIELD_REVALIDATION_REQUIREMENTS = [
   { key: 'offgridGeneratorServiceRecord', label: 'Off-grid generator service and fuel record', maxAgeDays: 180, generatorOnly: true },
   { key: 'offgridFirmwareSettingsBackup', label: 'Off-grid firmware and settings backup', maxAgeDays: 365 },
   { key: 'offgridCustomerSignoff', label: 'Off-grid customer operating sign-off', maxAgeDays: 365 }
+];
+
+export const OFFGRID_FIELD_IMPORT_REQUIREMENTS = [
+  { key: 'offgridHighResLoadProfile', label: 'Off-grid 1-minute field load profile', minDurationDays: 7, maxIntervalMinutes: 5 },
+  { key: 'offgridInverterEventLog', label: 'Off-grid inverter trip/event log' }
 ];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -169,10 +175,14 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
 
   if (state.scenarioKey === 'off-grid') {
     const offgrid = results.offgridL2Results || {};
+    const fieldImports = state.offgridFieldImports || {};
+    const highResLoad = fieldImports.highResolutionLoad || {};
+    const inverterEventLog = fieldImports.inverterEventLog || {};
+    const hasDerivedHighResLoad8760 = Array.isArray(highResLoad.derivedHourly8760) && highResLoad.derivedHourly8760.length === 8760;
     const hasRealPvProduction = offgrid.productionDispatchMetadata?.hasRealHourlyProduction === true
       || hasCompleteHourly8760(state.offgridPvHourly8760)
       || hasCompleteHourly8760(state.hourlyProduction8760);
-    const hasRealLoad = hasCompleteHourly8760(state.hourlyConsumption8760);
+    const hasRealLoad = hasCompleteHourly8760(state.hourlyConsumption8760) || hasDerivedHighResLoad8760;
     const hasRealCriticalLoad = hasCompleteHourly8760(state.offgridCriticalLoad8760)
       || hasCompleteHourly8760(state.criticalLoad8760);
     const hasSiteVerifiedShading = state.shadingQuality === 'site-verified';
@@ -187,11 +197,20 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
     });
     registry.offgridLoadProfile = normalizeEvidenceRecord(evidence.offgridLoadProfile, {
       type: 'offgridLoadProfile',
-      status: runtimeEvidenceStatus(evidence.offgridLoadProfile, hasRealLoad),
-      ref: evidence.offgridLoadProfile?.ref || (hasRealLoad ? 'runtime-total-load-8760' : ''),
-      checkedAt: evidence.offgridLoadProfile?.checkedAt || null,
+      status: evidence.offgridLoadProfile?.status === 'verified'
+        ? 'verified'
+        : evidence.offgridHighResLoadProfile?.status === 'verified' && hasDerivedHighResLoad8760
+          ? 'verified'
+          : runtimeEvidenceStatus(evidence.offgridLoadProfile, hasRealLoad),
+      ref: evidence.offgridLoadProfile?.ref || (hasDerivedHighResLoad8760
+        ? (evidence.offgridHighResLoadProfile?.ref || 'runtime-derived-from-highres-load')
+        : (hasRealLoad ? 'runtime-total-load-8760' : '')),
+      checkedAt: evidence.offgridLoadProfile?.checkedAt || evidence.offgridHighResLoadProfile?.checkedAt || null,
       sourceLabel: 'Off-grid total load 8760 evidence',
-      notes: hasRealLoad ? 'Runtime 8760 total load profile is present; Phase 2 still requires an auditable file hash.' : ''
+      notes: hasDerivedHighResLoad8760
+        ? 'High-resolution field profile was aggregated into a dispatch-ready 8760 load series.'
+        : hasRealLoad ? 'Runtime 8760 total load profile is present; Phase 2 still requires an auditable file hash.' : '',
+      files: evidence.offgridLoadProfile?.files?.length ? evidence.offgridLoadProfile.files : (evidence.offgridHighResLoadProfile?.files || [])
     });
     registry.offgridCriticalLoadProfile = normalizeEvidenceRecord(evidence.offgridCriticalLoadProfile, {
       type: 'offgridCriticalLoadProfile',
@@ -200,6 +219,26 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
       checkedAt: evidence.offgridCriticalLoadProfile?.checkedAt || null,
       sourceLabel: 'Off-grid critical load 8760 evidence',
       notes: hasRealCriticalLoad ? 'Runtime 8760 critical load profile is present; Phase 2 still requires an auditable file hash.' : ''
+    });
+    registry.offgridHighResLoadProfile = normalizeEvidenceRecord(evidence.offgridHighResLoadProfile, {
+      type: 'offgridHighResLoadProfile',
+      status: evidence.offgridHighResLoadProfile?.status || (highResLoad.sampleCount ? 'review-required' : 'missing'),
+      ref: evidence.offgridHighResLoadProfile?.ref || (highResLoad.sampleCount ? 'runtime-highres-load-import' : ''),
+      checkedAt: evidence.offgridHighResLoadProfile?.checkedAt || null,
+      sourceLabel: 'Off-grid 1-minute field load profile',
+      notes: highResLoad.sampleCount
+        ? `Observed peak ${Number(highResLoad.observedPeakKw || 0).toFixed(2)} kW at ${Number(highResLoad.intervalMinutes || 0).toFixed(0)} min resolution.`
+        : ''
+    });
+    registry.offgridInverterEventLog = normalizeEvidenceRecord(evidence.offgridInverterEventLog, {
+      type: 'offgridInverterEventLog',
+      status: evidence.offgridInverterEventLog?.status || (inverterEventLog.eventCount ? 'review-required' : 'missing'),
+      ref: evidence.offgridInverterEventLog?.ref || (inverterEventLog.eventCount ? 'runtime-inverter-event-log' : ''),
+      checkedAt: evidence.offgridInverterEventLog?.checkedAt || null,
+      sourceLabel: 'Off-grid inverter trip/event log',
+      notes: inverterEventLog.eventCount
+        ? `Trips ${Number(inverterEventLog.tripCount || 0)}, overload ${Number(inverterEventLog.overloadCount || 0)}, faults ${Number(inverterEventLog.faultCount || 0)}.`
+        : ''
     });
     registry.offgridSiteShading = normalizeEvidenceRecord(evidence.offgridSiteShading, {
       type: 'offgridSiteShading',
@@ -247,6 +286,59 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
 
   const validation = validateEvidenceRegistry(registry, { today });
   return { version: EVIDENCE_GOVERNANCE_VERSION, today, registry, validation };
+}
+
+export function buildOffgridFieldImportGate(evidenceGovernance = {}, results = {}, { today = currentDateIso() } = {}) {
+  const registry = evidenceGovernance.registry || evidenceGovernance || {};
+  const offgrid = results.offgridL2Results || {};
+  const fieldImportSummary = offgrid.fieldImportSummary || {};
+  const highRes = fieldImportSummary.highResolutionLoad || {};
+  const inverterLog = fieldImportSummary.inverterEventLog || {};
+  const blockers = [];
+  const warnings = [];
+  const requiredEvidenceKeys = OFFGRID_FIELD_IMPORT_REQUIREMENTS.map(item => item.key);
+
+  const loadRecord = registry.offgridHighResLoadProfile || {};
+  const inverterRecord = registry.offgridInverterEventLog || {};
+  if (loadRecord.status !== 'verified' || !hasValidatedFile(loadRecord)) {
+    blockers.push('offgridHighResLoadProfile: doğrulanmış 1 dakikalık saha yük dosyası ve SHA-256 izi yok.');
+  }
+  if (!highRes.sampleCount) blockers.push('1 dakikalık saha yük özeti çözümlenmedi.');
+  if (inverterRecord.status !== 'verified' || !hasValidatedFile(inverterRecord)) {
+    blockers.push('offgridInverterEventLog: doğrulanmış inverter olay logu ve SHA-256 izi yok.');
+  }
+  if (!inverterLog.eventCount) blockers.push('İnverter olay logu özeti çözümlenmedi.');
+  if (highRes.intervalMinutes && highRes.intervalMinutes > 5) warnings.push('Yüksek çözünürlüklü saha yükü 5 dakikadan kaba; inverter eşzamanlılık riski eksik yakalanabilir.');
+  if (highRes.durationDays && highRes.durationDays < 7) warnings.push('Yüksek çözünürlüklü saha yükü 7 günden kısa; saha çeşitliliği ve kötü gün davranışı eksik temsil edilebilir.');
+  if (inverterLog.tripCount > 0 || inverterLog.overloadCount > 0) warnings.push('İnverter logunda trip/overload olayları görüldü; inverter sizing ve surge marjı tekrar doğrulanmalı.');
+  if (!highRes.derivedHourly8760Ready) warnings.push('Dakika-profili 8760 dispatch girdisine dönüşmedi; bu import şu aşamada pik/olay doğrulaması için kullanılıyor.');
+  if (loadRecord.status === 'verified' && !isEvidenceFresh(loadRecord, { today, maxAgeDays: 365 })) {
+    warnings.push('1 dakikalık saha yük dosyasının kontrol tarihi 365 günden eski veya eksik.');
+  }
+  if (inverterRecord.status === 'verified' && !isEvidenceFresh(inverterRecord, { today, maxAgeDays: 365 })) {
+    warnings.push('İnverter olay logunun kontrol tarihi 365 günden eski veya eksik.');
+  }
+
+  const uniqueBlockers = [...new Set(blockers)];
+  const uniqueWarnings = [...new Set(warnings)];
+  const phase7Ready = uniqueBlockers.length === 0;
+  return {
+    version: OFFGRID_FIELD_IMPORT_VERSION,
+    status: phase7Ready ? 'phase7-ready' : 'blocked',
+    phase7Ready,
+    fieldGuaranteeReady: false,
+    requiredEvidenceKeys,
+    blockers: uniqueBlockers,
+    warnings: uniqueWarnings,
+    summary: {
+      observedPeakKw: Number(highRes.observedPeakKw || 0),
+      p95Kw: Number(highRes.p95Kw || 0),
+      intervalMinutes: Number(highRes.intervalMinutes || 0),
+      durationDays: Number(highRes.durationDays || 0),
+      inverterTripCount: Number(inverterLog.tripCount || 0),
+      inverterOverloadCount: Number(inverterLog.overloadCount || 0)
+    }
+  };
 }
 
 export function buildOffgridFieldEvidenceGate(evidenceGovernance = {}, results = {}, { today = currentDateIso() } = {}) {
@@ -791,6 +883,8 @@ export function buildStructuredProposalExport(state = {}, results = {}) {
       fieldAcceptanceGate: results.offgridL2Results.fieldAcceptanceGate || null,
       fieldOperationGate: results.offgridL2Results.fieldOperationGate || null,
       fieldRevalidationGate: results.offgridL2Results.fieldRevalidationGate || null,
+      fieldImportGate: results.offgridL2Results.fieldImportGate || null,
+      fieldImportSummary: results.offgridL2Results.fieldImportSummary || null,
       fieldGuaranteeCandidate: !!results.offgridL2Results.fieldGuaranteeCandidate,
       fieldGuaranteeReady: !!results.offgridL2Results.fieldGuaranteeReady,
       quoteGate: {

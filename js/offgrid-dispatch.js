@@ -710,11 +710,97 @@ function fallbackPeakFromEnergy(totalHourly8760, criticalHourly8760) {
   };
 }
 
+function peakArrayPercentile(values = [], percentile = 0.95) {
+  const sorted = values.map(v => Math.max(0, Number(v) || 0)).sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.floor((sorted.length - 1) * percentile)));
+  return sorted[idx];
+}
+
+function applyFieldPeakCalibration({
+  mode = 'simple-fallback',
+  hourlyPeakKw8760 = [],
+  criticalPeakKw8760 = [],
+  baselinePeakKw8760 = [],
+  fieldImportSummary = null
+} = {}) {
+  const highRes = fieldImportSummary?.highResolutionLoad || null;
+  const inverterLog = fieldImportSummary?.inverterEventLog || null;
+  if (!highRes?.sampleCount) {
+    return {
+      hourlyPeakKw8760,
+      criticalPeakKw8760,
+      baselinePeakKw8760,
+      calibrationMeta: null
+    };
+  }
+
+  const currentMaxPeak = hourlyPeakKw8760.reduce((max, value) => Math.max(max, Math.max(0, Number(value) || 0)), 0);
+  const currentP95Peak = peakArrayPercentile(hourlyPeakKw8760, 0.95);
+  const observedPeakKw = Math.max(0, Number(highRes.observedPeakKw) || 0);
+  const observedP95Kw = Math.max(0, Number(highRes.p95Kw) || 0);
+  const tripCount = Math.max(0, Number(inverterLog?.tripCount) || 0);
+  const overloadCount = Math.max(0, Number(inverterLog?.overloadCount) || 0);
+
+  const peakMatchFactor = currentMaxPeak > 0 && observedPeakKw > 0 ? observedPeakKw / currentMaxPeak : 1;
+  const p95MatchFactor = currentP95Peak > 0 && observedP95Kw > 0 ? observedP95Kw / currentP95Peak : 1;
+  const eventPenaltyFactor = 1 + Math.min(0.35, (tripCount * 0.08) + (overloadCount * 0.05));
+  const calibrationFactor = clamp(Math.max(1, peakMatchFactor, p95MatchFactor) * eventPenaltyFactor, 1, 2.5);
+
+  if (calibrationFactor <= 1.001) {
+    return {
+      hourlyPeakKw8760,
+      criticalPeakKw8760,
+      baselinePeakKw8760,
+      calibrationMeta: {
+        applied: false,
+        observedPeakKw,
+        observedP95Kw,
+        tripCount,
+        overloadCount,
+        intervalMinutes: Number(highRes.intervalMinutes) || 0,
+        durationDays: Number(highRes.durationDays) || 0,
+        calibrationFactor: 1,
+        eventPenaltyFactor
+      }
+    };
+  }
+
+  const scaledHourlyPeakKw8760 = hourlyPeakKw8760.map(value => Math.max(0, Number(value) || 0) * calibrationFactor);
+  const scaledCriticalPeakKw8760 = criticalPeakKw8760.map((value, idx) => {
+    const scaledCritical = Math.max(0, Number(value) || 0) * calibrationFactor;
+    return Math.min(Math.max(0, Number(scaledHourlyPeakKw8760[idx]) || 0), scaledCritical);
+  });
+  const forcedSeverity = tripCount > 0 || overloadCount >= 2
+    ? 'high'
+    : calibrationFactor >= 1.18 ? 'medium' : 'low';
+
+  return {
+    hourlyPeakKw8760: scaledHourlyPeakKw8760,
+    criticalPeakKw8760: scaledCriticalPeakKw8760,
+    baselinePeakKw8760: baselinePeakKw8760.length ? baselinePeakKw8760 : hourlyPeakKw8760.map(value => Math.max(0, Number(value) || 0)),
+    calibrationMeta: {
+      applied: true,
+      mode,
+      observedPeakKw,
+      observedP95Kw,
+      tripCount,
+      overloadCount,
+      intervalMinutes: Number(highRes.intervalMinutes) || 0,
+      durationDays: Number(highRes.durationDays) || 0,
+      calibrationFactor,
+      eventPenaltyFactor,
+      forcedSeverity
+    }
+  };
+}
+
 function summarizeSyntheticPeakModel({
   mode,
   baselinePeakKw8760 = [],
   hourlyPeakKw8760 = [],
-  criticalPeakKw8760 = []
+  criticalPeakKw8760 = [],
+  calibrationMeta = null
 } = {}) {
   const maxBaselinePeakKw = baselinePeakKw8760.reduce((max, value) => Math.max(max, Math.max(0, Number(value) || 0)), 0);
   const maxSyntheticPeakKw = hourlyPeakKw8760.reduce((max, value) => Math.max(max, Math.max(0, Number(value) || 0)), 0);
@@ -726,19 +812,22 @@ function summarizeSyntheticPeakModel({
   }, 0);
   const peakEnvelopeMaxFactor = maxBaselinePeakKw > 0 ? maxSyntheticPeakKw / maxBaselinePeakKw : 1;
   const peakDeltaKw = Math.max(0, maxSyntheticPeakKw - maxBaselinePeakKw);
-  const severity = peakEnvelopeMaxFactor >= 1.35 ? 'high'
+  const severity = calibrationMeta?.forcedSeverity || (peakEnvelopeMaxFactor >= 1.35 ? 'high'
     : peakEnvelopeMaxFactor >= 1.18 ? 'medium'
-    : 'low';
+    : 'low');
   return {
-    peakModel: mode === 'device-list' ? 'synthetic-conservative-envelope' : 'energy-shaped-fallback-peak',
-    peakEnvelopeApplied: mode === 'device-list',
+    peakModel: calibrationMeta?.applied
+      ? 'field-calibrated-peak-envelope'
+      : mode === 'device-list' ? 'synthetic-conservative-envelope' : 'energy-shaped-fallback-peak',
+    peakEnvelopeApplied: mode === 'device-list' || !!calibrationMeta?.applied,
     severity,
     peakEnvelopeHours,
     peakEnvelopeMaxFactor,
     maxBaselinePeakKw,
     maxSyntheticPeakKw,
     maxCriticalPeakKw,
-    peakDeltaKw
+    peakDeltaKw,
+    fieldCalibration: calibrationMeta || null
   };
 }
 
@@ -756,6 +845,157 @@ function syntheticPeakEnvelopeFactor(device, category, templateValue, hoursPerDa
 
 function clampScore(value) {
   return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+}
+
+function roundUpToStep(value, step = 0.1) {
+  const numeric = Math.max(0, Number(value) || 0);
+  const safeStep = Math.max(0.001, Number(step) || 0.1);
+  return Math.ceil(numeric / safeStep) * safeStep;
+}
+
+function buildOffgridDesignCorrections(normalDispatch = {}, loadProfile = {}, fieldImportSummary = null) {
+  const highRes = fieldImportSummary?.highResolutionLoad || null;
+  const inverterLog = fieldImportSummary?.inverterEventLog || null;
+  const syntheticPeakModel = loadProfile.syntheticPeakModel || null;
+  const calibration = syntheticPeakModel?.fieldCalibration || null;
+  const hourlyPeakKw8760 = Array.isArray(loadProfile.hourlyPeakKw8760) ? loadProfile.hourlyPeakKw8760 : [];
+  const criticalPeakKw8760 = Array.isArray(loadProfile.criticalPeakKw8760) ? loadProfile.criticalPeakKw8760 : [];
+  const currentInverterAcKw = Math.max(0, Number(normalDispatch.inverterAcLimitKw) || 0);
+  const currentSurgeMultiplier = Math.max(1, Number(normalDispatch.inverterSurgeMultiplier) || 1);
+  const currentSurgeLimitKw = Math.max(0, Number(normalDispatch.inverterSurgeLimitKw) || (currentInverterAcKw * currentSurgeMultiplier));
+  const currentBatteryMaxDischargeKw = Math.max(0, Number(normalDispatch.maxDischargePowerKw) || 0);
+  const inverterPowerLimitedKwh = Math.max(0, Number(normalDispatch.inverterPowerLimitedLoadKwh) || 0);
+  const inverterPowerLimitHours = Math.max(0, Number(normalDispatch.inverterPowerLimitHours) || 0);
+  const batteryDischargeLimitedKwh = Math.max(0, Number(normalDispatch.batteryDischargeLimitedKwh) || 0);
+  const unmetCriticalKwh = Math.max(0, Number(normalDispatch.unmetCriticalLoadKwh) || 0);
+  const tripCount = Math.max(0, Number(calibration?.tripCount ?? inverterLog?.tripCount) || 0);
+  const overloadCount = Math.max(0, Number(calibration?.overloadCount ?? inverterLog?.overloadCount) || 0);
+  const observedPeakKw = Math.max(0, Number(calibration?.observedPeakKw ?? highRes?.observedPeakKw) || 0);
+  const observedP95Kw = Math.max(0, Number(calibration?.observedP95Kw ?? highRes?.p95Kw) || 0);
+  const calibrationFactor = Math.max(1, Number(calibration?.calibrationFactor) || 1);
+  const modeledPeakKw = Math.max(
+    Number(syntheticPeakModel?.maxSyntheticPeakKw) || 0,
+    peakArrayPercentile(hourlyPeakKw8760, 0.99),
+    observedPeakKw
+  );
+  const modeledP95Kw = Math.max(
+    peakArrayPercentile(hourlyPeakKw8760, 0.95),
+    observedP95Kw
+  );
+  const modeledCriticalPeakKw = Math.max(
+    Number(syntheticPeakModel?.maxCriticalPeakKw) || 0,
+    peakArrayPercentile(criticalPeakKw8760, 0.99)
+  );
+  const modeledCriticalP95Kw = peakArrayPercentile(criticalPeakKw8760, 0.95);
+  const fieldSignalsPresent = !!(highRes?.sampleCount || inverterLog?.eventCount || calibration);
+
+  const requiredInverterAcKw = Math.max(
+    currentInverterAcKw,
+    modeledP95Kw * (fieldSignalsPresent ? 1.10 : 1.06),
+    modeledPeakKw * (
+      tripCount > 0 || inverterPowerLimitedKwh > 0
+        ? 1.14
+        : syntheticPeakModel?.peakEnvelopeApplied ? 1.10 : 1.05
+    ),
+    batteryDischargeLimitedKwh > 0 ? modeledCriticalPeakKw * 1.08 : 0
+  );
+  const recommendedInverterAcKw = roundUpToStep(requiredInverterAcKw, 0.1);
+
+  const surgeTargetFromCurrentAc = currentInverterAcKw > 0 ? modeledPeakKw / currentInverterAcKw : 1;
+  const surgeTargetFromRecommendedAc = recommendedInverterAcKw > 0 ? modeledPeakKw / recommendedInverterAcKw : 1;
+  const requiredSurgeMultiplier = clamp(Math.max(
+    currentSurgeMultiplier,
+    surgeTargetFromRecommendedAc * (tripCount > 0 || overloadCount > 0 ? 1.08 : 1.03),
+    tripCount > 0 ? 1.35 : 1.20,
+    overloadCount > 0 ? 1.25 : 1.0
+  ), 1, 3);
+  const recommendedSurgeMultiplier = roundUpToStep(requiredSurgeMultiplier, 0.05);
+
+  const requiredBatteryMaxDischargeKw = Math.max(
+    currentBatteryMaxDischargeKw,
+    modeledCriticalP95Kw * 1.08,
+    modeledCriticalPeakKw * (batteryDischargeLimitedKwh > 0 || unmetCriticalKwh > 0 ? 1.12 : 1.05)
+  );
+  const recommendedBatteryMaxDischargeKw = roundUpToStep(requiredBatteryMaxDischargeKw, 0.1);
+
+  const deltaInverterAcKw = Math.max(0, recommendedInverterAcKw - currentInverterAcKw);
+  const deltaSurgeMultiplier = Math.max(0, recommendedSurgeMultiplier - currentSurgeMultiplier);
+  const deltaBatteryMaxDischargeKw = Math.max(0, recommendedBatteryMaxDischargeKw - currentBatteryMaxDischargeKw);
+  const hasCorrection = deltaInverterAcKw > 0.049
+    || deltaSurgeMultiplier > 0.024
+    || deltaBatteryMaxDischargeKw > 0.049
+    || tripCount > 0
+    || overloadCount > 0
+    || inverterPowerLimitedKwh > 0
+    || batteryDischargeLimitedKwh > 0
+    || (modeledPeakKw > currentSurgeLimitKw + 1e-9)
+    || (modeledCriticalPeakKw > currentBatteryMaxDischargeKw + 1e-9);
+  if (!hasCorrection) return null;
+
+  const reasons = [];
+  if (calibration?.applied) {
+    reasons.push('field-peak-calibration');
+  }
+  if (tripCount > 0) reasons.push('inverter-trip-events');
+  if (overloadCount > 0) reasons.push('inverter-overload-events');
+  if (inverterPowerLimitedKwh > 0) reasons.push('dispatch-inverter-power-limit');
+  if (batteryDischargeLimitedKwh > 0) reasons.push('dispatch-battery-discharge-limit');
+  if (modeledPeakKw > currentSurgeLimitKw + 1e-9) reasons.push('modeled-peak-exceeds-surge-limit');
+  if (modeledCriticalPeakKw > currentBatteryMaxDischargeKw + 1e-9) reasons.push('critical-peak-exceeds-battery-discharge');
+  if (unmetCriticalKwh > 0.1) reasons.push('critical-load-unmet');
+
+  let severityScore = 0;
+  if (calibrationFactor >= 1.25) severityScore += 2;
+  else if (calibrationFactor > 1.05) severityScore += 1;
+  if (tripCount > 0) severityScore += 3;
+  if (overloadCount > 0) severityScore += Math.min(2, overloadCount);
+  if (inverterPowerLimitedKwh > 50) severityScore += 2;
+  else if (inverterPowerLimitedKwh > 0) severityScore += 1;
+  if (batteryDischargeLimitedKwh > 50) severityScore += 2;
+  else if (batteryDischargeLimitedKwh > 0) severityScore += 1;
+  if (unmetCriticalKwh > 1) severityScore += 2;
+  const severity = severityScore >= 6 ? 'high'
+    : severityScore >= 3 ? 'medium'
+    : 'low';
+
+  return {
+    severity,
+    fieldSignalsPresent,
+    fieldCalibrationApplied: !!calibration?.applied,
+    reasons,
+    current: {
+      inverterAcKw: currentInverterAcKw,
+      inverterSurgeMultiplier: currentSurgeMultiplier,
+      inverterSurgeLimitKw: currentSurgeLimitKw,
+      batteryMaxDischargeKw: currentBatteryMaxDischargeKw
+    },
+    recommended: {
+      inverterAcKw: recommendedInverterAcKw,
+      inverterSurgeMultiplier: recommendedSurgeMultiplier,
+      inverterSurgeLimitKw: roundUpToStep(recommendedInverterAcKw * recommendedSurgeMultiplier, 0.1),
+      batteryMaxDischargeKw: recommendedBatteryMaxDischargeKw
+    },
+    deltas: {
+      inverterAcKw: deltaInverterAcKw,
+      inverterSurgeMultiplier: deltaSurgeMultiplier,
+      batteryMaxDischargeKw: deltaBatteryMaxDischargeKw
+    },
+    triggers: {
+      modeledPeakKw,
+      modeledP95Kw,
+      modeledCriticalPeakKw,
+      modeledCriticalP95Kw,
+      observedPeakKw,
+      observedP95Kw,
+      tripCount,
+      overloadCount,
+      calibrationFactor,
+      inverterPowerLimitedKwh,
+      inverterPowerLimitHours,
+      batteryDischargeLimitedKwh,
+      unmetCriticalKwh
+    }
+  };
 }
 
 function uncertaintyForScore(score, tier) {
@@ -956,10 +1196,17 @@ export function buildOffgridLoadProfile(devices, options = {}) {
 
     const annualTotalKwh = dailyKwh * 365;
     const peaks = fallbackPeakFromEnergy(totalHourly8760, criticalHourly8760);
+    const calibratedPeaks = applyFieldPeakCalibration({
+      mode: 'simple-fallback',
+      hourlyPeakKw8760: peaks.hourlyPeakKw8760,
+      criticalPeakKw8760: peaks.criticalPeakKw8760,
+      fieldImportSummary: options.fieldImportSummary
+    });
     return {
       totalHourly8760,
       criticalHourly8760,
-      ...peaks,
+      hourlyPeakKw8760: calibratedPeaks.hourlyPeakKw8760,
+      criticalPeakKw8760: calibratedPeaks.criticalPeakKw8760,
       annualTotalKwh,
       annualCriticalKwh: annualTotalKwh * critFrac,
       deviceSummary: [],
@@ -967,6 +1214,13 @@ export function buildOffgridLoadProfile(devices, options = {}) {
       loadSource: 'daily-kwh-synthetic-profile',
       criticalLoadBasis: 'critical-fraction-of-synthetic-load',
       hasRealHourlyLoad: false,
+      syntheticPeakModel: calibratedPeaks.calibrationMeta ? summarizeSyntheticPeakModel({
+        mode: 'simple-fallback',
+        baselinePeakKw8760: calibratedPeaks.baselinePeakKw8760,
+        hourlyPeakKw8760: calibratedPeaks.hourlyPeakKw8760,
+        criticalPeakKw8760: calibratedPeaks.criticalPeakKw8760,
+        calibrationMeta: calibratedPeaks.calibrationMeta
+      }) : null,
       deviceCount: 0,
       criticalDeviceCount: 0
     };
@@ -1033,18 +1287,26 @@ export function buildOffgridLoadProfile(devices, options = {}) {
 
   const annualTotalKwh = sum(totalHourly8760);
   const annualCriticalKwh = sum(criticalHourly8760);
-  const syntheticPeakModel = summarizeSyntheticPeakModel({
+  const calibratedPeaks = applyFieldPeakCalibration({
     mode: 'device-list',
     baselinePeakKw8760,
     hourlyPeakKw8760,
-    criticalPeakKw8760
+    criticalPeakKw8760,
+    fieldImportSummary: options.fieldImportSummary
+  });
+  const syntheticPeakModel = summarizeSyntheticPeakModel({
+    mode: 'device-list',
+    baselinePeakKw8760: calibratedPeaks.baselinePeakKw8760,
+    hourlyPeakKw8760: calibratedPeaks.hourlyPeakKw8760,
+    criticalPeakKw8760: calibratedPeaks.criticalPeakKw8760,
+    calibrationMeta: calibratedPeaks.calibrationMeta
   });
 
   return {
     totalHourly8760,
     criticalHourly8760,
-    hourlyPeakKw8760,
-    criticalPeakKw8760,
+    hourlyPeakKw8760: calibratedPeaks.hourlyPeakKw8760,
+    criticalPeakKw8760: calibratedPeaks.criticalPeakKw8760,
     annualTotalKwh,
     annualCriticalKwh,
     deviceSummary,
@@ -1682,6 +1944,11 @@ export function buildOffgridResults(normalDispatch, badWeatherDispatch, loadProf
     calculationMode: financialInputs.calculationMode || 'basic',
     badWeatherEnabled: !!badWeatherDispatch
   });
+  const designCorrections = buildOffgridDesignCorrections(
+    normalDispatch,
+    loadProfile,
+    financialInputs.fieldImportSummary || null
+  );
 
   return {
     // Dispatch özeti
@@ -1800,6 +2067,7 @@ export function buildOffgridResults(normalDispatch, badWeatherDispatch, loadProf
     annualCriticalLoadKwh: loadProfile.annualCriticalKwh,
     deviceSummary: loadProfile.deviceSummary || [],
     syntheticPeakModel: loadProfile.syntheticPeakModel || null,
+    designCorrections,
     deviceCount: loadProfile.deviceCount || 0,
     criticalDeviceCount: loadProfile.criticalDeviceCount || 0,
 

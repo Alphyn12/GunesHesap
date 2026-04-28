@@ -214,7 +214,8 @@ export function buildPvEngineRequest(state = {}) {
       evidence: state.evidence || {},
       proposalApproval: state.proposalApproval || null,
       quoteInputsVerified: !!state.quoteInputsVerified,
-      hasSignedCustomerBillData: !!state.hasSignedCustomerBillData
+      hasSignedCustomerBillData: !!state.hasSignedCustomerBillData,
+      fieldImports: state.offgridFieldImports || null
     }
   };
 }

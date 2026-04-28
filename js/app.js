@@ -51,6 +51,8 @@ import { createSolarProposalMark } from './solar-art.js';
 import { loadProposalState, saveProposalState } from './storage.js';
 import { DEVICE_CATALOG, DEVICE_CATEGORIES, DEVICE_CATEGORY_LABELS, catalogItemToDevice, getDevicesByCategory } from './device-catalog.js';
 import { escapeHtml } from './security.js';
+import { buildBackendUrl } from './backend-config.js';
+import { isSpreadsheetFilename, parseHighResolutionLoadText, parseInverterEventLogText } from './offgrid-field-import.js';
 
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
@@ -400,6 +402,8 @@ window.state = {
     offgridPvProduction: { type: 'offgridPvProduction', status: 'missing', ref: '', checkedAt: null },
     offgridLoadProfile: { type: 'offgridLoadProfile', status: 'missing', ref: '', checkedAt: null },
     offgridCriticalLoadProfile: { type: 'offgridCriticalLoadProfile', status: 'missing', ref: '', checkedAt: null },
+    offgridHighResLoadProfile: { type: 'offgridHighResLoadProfile', status: 'missing', ref: '', checkedAt: null },
+    offgridInverterEventLog: { type: 'offgridInverterEventLog', status: 'missing', ref: '', checkedAt: null },
     offgridSiteShading: { type: 'offgridSiteShading', status: 'missing', ref: '', checkedAt: null },
     offgridEquipmentDatasheets: { type: 'offgridEquipmentDatasheets', status: 'missing', ref: '', checkedAt: null },
     offgridCommissioningReport: { type: 'offgridCommissioningReport', status: 'missing', ref: '', checkedAt: null },
@@ -494,6 +498,11 @@ window.state = {
   offgridPvHourly8760: null,
   offgridPvHourlySource: '',
   offgridCriticalLoad8760: null,
+  offgridFieldImports: {
+    highResolutionLoad: null,
+    criticalHighResolutionLoad: null,
+    inverterEventLog: null
+  },
   offgridFieldGuaranteeMode: false,
   offgridBatteryMaxChargeKw: null,
   offgridBatteryMaxDischargeKw: null,
@@ -1623,6 +1632,51 @@ function parseSingleColumn8760Csv(text) {
   return values.slice(0, 8760);
 }
 
+async function analyzeOffgridFieldImport(file, kind) {
+  if (!file) throw new Error('Dosya seçilmedi.');
+  if (isSpreadsheetFilename(file.name || '')) {
+    if (!window.state.backendEngineAvailable) {
+      throw new Error('XLSX saha importu için backend gerekli. CSV/TXT kullanın veya backend modunu açın.');
+    }
+    const form = new FormData();
+    form.append('file', file);
+    const response = await fetch(buildBackendUrl('/api/offgrid/field-import') + `?kind=${encodeURIComponent(kind)}`, {
+      method: 'POST',
+      body: form
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.ok || !payload?.summary) {
+      throw new Error(payload?.detail || payload?.error || 'Saha importu çözümlenemedi.');
+    }
+    return payload.summary;
+  }
+  const text = await file.text();
+  if (kind === 'inverter-log') return parseInverterEventLogText(text);
+  return parseHighResolutionLoadText(text, { kind });
+}
+
+function setFieldImportSummary(kind, summary) {
+  window.state.offgridFieldImports = window.state.offgridFieldImports || {};
+  if (kind === 'load') window.state.offgridFieldImports.highResolutionLoad = summary;
+  else if (kind === 'critical-load') window.state.offgridFieldImports.criticalHighResolutionLoad = summary;
+  else if (kind === 'inverter-log') window.state.offgridFieldImports.inverterEventLog = summary;
+}
+
+function clearFieldImportSummary(kind) {
+  if (!window.state.offgridFieldImports) return;
+  if (kind === 'load') window.state.offgridFieldImports.highResolutionLoad = null;
+  else if (kind === 'critical-load') window.state.offgridFieldImports.criticalHighResolutionLoad = null;
+  else if (kind === 'inverter-log') window.state.offgridFieldImports.inverterEventLog = null;
+}
+
+function fieldImportSummaryText(summary) {
+  if (!summary) return '';
+  if (summary.kind === 'inverter-event-log') {
+    return `Olay: ${Number(summary.eventCount || 0).toLocaleString()} | Trip: ${Number(summary.tripCount || 0).toLocaleString()} | Overload: ${Number(summary.overloadCount || 0).toLocaleString()}`;
+  }
+  return `Pik: ${Number(summary.observedPeakKw || 0).toFixed(2)} kW | P95: ${Number(summary.p95Kw || 0).toFixed(2)} kW | Aralık: ${Number(summary.intervalMinutes || 0).toFixed(0)} dk`;
+}
+
 function setCsvStatus(statusId, clearId, ok, message) {
   const statusEl = document.getElementById(statusId);
   if (statusEl) {
@@ -1632,6 +1686,47 @@ function setCsvStatus(statusId, clearId, ok, message) {
   }
   const clearBtn = document.getElementById(clearId);
   if (clearBtn) clearBtn.style.display = ok ? '' : 'none';
+}
+
+async function loadOffgridFieldImport(event, {
+  kind,
+  evidenceType,
+  inputId,
+  statusId,
+  clearId,
+  successLabel,
+  applyDerived8760ToStateKey = null
+}) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  setCsvStatus(statusId, clearId, true, '⏳ Saha dosyası analiz ediliyor...');
+  try {
+    const summary = await analyzeOffgridFieldImport(file, kind);
+    setFieldImportSummary(kind, summary);
+    if (applyDerived8760ToStateKey && Array.isArray(summary.derivedHourly8760) && summary.derivedHourly8760.length === 8760) {
+      window.state[applyDerived8760ToStateKey] = summary.derivedHourly8760.slice();
+      if (applyDerived8760ToStateKey === 'hourlyConsumption8760') window.state.hourlyProfileSource = 'hourly-uploaded';
+      if (applyDerived8760ToStateKey === 'offgridCriticalLoad8760') window.state.offgridCriticalLoad8760 = summary.derivedHourly8760.slice();
+    }
+    const evidenceResult = evidenceType
+      ? await attachEvidenceFile(window.state, evidenceType, file, currentUser())
+      : { ok: true, metadata: null };
+    const evidenceNote = evidenceResult.ok && evidenceResult.metadata?.sha256
+      ? ` | Kanıt SHA: ${evidenceResult.metadata.sha256.slice(0, 12)}`
+      : evidenceResult.ok ? '' : ` | Kanıt kaydedilemedi: ${evidenceResult.errors.join(' ')}`;
+    const derivedNote = summary.derivedHourly8760Ready
+      ? ' | 8760 türetildi ve dispatch girdisine yazıldı'
+      : ` | ${Number(summary.durationDays || 0).toFixed(1)} gün saha profili`;
+    setCsvStatus(statusId, clearId, true, `✓ ${successLabel} | ${fieldImportSummaryText(summary)}${derivedNote}${evidenceNote}`);
+    renderEvidenceFileStatus();
+    persistState();
+  } catch (error) {
+    clearFieldImportSummary(kind);
+    if (applyDerived8760ToStateKey) window.state[applyDerived8760ToStateKey] = null;
+    const input = document.getElementById(inputId);
+    if (input) input.value = '';
+    setCsvStatus(statusId, clearId, false, `✗ ${error.message}`);
+  }
 }
 
 function loadOffgrid8760Csv(event, { stateKey, sourceKey, evidenceType, inputId, statusId, clearId, successLabel }) {
@@ -1734,6 +1829,51 @@ function clearOffgridCriticalCsvUpload() {
   const statusEl = document.getElementById('offgrid-critical-csv-status');
   if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
   const clearBtn = document.getElementById('offgrid-critical-csv-clear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  persistState();
+}
+
+function handleOffgridHighResLoadUpload(event) {
+  loadOffgridFieldImport(event, {
+    kind: 'load',
+    evidenceType: 'offgridHighResLoadProfile',
+    inputId: 'offgrid-highres-load-upload',
+    statusId: 'offgrid-highres-load-status',
+    clearId: 'offgrid-highres-load-clear',
+    successLabel: 'Yüksek çözünürlüklü saha yükü içe aktarıldı',
+    applyDerived8760ToStateKey: 'hourlyConsumption8760'
+  });
+}
+
+function clearOffgridHighResLoadUpload() {
+  clearFieldImportSummary('load');
+  const input = document.getElementById('offgrid-highres-load-upload');
+  if (input) input.value = '';
+  const statusEl = document.getElementById('offgrid-highres-load-status');
+  if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+  const clearBtn = document.getElementById('offgrid-highres-load-clear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  persistState();
+}
+
+function handleOffgridInverterLogUpload(event) {
+  loadOffgridFieldImport(event, {
+    kind: 'inverter-log',
+    evidenceType: 'offgridInverterEventLog',
+    inputId: 'offgrid-inverter-log-upload',
+    statusId: 'offgrid-inverter-log-status',
+    clearId: 'offgrid-inverter-log-clear',
+    successLabel: 'Inverter olay logu içe aktarıldı'
+  });
+}
+
+function clearOffgridInverterLogUpload() {
+  clearFieldImportSummary('inverter-log');
+  const input = document.getElementById('offgrid-inverter-log-upload');
+  if (input) input.value = '';
+  const statusEl = document.getElementById('offgrid-inverter-log-status');
+  if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+  const clearBtn = document.getElementById('offgrid-inverter-log-clear');
   if (clearBtn) clearBtn.style.display = 'none';
   persistState();
 }
@@ -2358,6 +2498,8 @@ function renderEvidenceFileStatus() {
       'offgridPvProduction',
       'offgridLoadProfile',
       'offgridCriticalLoadProfile',
+      'offgridHighResLoadProfile',
+      'offgridInverterEventLog',
       'offgridSiteShading',
       'offgridEquipmentDatasheets',
       'offgridCommissioningReport',
@@ -3583,10 +3725,14 @@ window.handleHourlyCsvUpload = handleHourlyCsvUpload;
 window.clearHourlyCsvUpload = clearHourlyCsvUpload;
 window.handleOffgridPvCsvUpload = handleOffgridPvCsvUpload;
 window.handleOffgridLoadCsvUpload = handleOffgridLoadCsvUpload;
+window.handleOffgridHighResLoadUpload = handleOffgridHighResLoadUpload;
+window.handleOffgridInverterLogUpload = handleOffgridInverterLogUpload;
 window.clearOffgridLoadCsvUpload = clearOffgridLoadCsvUpload;
 window.clearOffgridPvCsvUpload = clearOffgridPvCsvUpload;
 window.handleOffgridCriticalCsvUpload = handleOffgridCriticalCsvUpload;
 window.clearOffgridCriticalCsvUpload = clearOffgridCriticalCsvUpload;
+window.clearOffgridHighResLoadUpload = clearOffgridHighResLoadUpload;
+window.clearOffgridInverterLogUpload = clearOffgridInverterLogUpload;
 window.handleOffgridEvidenceFileUpload = handleOffgridEvidenceFileUpload;
 window.updateProposalGovernanceInput = updateProposalGovernanceInput;
 window.updateUserIdentityInput = updateUserIdentityInput;
@@ -3754,10 +3900,14 @@ registerActions({
   handleOffgridPvCsvUpload: (_arg, _el, e) => handleOffgridPvCsvUpload(e),
   handleOffgridLoadCsvUpload: (_arg, _el, e) => handleOffgridLoadCsvUpload(e),
   handleOffgridCriticalCsvUpload: (_arg, _el, e) => handleOffgridCriticalCsvUpload(e),
+  handleOffgridHighResLoadUpload: (_arg, _el, e) => handleOffgridHighResLoadUpload(e),
+  handleOffgridInverterLogUpload: (_arg, _el, e) => handleOffgridInverterLogUpload(e),
   clearHourlyCsvUpload,
   clearOffgridPvCsvUpload,
   clearOffgridLoadCsvUpload,
   clearOffgridCriticalCsvUpload,
+  clearOffgridHighResLoadUpload,
+  clearOffgridInverterLogUpload,
   // Bill
   toggleBillBlock,
   onBillToggle,

@@ -1,6 +1,5 @@
-// v37: Faz 1 / F1.D+F1.F — inline <style> bloğu components.css'e taşındı,
-//      CSP 'unsafe-inline' kaldırıldı, Nominatim connect-src'ye eklendi.
-const CACHE_NAME = 'solarRota-v37';
+// v38: Faz 7 — high-resolution off-grid field import module and UI assets added.
+const CACHE_NAME = 'solarRota-v38';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -41,6 +40,7 @@ const STATIC_ASSETS = [
   '/js/location-validation.js',
   '/js/osm-shadow.js',
   '/js/output-i18n.js',
+  '/js/offgrid-field-import.js',
   '/js/panel-catalog.js',
   '/js/pv-engine-contracts.js',
   '/js/pvlib-bridge.js',

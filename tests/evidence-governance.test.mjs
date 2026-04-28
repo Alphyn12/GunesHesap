@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   buildOffgridFieldAcceptanceGate,
   buildOffgridFieldEvidenceGate,
+  buildOffgridFieldImportGate,
   buildOffgridFieldOperationGate,
   buildOffgridFieldRevalidationGate,
   buildEvidenceRegistry,
@@ -118,8 +119,29 @@ const offgridRegistry = buildEvidenceRegistry(
     hourlyConsumption8760: new Array(8760).fill(1),
     offgridPvHourly8760: new Array(8760).fill(0.5),
     offgridCriticalLoad8760: new Array(8760).fill(0.3),
+    offgridFieldImports: {
+      highResolutionLoad: {
+        sampleCount: 10080,
+        intervalMinutes: 1,
+        durationDays: 7,
+        observedPeakKw: 5.4,
+        p95Kw: 3.2,
+        derivedHourly8760Ready: true,
+        derivedHourly8760: new Array(8760).fill(1)
+      },
+      inverterEventLog: {
+        eventCount: 12,
+        tripCount: 1,
+        overloadCount: 2,
+        faultCount: 0
+      }
+    },
     shadingQuality: 'site-verified',
-    evidence: verifiedOffgridEvidence
+    evidence: {
+      ...verifiedOffgridEvidence,
+      offgridHighResLoadProfile: { status: 'verified', ref: 'highres.xlsx', checkedAt: '2026-04-12', files: [evidenceFile('highres', 'u')] },
+      offgridInverterEventLog: { status: 'verified', ref: 'inverter-log.xlsx', checkedAt: '2026-04-12', files: [evidenceFile('invlog', 'v')] }
+    }
   },
   {
     offgridL2Results: {
@@ -145,6 +167,32 @@ const offgridEvidenceReady = buildOffgridFieldEvidenceGate(
 );
 assert.equal(offgridEvidenceReady.phase2Ready, true);
 assert.equal(offgridEvidenceReady.fieldGuaranteeReady, false);
+
+const offgridFieldImportReady = buildOffgridFieldImportGate(
+  offgridRegistry,
+  {
+    offgridL2Results: {
+      fieldImportSummary: {
+        highResolutionLoad: {
+          sampleCount: 10080,
+          intervalMinutes: 1,
+          durationDays: 7,
+          observedPeakKw: 5.4,
+          p95Kw: 3.2,
+          derivedHourly8760Ready: true
+        },
+        inverterEventLog: {
+          eventCount: 12,
+          tripCount: 1,
+          overloadCount: 2
+        }
+      }
+    }
+  },
+  { today: '2026-04-13' }
+);
+assert.equal(offgridFieldImportReady.phase7Ready, true);
+assert.ok(offgridFieldImportReady.warnings.some(item => item.includes('trip/overload')));
 
 const offgridAcceptanceBlocked = buildOffgridFieldAcceptanceGate(
   { registry: {} },

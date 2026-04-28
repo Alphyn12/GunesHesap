@@ -283,6 +283,7 @@ export function calculateProposalConfidence({ state = {}, results = {}, quoteRea
     if (offgrid.fieldEvidenceGate?.phase2Ready !== true) add(10, 'Faz 2 saha kanıtları eksik.');
     if (offgrid.fieldModelMaturityGate?.phase3Ready !== true) add(10, 'Faz 3 stres/model olgunluğu eksik.');
     if (offgrid.fieldAcceptanceGate?.phase4Ready !== true) add(8, 'Faz 4 saha kabul kanıtları eksik.');
+    if (offgrid.fieldImportGate?.phase7Ready !== true) add(4, 'Faz 7 yüksek çözünürlüklü saha importu eksik.');
   }
 
   const normalized = Math.max(0, Math.min(100, Math.round(score)));

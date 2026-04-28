@@ -211,13 +211,22 @@ function offgridCoverageInterpretationMeta(L = {}) {
 function offgridSyntheticPeakMeta(L = {}) {
   const peak = L.syntheticPeakModel || null;
   if (!peak || !peak.peakEnvelopeApplied) return null;
+  const calibration = peak.fieldCalibration || null;
+  const isFieldCalibrated = peak.peakModel === 'field-calibrated-peak-envelope' && calibration?.applied;
   return {
-    label: i18n.t('offgridL2.syntheticPeakModelConservative'),
+    label: i18n.t(isFieldCalibrated ? 'offgridL2.syntheticPeakModelFieldCalibrated' : 'offgridL2.syntheticPeakModelConservative'),
     severity: i18n.t(`offgridL2.syntheticPeakSeverity_${peak.severity || 'medium'}`),
-    note: i18n.t('offgridL2.syntheticPeakNote')
+    note: (isFieldCalibrated
+      ? i18n.t('offgridL2.syntheticPeakFieldCalibrationNote')
+        .replace('{peak}', Number(calibration?.observedPeakKw || 0).toFixed(1))
+        .replace('{p95}', Number(calibration?.observedP95Kw || 0).toFixed(1))
+        .replace('{days}', Number(calibration?.durationDays || 0).toFixed(1))
+        .replace('{trips}', Math.round(Number(calibration?.tripCount || 0)).toLocaleString(localeTag()))
+        .replace('{overloads}', Math.round(Number(calibration?.overloadCount || 0)).toLocaleString(localeTag()))
+      : i18n.t('offgridL2.syntheticPeakNote')
       .replace('{factor}', Number(peak.peakEnvelopeMaxFactor || 1).toFixed(2))
       .replace('{delta}', Number(peak.peakDeltaKw || 0).toFixed(1))
-      .replace('{hours}', Math.round(Number(peak.peakEnvelopeHours) || 0).toLocaleString(localeTag()))
+      .replace('{hours}', Math.round(Number(peak.peakEnvelopeHours) || 0).toLocaleString(localeTag())))
   };
 }
 
@@ -230,6 +239,23 @@ function offgridSyntheticPvMeta(L = {}) {
       .replace('{days}', Math.round(Number(weatherMeta.longestLowPvClusterDays) || 0).toLocaleString(localeTag()))
       .replace('{min}', Number(((weatherMeta.minimumDailyFractionOfAverage || 0) * 100)).toFixed(0))
       .replace('{max}', Number(((weatherMeta.maximumDailyFractionOfAverage || 0) * 100)).toFixed(0))
+  };
+}
+
+function offgridDesignCorrectionMeta(L = {}) {
+  const correction = L.designCorrections || null;
+  if (!correction) return null;
+  const reasons = Array.isArray(correction.reasons) ? correction.reasons : [];
+  const reasonText = reasons.slice(0, 3).map(reason => i18n.t(`offgridL2.designCorrectionReason_${reason}`)).join(', ');
+  const triggerPeak = Number(correction.triggers?.modeledPeakKw || 0).toFixed(1);
+  const currentSurge = Number(correction.current?.inverterSurgeLimitKw || 0).toFixed(1);
+  return {
+    severity: i18n.t(`offgridL2.syntheticPeakSeverity_${correction.severity || 'medium'}`),
+    title: i18n.t('offgridL2.designCorrectionTitle'),
+    note: i18n.t('offgridL2.designCorrectionSummary')
+      .replace('{peak}', triggerPeak)
+      .replace('{surge}', currentSurge)
+      .replace('{reason}', reasonText || i18n.t('offgridL2.designCorrectionReason_dispatch-inverter-power-limit'))
   };
 }
 
@@ -546,6 +572,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
   const coverageNotes = offgridCoverageInterpretationMeta(L);
   const syntheticPeakMeta = offgridSyntheticPeakMeta(L);
   const syntheticPvMeta = offgridSyntheticPvMeta(L);
+  const designCorrectionMeta = offgridDesignCorrectionMeta(L);
   const accuracyColor = (L.accuracyScore || 0) >= 80 ? '#22C55E'
     : (L.accuracyScore || 0) >= 60 ? '#F59E0B'
     : '#EF4444';
@@ -714,6 +741,54 @@ function renderOffgridL2Results(offgridL2Results, state) {
     }
   }
 
+  // Faz 9: saha verisi / limiter tabanli tasarim duzeltmeleri
+  const designWrap = document.getElementById('offgrid-design-corrections');
+  const designBody = document.getElementById('offgrid-design-corrections-body');
+  if (designWrap && designBody) {
+    const correction = L.designCorrections || null;
+    if (correction) {
+      designWrap.style.display = '';
+      const severityTone = correction.severity === 'high'
+        ? 'var(--danger)'
+        : correction.severity === 'medium' ? '#F97316' : 'var(--primary)';
+      const reasons = Array.isArray(correction.reasons) ? correction.reasons : [];
+      designBody.innerHTML = `
+        <div class="offgrid-stat-grid">
+          ${offgridStatCard({
+            label: i18n.t('offgridL2.designCorrectionInverterAcLabel'),
+            value: `${Number(correction.recommended?.inverterAcKw || 0).toFixed(1)} kW`,
+            note: `${i18n.t('offgridL2.designCorrectionCurrentLabel')}: ${Number(correction.current?.inverterAcKw || 0).toFixed(1)} kW`,
+            color: severityTone
+          })}
+          ${offgridStatCard({
+            label: i18n.t('offgridL2.designCorrectionSurgeLabel'),
+            value: `×${Number(correction.recommended?.inverterSurgeMultiplier || 0).toFixed(2)}`,
+            note: `${i18n.t('offgridL2.designCorrectionCurrentLabel')}: ×${Number(correction.current?.inverterSurgeMultiplier || 0).toFixed(2)}`,
+            color: severityTone
+          })}
+          ${offgridStatCard({
+            label: i18n.t('offgridL2.designCorrectionBatteryDischargeLabel'),
+            value: `${Number(correction.recommended?.batteryMaxDischargeKw || 0).toFixed(1)} kW`,
+            note: `${i18n.t('offgridL2.designCorrectionCurrentLabel')}: ${Number(correction.current?.batteryMaxDischargeKw || 0).toFixed(1)} kW`,
+            color: severityTone
+          })}
+        </div>
+        <div class="offgrid-chip-grid">
+          ${offgridChipCard({ label: i18n.t('offgridL2.syntheticPeakSeverityLabel'), value: i18n.t(`offgridL2.syntheticPeakSeverity_${correction.severity || 'medium'}`), note: i18n.t('offgridL2.designCorrectionSeverityNote') })}
+          ${offgridChipCard({ label: i18n.t('offgridL2.syntheticPeakMaxLabel'), value: `${Number(correction.triggers?.modeledPeakKw || 0).toFixed(1)} kW`, note: `${i18n.t('offgridL2.designCorrectionObservedPeakLabel')}: ${Number(correction.triggers?.observedPeakKw || 0).toFixed(1)} kW` })}
+          ${offgridChipCard({ label: i18n.t('offgridL2.syntheticPeakCriticalMaxLabel'), value: `${Number(correction.triggers?.modeledCriticalPeakKw || 0).toFixed(1)} kW`, note: `${i18n.t('offgridL2.designCorrectionP95Label')}: ${Number(correction.triggers?.modeledP95Kw || 0).toFixed(1)} kW` })}
+          ${offgridChipCard({ label: i18n.t('offgridL2.powerLimitedLabel'), value: `${Math.round(Number(correction.triggers?.inverterPowerLimitedKwh || 0)).toLocaleString(locale)} kWh`, note: `${Math.round(Number(correction.triggers?.inverterPowerLimitHours || 0)).toLocaleString(locale)} saat` })}
+          ${offgridChipCard({ label: i18n.t('offgridL2.batteryPowerLimitLabel'), value: `${Math.round(Number(correction.triggers?.batteryDischargeLimitedKwh || 0)).toLocaleString(locale)} kWh`, note: i18n.t('offgridL2.designCorrectionBatteryLimitNote') })}
+          ${offgridChipCard({ label: i18n.t('offgridL2.inverterLogUpload'), value: `${Math.round(Number(correction.triggers?.tripCount || 0)).toLocaleString(locale)} trip / ${Math.round(Number(correction.triggers?.overloadCount || 0)).toLocaleString(locale)} overload`, note: `${i18n.t('offgridL2.syntheticPeakFactorLabel')}: ×${Number(correction.triggers?.calibrationFactor || 1).toFixed(2)}` })}
+        </div>
+        ${designCorrectionMeta ? `<div class="offgrid-body-copy">${escapeHtml(designCorrectionMeta.note)}</div>` : ''}
+        ${reasons.length ? `<div class="offgrid-list-title">${escapeHtml(i18n.t('offgridL2.designCorrectionReasonTitle'))}</div><ul class="offgrid-list">${reasons.map(reason => `<li>${escapeHtml(i18n.t(`offgridL2.designCorrectionReason_${reason}`))}</li>`).join('')}</ul>` : ''}
+      `;
+    } else {
+      designWrap.style.display = 'none';
+    }
+  }
+
   // Yaşam döngüsü maliyeti
   const lcWrap = document.getElementById('offgrid-lifecycle-details');
   if (lcWrap) {
@@ -848,9 +923,12 @@ function renderOffgridL2Results(offgridL2Results, state) {
       ['Model olgunluğu', L.fieldModelMaturityGate],
       ['Saha kabulü', L.fieldAcceptanceGate],
       ['Garanti operasyonu', L.fieldOperationGate],
-      ['Yıllık yeniden doğrulama', L.fieldRevalidationGate]
+      ['Yıllık yeniden doğrulama', L.fieldRevalidationGate],
+      ['Yüksek çözünürlüklü saha importu', L.fieldImportGate]
     ].filter(([, gate]) => gate && gateReadyState(gate) === false)
       .map(([label, gate]) => `${label}: ${gate.blockers?.[0] || 'İlgili saha verisi tamamlanmalı.'}`);
+    const highResLoad = L.fieldImportSummary?.highResolutionLoad || null;
+    const inverterLog = L.fieldImportSummary?.inverterEventLog || null;
     const confidenceCopy = accuracy?.interpretation || i18n.t('offgridL2.accuracyInterpretationFallback');
     if (sourceTransBody) {
       sourceTransBody.innerHTML = `
@@ -870,6 +948,9 @@ function renderOffgridL2Results(offgridL2Results, state) {
           ${offgridChipCard({ label: 'Ek doğrulama durumu', value: parityText, note: L.productionFallback ? i18n.t('offgridL2.fallbackUsed') : i18n.t('offgridL2.liveData') })}
           ${syntheticPvMeta ? offgridChipCard({ label: i18n.t('offgridL2.syntheticPvWeatherModelLabel'), value: syntheticPvMeta.label, note: syntheticPvMeta.note }) : ''}
           ${syntheticPeakMeta ? offgridChipCard({ label: i18n.t('offgridL2.syntheticPeakModelLabel'), value: syntheticPeakMeta.label, note: syntheticPeakMeta.note }) : ''}
+          ${designCorrectionMeta ? offgridChipCard({ label: i18n.t('offgridL2.designCorrectionTitle'), value: designCorrectionMeta.severity, note: designCorrectionMeta.note }) : ''}
+          ${highResLoad ? offgridChipCard({ label: i18n.t('offgridL2.fieldImportStatus'), value: `${Number(highResLoad.observedPeakKw || 0).toFixed(1)} kW peak`, note: `${Number(highResLoad.intervalMinutes || 0).toFixed(0)} dk · ${Number(highResLoad.durationDays || 0).toFixed(1)} gün` }) : ''}
+          ${inverterLog ? offgridChipCard({ label: i18n.t('offgridL2.inverterLogUpload'), value: `${Number(inverterLog.tripCount || 0)} trip / ${Number(inverterLog.overloadCount || 0)} overload`, note: `${Number(inverterLog.eventCount || 0)} kayıt` }) : ''}
         </div>
         <div class="offgrid-note-strip"><div class="offgrid-note ${fieldDataMeta.tone === 'danger' ? 'offgrid-note--warn' : ''}">${escapeHtml(fieldDataMeta.note)}</div></div>
         ${syntheticPvMeta ? `<div class="offgrid-note-strip"><div class="offgrid-note offgrid-note--warn">${escapeHtml(i18n.t('offgridL2.syntheticPvWeatherPenaltyApplied').replace('{days}', Math.round(Number(L.productionDispatchMetadata?.syntheticWeatherMetadata?.longestLowPvClusterDays) || 0).toLocaleString(localeTag())).replace('{min}', Number(((L.productionDispatchMetadata?.syntheticWeatherMetadata?.minimumDailyFractionOfAverage || 0) * 100)).toFixed(0)))}</div></div>` : ''}

@@ -243,6 +243,66 @@ describe('buildOffgridPvDispatchProfile — üretim source-of-truth', () => {
   });
 });
 
+describe('buildOffgridResults — field-driven design corrections', () => {
+  it('saha piki ve inverter olayları varsa tasarım düzeltmesi üretir', () => {
+    const fieldImportSummary = {
+      highResolutionLoad: {
+        sampleCount: 1440,
+        observedPeakKw: 7.8,
+        p95Kw: 4.6,
+        intervalMinutes: 1,
+        durationDays: 1
+      },
+      inverterEventLog: {
+        eventCount: 3,
+        tripCount: 1,
+        overloadCount: 2
+      }
+    };
+    const devices = [
+      { name: 'Pompa', category: 'pump', powerW: 1200, hoursPerDay: 2.5, isCritical: true, usageType: 'scheduled' },
+      { name: 'Kettle', category: 'kitchen', powerW: 2200, hoursPerDay: 0.4, isCritical: false, usageType: 'manual' },
+      { name: 'Washer', category: 'laundry', powerW: 1800, hoursPerDay: 1.0, isCritical: false, usageType: 'cyclic' }
+    ];
+    const loadProfile = buildOffgridLoadProfile(devices, { fieldImportSummary });
+    const dispatch = runOffgridDispatch(
+      makeDaytimePvHourly(10),
+      loadProfile.totalHourly8760,
+      loadProfile.criticalHourly8760,
+      {
+        usableCapacityKwh: 10,
+        efficiency: 0.92,
+        socReserveKwh: 1,
+        initialSocKwh: 4,
+        maxChargePowerKw: 3,
+        maxDischargePowerKw: 3
+      },
+      NO_GENERATOR,
+      {
+        loadPeakKw8760: loadProfile.hourlyPeakKw8760,
+        criticalPeakKw8760: loadProfile.criticalPeakKw8760,
+        inverterAcLimitKw: 3.5,
+        inverterSurgeMultiplier: 1.2
+      }
+    );
+    const result = buildOffgridResults(
+      dispatch,
+      null,
+      loadProfile,
+      NO_GENERATOR,
+      { fieldImportSummary }
+    );
+
+    assert.ok(result.designCorrections, 'design corrections bekleniyor');
+    assert.equal(result.designCorrections.fieldCalibrationApplied, true);
+    assert.equal(result.designCorrections.severity, 'high');
+    assert.ok(result.designCorrections.reasons.includes('inverter-trip-events'));
+    assert.ok(result.designCorrections.recommended.inverterAcKw > result.designCorrections.current.inverterAcKw);
+    assert.ok(result.designCorrections.recommended.inverterSurgeMultiplier >= result.designCorrections.current.inverterSurgeMultiplier);
+    assert.ok(result.designCorrections.recommended.batteryMaxDischargeKw >= result.designCorrections.current.batteryMaxDischargeKw);
+  });
+});
+
 describe('evaluateOffgridFieldGuaranteeReadiness — Faz 1 gate', () => {
   it('sentetik üretim ve sentetik yük ile saha garantisini kapalı tutar', () => {
     const productionProfile = buildOffgridPvDispatchProfile({

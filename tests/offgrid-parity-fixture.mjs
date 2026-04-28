@@ -116,6 +116,7 @@ function summarizeResult(result) {
     generatorStartSocPct: result.generatorStartSocPct,
     generatorStopSocPct: result.generatorStopSocPct,
     syntheticPeakModel: result.syntheticPeakModel || null,
+    designCorrections: result.designCorrections || null,
     accuracyScore: result.accuracyScore,
     accuracyTier: result.accuracyTier,
     expectedUncertaintyPct: result.expectedUncertaintyPct,
@@ -152,7 +153,8 @@ function buildParityResult(request, production) {
     hourlyLoadSource: 'real-hourly-8760',
     fallbackDailyKwh: finite(load.dailyConsumptionKwh, 0),
     criticalFraction: finite(load.offgridCriticalFraction, 0.45),
-    tariffType: tariff.tariffType || 'residential'
+    tariffType: tariff.tariffType || 'residential',
+    fieldImportSummary: request.governance?.fieldImports || null
   });
 
   const explicitHourlyPv = isComplete8760(load.hourlyProduction8760) ? load.hourlyProduction8760 : null;
@@ -328,7 +330,8 @@ function buildParityResult(request, production) {
       productionProfile: pvProfile,
       batteryConfig: battery,
       dispatchOptions,
-      calculationMode: offgrid.calculationMode || 'basic'
+      calculationMode: offgrid.calculationMode || 'basic',
+      fieldImportSummary: request.governance?.fieldImports || null
     },
     withoutGenerator,
     pvProfile

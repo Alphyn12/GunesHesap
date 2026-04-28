@@ -92,7 +92,7 @@ const OBJECT_KEYS = new Set([
   'roofGeometry', 'osmShadow', 'financing',
   'maintenanceContract', 'gridApplicationChecklist', 'proposalApproval', 'evidence',
   'userIdentity', 'scenarioContext', 'engineContext', 'exchangeRate',
-  'satelliteEnhancement'
+  'satelliteEnhancement', 'offgridFieldImports'
 ]);
 
 const ARRAY_KEYS = new Set([

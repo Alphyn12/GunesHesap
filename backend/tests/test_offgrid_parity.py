@@ -235,6 +235,7 @@ def summarize_python_result(result: dict) -> dict:
         "generatorStartSocPct": result.get("generatorStartSocPct"),
         "generatorStopSocPct": result.get("generatorStopSocPct"),
         "syntheticPeakModel": result.get("syntheticPeakModel"),
+        "designCorrections": result.get("designCorrections"),
         "accuracyScore": result.get("accuracyScore"),
         "accuracyTier": result.get("accuracyTier"),
         "expectedUncertaintyPct": result.get("expectedUncertaintyPct"),
@@ -392,6 +393,20 @@ def test_offgrid_backend_js_parity(case_name, case_factory):
         assert_close(py_peak.get("peakEnvelopeMaxFactor"), js_peak.get("peakEnvelopeMaxFactor"), RATIO_TOL, f"{case_name}.peakEnvelopeMaxFactor")
         assert_close(py_peak.get("maxSyntheticPeakKw"), js_peak.get("maxSyntheticPeakKw"), KW_TOL, f"{case_name}.maxSyntheticPeakKw")
         assert_close(py_peak.get("maxCriticalPeakKw"), js_peak.get("maxCriticalPeakKw"), KW_TOL, f"{case_name}.maxCriticalPeakKw")
+
+    py_correction = py_summary["designCorrections"] or {}
+    js_correction = js_summary["designCorrections"] or {}
+    assert bool(py_correction) == bool(js_correction)
+    if py_correction or js_correction:
+        assert py_correction.get("severity") == js_correction.get("severity")
+        assert py_correction.get("reasons") == js_correction.get("reasons")
+        for key in ["inverterAcKw", "inverterSurgeMultiplier", "inverterSurgeLimitKw", "batteryMaxDischargeKw"]:
+            assert_close(py_correction.get("current", {}).get(key), js_correction.get("current", {}).get(key), KW_TOL, f"{case_name}.design.current.{key}")
+            assert_close(py_correction.get("recommended", {}).get(key), js_correction.get("recommended", {}).get(key), KW_TOL, f"{case_name}.design.recommended.{key}")
+        for key in ["modeledPeakKw", "modeledP95Kw", "modeledCriticalPeakKw", "modeledCriticalP95Kw", "observedPeakKw", "observedP95Kw", "calibrationFactor"]:
+            assert_close(py_correction.get("triggers", {}).get(key), js_correction.get("triggers", {}).get(key), KW_TOL, f"{case_name}.design.triggers.{key}")
+        for key in ["tripCount", "overloadCount", "inverterPowerLimitedKwh", "inverterPowerLimitHours", "batteryDischargeLimitedKwh", "unmetCriticalKwh"]:
+            assert_close(py_correction.get("triggers", {}).get(key), js_correction.get("triggers", {}).get(key), KWH_TOL, f"{case_name}.design.triggers.{key}")
 
     assert py_summary["accuracyScore"] == js_summary["accuracyScore"]
     assert py_summary["accuracyTier"] == js_summary["accuracyTier"]

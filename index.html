@@ -2556,10 +2556,22 @@
                 <div class="error-msg-hidden-sm" id="offgrid-load-csv-status"></div>
               </label>
               <label class="text-helper-block-7">
+                <span data-i18n="offgridL2.highResLoadUpload">1 dakikalık saha yükü CSV / XLSX</span>
+                <input class="input-meta-row" type="file" id="offgrid-highres-load-upload" accept=".csv,.txt,.xlsx,.xls" data-change-action="handleOffgridHighResLoadUpload">
+                <button class="error-msg-hidden-mt-4" type="button" id="offgrid-highres-load-clear" data-click-action="clearOffgridHighResLoadUpload" data-i18n="onGridFlow.hourlyUploadClear">Saha importunu sil</button>
+                <div class="error-msg-hidden-sm" id="offgrid-highres-load-status"></div>
+              </label>
+              <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.critical8760Upload">Gerçek kritik yük 8760 CSV</span>
                 <input class="input-meta-row" type="file" id="offgrid-critical-csv-upload" accept=".csv,.txt" data-change-action="handleOffgridCriticalCsvUpload">
                 <button class="error-msg-hidden-mt-4" type="button" id="offgrid-critical-csv-clear" data-click-action="clearOffgridCriticalCsvUpload" data-i18n="onGridFlow.hourlyUploadClear">Saatlik veriyi sil</button>
                 <div class="error-msg-hidden-sm" id="offgrid-critical-csv-status"></div>
+              </label>
+              <label class="text-helper-block-7">
+                <span data-i18n="offgridL2.inverterLogUpload">İnverter olay logu CSV / XLSX</span>
+                <input class="input-meta-row" type="file" id="offgrid-inverter-log-upload" accept=".csv,.txt,.xlsx,.xls" data-change-action="handleOffgridInverterLogUpload">
+                <button class="error-msg-hidden-mt-4" type="button" id="offgrid-inverter-log-clear" data-click-action="clearOffgridInverterLogUpload" data-i18n="onGridFlow.hourlyUploadClear">Log importunu sil</button>
+                <div class="error-msg-hidden-sm" id="offgrid-inverter-log-status"></div>
               </label>
               <label class="text-helper-block-7">
                 <span data-i18n="offgridL2.shadingEvidenceUpload">Saha gölge kanıtı</span>
@@ -2647,7 +2659,7 @@
                 <div class="error-msg-hidden-sm" id="offgrid-customer-signoff-evidence-status"></div>
               </label>
             </div>
-            <div class="u-g" data-i18n="offgridL2.fieldDataHint">Faz 1 için üç gerçek 8760 seri gerekir. Faz 2 için SHA-256 saha kanıtları gerekir. Faz 4 için kabul dosyaları, Faz 5 için aktif izleme ve bakım kayıtları, Faz 6 için periyodik revalidasyon kanıtları gerekir.</div>
+            <div class="u-g" data-i18n="offgridL2.fieldDataHint">Faz 1 için üç gerçek 8760 seri gerekir. Faz 2 için SHA-256 saha kanıtları gerekir. Faz 4 için kabul dosyaları, Faz 5 için aktif izleme ve bakım kayıtları, Faz 6 için periyodik revalidasyon kanıtları gerekir. Faz 7 için 1 dakikalık saha yükü ve inverter olay logu import edilmelidir.</div>
           </div>
 
           <!-- Cihaz Listesi (İleri Mod) -->
@@ -3681,6 +3693,18 @@
       </div>
       <div class="result-helper">Düşük üretim, yük artışı ve batarya yaşlanması altında tasarımın en çok hangi koşulda zorlandığını burada görürsünüz.</div>
       <div id="offgrid-stress-result-details"></div>
+    </div>
+
+    <!-- Faz 9: Saha kalibrasyonundan tasarım düzeltmesi -->
+    <div id="offgrid-design-corrections" class="offgrid-result-card offgrid-result-card--accent is-hidden">
+      <div class="offgrid-result-head">
+        <div>
+          <div class="offgrid-result-kicker">Tasarım Düzeltmesi</div>
+          <div class="offgrid-result-title" data-i18n="offgridL2.designCorrectionTitle">Saha Verisinden Önerilen Düzeltmeler</div>
+        </div>
+      </div>
+      <div class="result-helper">Dakika-profili, inverter logu ve dispatch limitleri tasarımın hangi bileşeninin küçük kaldığını işaret ediyorsa önerileri burada görürsünüz.</div>
+      <div id="offgrid-design-corrections-body"></div>
     </div>
 
     <!-- Yaşam Döngüsü Maliyeti -->

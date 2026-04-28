@@ -23,6 +23,7 @@ import {
   buildEvidenceRegistry,
   buildOffgridFieldAcceptanceGate,
   buildOffgridFieldEvidenceGate,
+  buildOffgridFieldImportGate,
   buildOffgridFieldOperationGate,
   buildOffgridFieldRevalidationGate,
   buildTariffSourceGovernance
@@ -1040,7 +1041,8 @@ export async function runCalculation() {
         criticalHourly8760: useAdvancedOffgridInputs ? realCriticalHourly : null,
         fallbackDailyKwh: hourlySummaryRaw.annualLoad / 365,
         criticalFraction: Math.max(0.1, Math.min(1, Number(state.offgridCriticalFraction) || 0.45)),
-        tariffType: state.tariffType
+        tariffType: state.tariffType,
+        fieldImportSummary: state.offgridFieldImports || null
       }
     );
     const dispatchOptions = {
@@ -1142,7 +1144,8 @@ export async function runCalculation() {
         productionProfile: offgridPvProfile,
         batteryConfig: batteryConfig,
         dispatchOptions,
-        calculationMode: state.offgridCalculationMode || 'basic'
+        calculationMode: state.offgridCalculationMode || 'basic',
+        fieldImportSummary: state.offgridFieldImports || null
       },
       withoutGeneratorDispatch,
       offgridPvProfile
@@ -1166,6 +1169,11 @@ export async function runCalculation() {
     };
     offgridL2Results.loadSource = offgridLoadProfile.loadSource || offgridLoadProfile.mode;
     offgridL2Results.loadMode = offgridLoadProfile.mode;
+    offgridL2Results.fieldImportSummary = state.offgridFieldImports || {
+      highResolutionLoad: null,
+      criticalHighResolutionLoad: null,
+      inverterEventLog: null
+    };
     offgridL2Results.synthetic = !!(offgridL2Results.synthetic || offgridPvProfile.synthetic);
     offgridL2Results.methodologyNote = offgridPvProfile.hasRealHourlyProduction && offgridLoadProfile.hasRealHourlyLoad
       ? 'real-pv-and-real-load-hourly-dispatch-pre-feasibility'
@@ -1549,6 +1557,7 @@ export async function runCalculation() {
     results.offgridL2Results.fieldAcceptanceGate = buildOffgridFieldAcceptanceGate(results.evidenceGovernance, results);
     results.offgridL2Results.fieldOperationGate = buildOffgridFieldOperationGate(results.evidenceGovernance, results);
     results.offgridL2Results.fieldRevalidationGate = buildOffgridFieldRevalidationGate(results.evidenceGovernance, results);
+    results.offgridL2Results.fieldImportGate = buildOffgridFieldImportGate(results.evidenceGovernance, results);
     results.offgridL2Results.fieldGuaranteeReady = !!(
       results.offgridL2Results.fieldGuaranteeCandidate
       && results.offgridL2Results.fieldAcceptanceGate.phase4Ready
@@ -1592,6 +1601,11 @@ export async function runCalculation() {
       const firstRevalidationBlocker = results.offgridL2Results.fieldRevalidationGate.blockers?.[0]
         || 'Faz 6 periyodik revalidasyon kanıtları eksik.';
       results.calculationWarnings.push(`Off-grid garanti revalidasyon kapısı kapalı: ${firstRevalidationBlocker}`);
+    }
+    if (results.offgridL2Results.fieldImportGate?.status === 'blocked') {
+      const firstImportBlocker = results.offgridL2Results.fieldImportGate.blockers?.[0]
+        || 'Faz 7 yüksek çözünürlüklü saha importu eksik.';
+      results.calculationWarnings.push(`Off-grid saha dakika-profili/log importu eksik: ${firstImportBlocker}`);
     }
     const hasRealPvHourly = !!results.offgridL2Results.productionDispatchMetadata?.hasRealHourlyProduction;
     const hasRealLoadHourly = !!results.offgridL2Results.hasRealHourlyLoad || (Array.isArray(state.hourlyConsumption8760) && state.hourlyConsumption8760.length >= 8760);

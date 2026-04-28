@@ -12,7 +12,9 @@ export const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   'image/jpeg',
   'image/webp',
   'text/plain',
-  'text/csv'
+  'text/csv',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel'
 ]);
 
 function cleanString(value, max = 240) {

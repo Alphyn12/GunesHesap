@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import isfinite, log2, pi, sin, sqrt
+from math import ceil, isfinite, log2, pi, sin, sqrt
 from typing import Any
 
 from backend.models.engine_contracts import EngineRequest
@@ -657,16 +657,25 @@ def build_field_model_maturity_gate(
     }
 
 
-def summarize_synthetic_peak_model(mode: str, baseline_peak: list[float], total_peak: list[float], critical_peak: list[float]) -> dict[str, Any]:
+def summarize_synthetic_peak_model(
+    mode: str,
+    baseline_peak: list[float],
+    total_peak: list[float],
+    critical_peak: list[float],
+    calibration_meta: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     max_baseline = max(baseline_peak) if baseline_peak else 0.0
     max_total = max(total_peak) if total_peak else 0.0
     max_critical = max(critical_peak) if critical_peak else 0.0
     peak_envelope_hours = sum(1 for idx, value in enumerate(total_peak) if value > (baseline_peak[idx] if idx < len(baseline_peak) else 0) + 1e-9)
     max_factor = (max_total / max_baseline) if max_baseline > 0 else 1.0
-    severity = "high" if max_factor >= 1.35 else "medium" if max_factor >= 1.18 else "low"
+    severity = calibration_meta.get("forcedSeverity") if calibration_meta else None
+    if not severity:
+        severity = "high" if max_factor >= 1.35 else "medium" if max_factor >= 1.18 else "low"
     return {
-        "peakModel": "synthetic-conservative-envelope" if mode == "device-list" else "energy-shaped-fallback-peak",
-        "peakEnvelopeApplied": mode == "device-list",
+        "peakModel": "field-calibrated-peak-envelope" if calibration_meta and calibration_meta.get("applied")
+        else ("synthetic-conservative-envelope" if mode == "device-list" else "energy-shaped-fallback-peak"),
+        "peakEnvelopeApplied": mode == "device-list" or bool(calibration_meta and calibration_meta.get("applied")),
         "severity": severity,
         "peakEnvelopeHours": peak_envelope_hours,
         "peakEnvelopeMaxFactor": max_factor,
@@ -674,11 +683,249 @@ def summarize_synthetic_peak_model(mode: str, baseline_peak: list[float], total_
         "maxSyntheticPeakKw": max_total,
         "maxCriticalPeakKw": max_critical,
         "peakDeltaKw": max(0.0, max_total - max_baseline),
+        "fieldCalibration": calibration_meta or None,
+    }
+
+
+def peak_array_percentile(values: list[float], percentile_value: float = 0.95) -> float:
+    if not values:
+        return 0.0
+    sorted_values = sorted(max(0.0, finite(value, 0.0)) for value in values)
+    idx = min(len(sorted_values) - 1, max(0, int((len(sorted_values) - 1) * percentile_value)))
+    return sorted_values[idx]
+
+
+def round_up_to_step(value: float, step: float = 0.1) -> float:
+    numeric = max(0.0, finite(value, 0.0))
+    safe_step = max(0.001, finite(step, 0.1))
+    return ceil(numeric / safe_step) * safe_step
+
+
+def apply_field_peak_calibration(
+    mode: str,
+    hourly_peak: list[float],
+    critical_peak: list[float],
+    baseline_peak: list[float] | None = None,
+    field_import_summary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    high_res = (field_import_summary or {}).get("highResolutionLoad") or {}
+    inverter_log = (field_import_summary or {}).get("inverterEventLog") or {}
+    if not high_res.get("sampleCount"):
+        return {
+            "hourlyPeakKw8760": hourly_peak,
+            "criticalPeakKw8760": critical_peak,
+            "baselinePeakKw8760": baseline_peak or [],
+            "calibrationMeta": None,
+        }
+
+    current_max_peak = max((max(0.0, finite(value, 0.0)) for value in hourly_peak), default=0.0)
+    current_p95_peak = peak_array_percentile(hourly_peak, 0.95)
+    observed_peak_kw = max(0.0, finite(high_res.get("observedPeakKw"), 0.0))
+    observed_p95_kw = max(0.0, finite(high_res.get("p95Kw"), 0.0))
+    trip_count = max(0, int(finite(inverter_log.get("tripCount"), 0.0)))
+    overload_count = max(0, int(finite(inverter_log.get("overloadCount"), 0.0)))
+    peak_match_factor = (observed_peak_kw / current_max_peak) if current_max_peak > 0 and observed_peak_kw > 0 else 1.0
+    p95_match_factor = (observed_p95_kw / current_p95_peak) if current_p95_peak > 0 and observed_p95_kw > 0 else 1.0
+    event_penalty_factor = 1 + min(0.35, (trip_count * 0.08) + (overload_count * 0.05))
+    calibration_factor = clamp(max(1.0, peak_match_factor, p95_match_factor) * event_penalty_factor, 1.0, 2.5)
+    meta = {
+        "mode": mode,
+        "observedPeakKw": observed_peak_kw,
+        "observedP95Kw": observed_p95_kw,
+        "tripCount": trip_count,
+        "overloadCount": overload_count,
+        "intervalMinutes": finite(high_res.get("intervalMinutes"), 0.0),
+        "durationDays": finite(high_res.get("durationDays"), 0.0),
+        "calibrationFactor": calibration_factor if calibration_factor > 1.001 else 1.0,
+        "eventPenaltyFactor": event_penalty_factor,
+        "applied": calibration_factor > 1.001,
+        "forcedSeverity": "high" if trip_count > 0 or overload_count >= 2 else ("medium" if calibration_factor >= 1.18 else "low"),
+    }
+    if calibration_factor <= 1.001:
+        return {
+            "hourlyPeakKw8760": hourly_peak,
+            "criticalPeakKw8760": critical_peak,
+            "baselinePeakKw8760": baseline_peak or [],
+            "calibrationMeta": meta,
+        }
+
+    scaled_hourly = [max(0.0, finite(value, 0.0)) * calibration_factor for value in hourly_peak]
+    scaled_critical = [min(scaled_hourly[idx], max(0.0, finite(value, 0.0)) * calibration_factor) for idx, value in enumerate(critical_peak)]
+    return {
+        "hourlyPeakKw8760": scaled_hourly,
+        "criticalPeakKw8760": scaled_critical,
+        "baselinePeakKw8760": baseline_peak or [max(0.0, finite(value, 0.0)) for value in hourly_peak],
+        "calibrationMeta": meta,
+    }
+
+
+def build_offgrid_design_corrections(
+    dispatch: dict[str, Any],
+    load_profile: dict[str, Any],
+    field_import_summary: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    high_res = (field_import_summary or {}).get("highResolutionLoad") or {}
+    inverter_log = (field_import_summary or {}).get("inverterEventLog") or {}
+    synthetic_peak_model = load_profile.get("syntheticPeakModel") or {}
+    calibration = synthetic_peak_model.get("fieldCalibration") or {}
+    hourly_peak = load_profile.get("hourlyPeakKw8760") if isinstance(load_profile.get("hourlyPeakKw8760"), list) else []
+    critical_peak = load_profile.get("criticalPeakKw8760") if isinstance(load_profile.get("criticalPeakKw8760"), list) else []
+    current_inverter_ac_kw = max(0.0, finite(dispatch.get("inverterAcLimitKw"), 0.0))
+    current_surge_multiplier = max(1.0, finite(dispatch.get("inverterSurgeMultiplier"), 1.0))
+    current_surge_limit_kw = max(0.0, finite(dispatch.get("inverterSurgeLimitKw"), current_inverter_ac_kw * current_surge_multiplier))
+    current_battery_max_discharge_kw = max(0.0, finite(dispatch.get("maxDischargePowerKw"), 0.0))
+    inverter_power_limited_kwh = max(0.0, finite(dispatch.get("inverterPowerLimitedLoadKwh"), 0.0))
+    inverter_power_limit_hours = max(0.0, finite(dispatch.get("inverterPowerLimitHours"), 0.0))
+    battery_discharge_limited_kwh = max(0.0, finite(dispatch.get("batteryDischargeLimitedKwh"), 0.0))
+    unmet_critical_kwh = max(0.0, finite(dispatch.get("unmetCriticalLoadKwh"), 0.0))
+    trip_count = max(0, int(finite(calibration.get("tripCount", inverter_log.get("tripCount")), 0.0)))
+    overload_count = max(0, int(finite(calibration.get("overloadCount", inverter_log.get("overloadCount")), 0.0)))
+    observed_peak_kw = max(0.0, finite(calibration.get("observedPeakKw", high_res.get("observedPeakKw")), 0.0))
+    observed_p95_kw = max(0.0, finite(calibration.get("observedP95Kw", high_res.get("p95Kw")), 0.0))
+    calibration_factor = max(1.0, finite(calibration.get("calibrationFactor"), 1.0))
+    modeled_peak_kw = max(
+        finite(synthetic_peak_model.get("maxSyntheticPeakKw"), 0.0),
+        peak_array_percentile(hourly_peak, 0.99),
+        observed_peak_kw,
+    )
+    modeled_p95_kw = max(
+        peak_array_percentile(hourly_peak, 0.95),
+        observed_p95_kw,
+    )
+    modeled_critical_peak_kw = max(
+        finite(synthetic_peak_model.get("maxCriticalPeakKw"), 0.0),
+        peak_array_percentile(critical_peak, 0.99),
+    )
+    modeled_critical_p95_kw = peak_array_percentile(critical_peak, 0.95)
+    field_signals_present = bool(high_res.get("sampleCount") or inverter_log.get("eventCount") or calibration)
+
+    required_inverter_ac_kw = max(
+        current_inverter_ac_kw,
+        modeled_p95_kw * (1.10 if field_signals_present else 1.06),
+        modeled_peak_kw * (1.14 if trip_count > 0 or inverter_power_limited_kwh > 0 else (1.10 if synthetic_peak_model.get("peakEnvelopeApplied") else 1.05)),
+        modeled_critical_peak_kw * 1.08 if battery_discharge_limited_kwh > 0 else 0.0,
+    )
+    recommended_inverter_ac_kw = round_up_to_step(required_inverter_ac_kw, 0.1)
+    surge_target_from_recommended_ac = (modeled_peak_kw / recommended_inverter_ac_kw) if recommended_inverter_ac_kw > 0 else 1.0
+    required_surge_multiplier = clamp(
+        max(
+            current_surge_multiplier,
+            surge_target_from_recommended_ac * (1.08 if trip_count > 0 or overload_count > 0 else 1.03),
+            1.35 if trip_count > 0 else 1.20,
+            1.25 if overload_count > 0 else 1.0,
+        ),
+        1.0,
+        3.0,
+    )
+    recommended_surge_multiplier = round_up_to_step(required_surge_multiplier, 0.05)
+
+    required_battery_max_discharge_kw = max(
+        current_battery_max_discharge_kw,
+        modeled_critical_p95_kw * 1.08,
+        modeled_critical_peak_kw * (1.12 if battery_discharge_limited_kwh > 0 or unmet_critical_kwh > 0 else 1.05),
+    )
+    recommended_battery_max_discharge_kw = round_up_to_step(required_battery_max_discharge_kw, 0.1)
+
+    delta_inverter_ac_kw = max(0.0, recommended_inverter_ac_kw - current_inverter_ac_kw)
+    delta_surge_multiplier = max(0.0, recommended_surge_multiplier - current_surge_multiplier)
+    delta_battery_max_discharge_kw = max(0.0, recommended_battery_max_discharge_kw - current_battery_max_discharge_kw)
+    has_correction = (
+        delta_inverter_ac_kw > 0.049
+        or delta_surge_multiplier > 0.024
+        or delta_battery_max_discharge_kw > 0.049
+        or trip_count > 0
+        or overload_count > 0
+        or inverter_power_limited_kwh > 0
+        or battery_discharge_limited_kwh > 0
+        or modeled_peak_kw > current_surge_limit_kw + 1e-9
+        or modeled_critical_peak_kw > current_battery_max_discharge_kw + 1e-9
+    )
+    if not has_correction:
+        return None
+
+    reasons: list[str] = []
+    if calibration.get("applied"):
+        reasons.append("field-peak-calibration")
+    if trip_count > 0:
+        reasons.append("inverter-trip-events")
+    if overload_count > 0:
+        reasons.append("inverter-overload-events")
+    if inverter_power_limited_kwh > 0:
+        reasons.append("dispatch-inverter-power-limit")
+    if battery_discharge_limited_kwh > 0:
+        reasons.append("dispatch-battery-discharge-limit")
+    if modeled_peak_kw > current_surge_limit_kw + 1e-9:
+        reasons.append("modeled-peak-exceeds-surge-limit")
+    if modeled_critical_peak_kw > current_battery_max_discharge_kw + 1e-9:
+        reasons.append("critical-peak-exceeds-battery-discharge")
+    if unmet_critical_kwh > 0.1:
+        reasons.append("critical-load-unmet")
+
+    severity_score = 0
+    if calibration_factor >= 1.25:
+        severity_score += 2
+    elif calibration_factor > 1.05:
+        severity_score += 1
+    if trip_count > 0:
+        severity_score += 3
+    if overload_count > 0:
+        severity_score += min(2, overload_count)
+    if inverter_power_limited_kwh > 50:
+        severity_score += 2
+    elif inverter_power_limited_kwh > 0:
+        severity_score += 1
+    if battery_discharge_limited_kwh > 50:
+        severity_score += 2
+    elif battery_discharge_limited_kwh > 0:
+        severity_score += 1
+    if unmet_critical_kwh > 1:
+        severity_score += 2
+    severity = "high" if severity_score >= 6 else "medium" if severity_score >= 3 else "low"
+
+    return {
+        "severity": severity,
+        "fieldSignalsPresent": field_signals_present,
+        "fieldCalibrationApplied": bool(calibration.get("applied")),
+        "reasons": reasons,
+        "current": {
+            "inverterAcKw": current_inverter_ac_kw,
+            "inverterSurgeMultiplier": current_surge_multiplier,
+            "inverterSurgeLimitKw": current_surge_limit_kw,
+            "batteryMaxDischargeKw": current_battery_max_discharge_kw,
+        },
+        "recommended": {
+            "inverterAcKw": recommended_inverter_ac_kw,
+            "inverterSurgeMultiplier": recommended_surge_multiplier,
+            "inverterSurgeLimitKw": round_up_to_step(recommended_inverter_ac_kw * recommended_surge_multiplier, 0.1),
+            "batteryMaxDischargeKw": recommended_battery_max_discharge_kw,
+        },
+        "deltas": {
+            "inverterAcKw": delta_inverter_ac_kw,
+            "inverterSurgeMultiplier": delta_surge_multiplier,
+            "batteryMaxDischargeKw": delta_battery_max_discharge_kw,
+        },
+        "triggers": {
+            "modeledPeakKw": modeled_peak_kw,
+            "modeledP95Kw": modeled_p95_kw,
+            "modeledCriticalPeakKw": modeled_critical_peak_kw,
+            "modeledCriticalP95Kw": modeled_critical_p95_kw,
+            "observedPeakKw": observed_peak_kw,
+            "observedP95Kw": observed_p95_kw,
+            "tripCount": trip_count,
+            "overloadCount": overload_count,
+            "calibrationFactor": calibration_factor,
+            "inverterPowerLimitedKwh": inverter_power_limited_kwh,
+            "inverterPowerLimitHours": inverter_power_limit_hours,
+            "batteryDischargeLimitedKwh": battery_discharge_limited_kwh,
+            "unmetCriticalKwh": unmet_critical_kwh,
+        },
     }
 
 
 def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
     load = request.load
+    governance_extra = getattr(request.governance, "model_extra", {}) or {}
+    field_import_summary = governance_extra.get("fieldImports") or None
     hourly_load = complete_hourly(getattr(load, "hourlyConsumption8760", None))
     critical_real = complete_hourly(getattr(load, "offgridCriticalLoad8760", None))
     critical_fraction = clamp(finite(getattr(load, "offgridCriticalFraction", None), 0.45), 0.0, 1.0)
@@ -721,6 +968,12 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
                     total_hourly.append(value)
                     critical_hourly.append(value * critical_fraction)
         total_peak, critical_peak = build_simple_peak_from_energy(total_hourly, critical_hourly)
+        calibrated = apply_field_peak_calibration(
+            "simple-fallback",
+            total_peak,
+            critical_peak,
+            field_import_summary=field_import_summary,
+        )
         return {
             "mode": "simple-fallback",
             "loadSource": "daily-kwh-synthetic-profile",
@@ -728,12 +981,18 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
             "hasRealHourlyLoad": False,
             "totalHourly8760": total_hourly,
             "criticalHourly8760": critical_hourly,
-            "hourlyPeakKw8760": total_peak,
-            "criticalPeakKw8760": critical_peak,
+            "hourlyPeakKw8760": calibrated["hourlyPeakKw8760"],
+            "criticalPeakKw8760": calibrated["criticalPeakKw8760"],
             "annualTotalKwh": sum_positive(total_hourly),
             "annualCriticalKwh": sum_positive(critical_hourly),
             "deviceSummary": [],
-            "syntheticPeakModel": None,
+            "syntheticPeakModel": summarize_synthetic_peak_model(
+                "simple-fallback",
+                calibrated["baselinePeakKw8760"],
+                calibrated["hourlyPeakKw8760"],
+                calibrated["criticalPeakKw8760"],
+                calibrated["calibrationMeta"],
+            ) if calibrated["calibrationMeta"] else None,
             "deviceCount": 0,
             "criticalDeviceCount": 0,
         }
@@ -789,6 +1048,13 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
             }
         )
 
+    calibrated = apply_field_peak_calibration(
+        "device-list",
+        total_peak,
+        critical_peak,
+        baseline_peak=baseline_peak,
+        field_import_summary=field_import_summary,
+    )
     return {
         "mode": "device-list",
         "loadSource": "device-library-and-manual-inventory",
@@ -796,12 +1062,18 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
         "hasRealHourlyLoad": False,
         "totalHourly8760": total_hourly,
         "criticalHourly8760": critical_hourly,
-        "hourlyPeakKw8760": total_peak,
-        "criticalPeakKw8760": critical_peak,
+        "hourlyPeakKw8760": calibrated["hourlyPeakKw8760"],
+        "criticalPeakKw8760": calibrated["criticalPeakKw8760"],
         "annualTotalKwh": sum_positive(total_hourly),
         "annualCriticalKwh": sum_positive(critical_hourly),
         "deviceSummary": device_summary,
-        "syntheticPeakModel": summarize_synthetic_peak_model("device-list", baseline_peak, total_peak, critical_peak),
+        "syntheticPeakModel": summarize_synthetic_peak_model(
+            "device-list",
+            calibrated["baselinePeakKw8760"],
+            calibrated["hourlyPeakKw8760"],
+            calibrated["criticalPeakKw8760"],
+            calibrated["calibrationMeta"],
+        ),
         "deviceCount": len(valid_devices),
         "criticalDeviceCount": critical_device_count,
     }
@@ -1353,6 +1625,17 @@ def build_backend_offgrid_results(request: EngineRequest, production: dict[str, 
     stress = run_stress_scenarios(pv_profile["pvHourly8760"], load_profile, battery_steady, generator, dispatch_options)
     readiness = evaluate_field_readiness(pv_profile, load_profile, battery, dispatch_options)
     calculation_mode = offgrid.calculationMode if offgrid else "basic"
+    governance_extra = getattr(request.governance, "model_extra", {}) or {}
+    field_import_summary = governance_extra.get("fieldImports") or {
+        "highResolutionLoad": None,
+        "criticalHighResolutionLoad": None,
+        "inverterEventLog": None,
+    }
+    design_corrections = build_offgrid_design_corrections(
+        normal,
+        load_profile,
+        field_import_summary,
+    )
     accuracy_assessment = build_accuracy_assessment(
         pv_profile,
         load_profile,
@@ -1371,7 +1654,10 @@ def build_backend_offgrid_results(request: EngineRequest, production: dict[str, 
     has_real_pv_hourly = bool(pv_profile["hasRealHourlyProduction"])
     has_real_load_hourly = bool(load_profile["hasRealHourlyLoad"])
     has_real_critical_hourly = load_profile["criticalLoadBasis"] == "real-hourly-critical-load"
+    has_high_res_import = bool((field_import_summary.get("highResolutionLoad") or {}).get("sampleCount"))
     field_data_state = "field-input-ready" if readiness.get("phase1Ready") else "hybrid-hourly" if (has_real_pv_hourly or has_real_load_hourly or has_real_critical_hourly) else "synthetic"
+    if field_data_state == "synthetic" and has_high_res_import:
+        field_data_state = "hybrid-hourly"
     result = {
         "productionSource": pv_profile["productionSeriesSource"],
         "productionSourceLabel": pv_profile["productionSourceLabel"],
@@ -1392,10 +1678,12 @@ def build_backend_offgrid_results(request: EngineRequest, production: dict[str, 
         "loadSource": load_profile["loadSource"],
         "hasRealHourlyLoad": load_profile["hasRealHourlyLoad"],
         "criticalLoadBasis": load_profile["criticalLoadBasis"],
+        "fieldImportSummary": field_import_summary,
         "annualTotalLoadKwh": load_profile["annualTotalKwh"],
         "annualCriticalLoadKwh": load_profile["annualCriticalKwh"],
         "deviceSummary": load_profile["deviceSummary"],
         "syntheticPeakModel": load_profile["syntheticPeakModel"],
+        "designCorrections": design_corrections,
         "deviceCount": load_profile["deviceCount"],
         "criticalDeviceCount": load_profile["criticalDeviceCount"],
         "calculationMode": calculation_mode,

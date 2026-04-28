@@ -411,6 +411,7 @@ ${escapeHtml(report('batteryInstalledCost'))}: ${money(bm.batteryCost)}${offGrid
     const criticalCoverageWithGeneratorText = formatOffgridCoverageValue(criticalCoverageWithGenerator, L);
     const syntheticPeakModel = L.syntheticPeakModel || null;
     const syntheticWeatherMeta = L.productionDispatchMetadata?.syntheticWeatherMetadata || null;
+    const designCorrections = L.designCorrections || null;
     const stress = L.fieldStressAnalysis || null;
     html += `
   <div class="eng-section-header">
@@ -445,6 +446,13 @@ ${escapeHtml(i18n.t('offgridL2.powerLimitedLabel'))}: ${fmt(L.inverterPowerLimit
 ${syntheticPeakModel?.peakEnvelopeApplied ? `${escapeHtml(i18n.t('offgridL2.syntheticPeakModelLabel'))}: ${escapeHtml(i18n.t('offgridL2.syntheticPeakModelConservative'))}
 ${escapeHtml(i18n.t('offgridL2.syntheticPeakMaxLabel'))}: ${Number(syntheticPeakModel.maxSyntheticPeakKw || 0).toFixed(1)} kW; ${escapeHtml(i18n.t('offgridL2.syntheticPeakCriticalMaxLabel'))}: ${Number(syntheticPeakModel.maxCriticalPeakKw || 0).toFixed(1)} kW
 ${escapeHtml(i18n.t('offgridL2.syntheticPeakFactorLabel'))}: ×${Number(syntheticPeakModel.peakEnvelopeMaxFactor || 1).toFixed(2)}; ${escapeHtml(i18n.t('offgridL2.syntheticPeakSeverityLabel'))}: ${escapeHtml(i18n.t(`offgridL2.syntheticPeakSeverity_${syntheticPeakModel.severity || 'medium'}`))}
+` : ''}${designCorrections ? `${escapeHtml(i18n.t('offgridL2.designCorrectionTitle'))}: ${escapeHtml(i18n.t(`offgridL2.syntheticPeakSeverity_${designCorrections.severity || 'medium'}`))}
+${escapeHtml(i18n.t('offgridL2.designCorrectionInverterAcLabel'))}: ${Number(designCorrections.current?.inverterAcKw || 0).toFixed(1)} → ${Number(designCorrections.recommended?.inverterAcKw || 0).toFixed(1)} kW
+${escapeHtml(i18n.t('offgridL2.designCorrectionSurgeLabel'))}: ×${Number(designCorrections.current?.inverterSurgeMultiplier || 0).toFixed(2)} → ×${Number(designCorrections.recommended?.inverterSurgeMultiplier || 0).toFixed(2)}
+${escapeHtml(i18n.t('offgridL2.designCorrectionBatteryDischargeLabel'))}: ${Number(designCorrections.current?.batteryMaxDischargeKw || 0).toFixed(1)} → ${Number(designCorrections.recommended?.batteryMaxDischargeKw || 0).toFixed(1)} kW
+${escapeHtml(i18n.t('offgridL2.designCorrectionObservedPeakLabel'))}: ${Number(designCorrections.triggers?.observedPeakKw || 0).toFixed(1)} kW; ${escapeHtml(i18n.t('offgridL2.syntheticPeakMaxLabel'))}: ${Number(designCorrections.triggers?.modeledPeakKw || 0).toFixed(1)} kW
+${escapeHtml(i18n.t('offgridL2.inverterLogUpload'))}: ${Math.round(Number(designCorrections.triggers?.tripCount || 0))} trip / ${Math.round(Number(designCorrections.triggers?.overloadCount || 0))} overload
+${(designCorrections.reasons || []).slice(0, 4).map(reason => `- ${escapeHtml(i18n.t(`offgridL2.designCorrectionReason_${reason}`))}`).join('\n')}
 ` : ''}${escapeHtml(i18n.t('offgridL2.lifecycleAnnual'))}: ${money(L.lifecycleCostAnnual || 0)}; ${escapeHtml(i18n.t('offgridL2.lifecycleGeneratorOverhaulLabel'))}: ${money(L.generatorOverhaulAnnual || 0)}
 ${escapeHtml(i18n.t('offgridL2.fieldGuaranteeStatus'))}: ${escapeHtml(i18n.t(L.fieldGuaranteeReadiness?.phase1Ready ? 'offgridL2.fieldGuaranteePhase1Ready' : 'offgridL2.fieldGuaranteeBlocked'))}
 ${(L.fieldGuaranteeReadiness?.blockers || []).slice(0, 3).map(item => `- ${escapeHtml(item)}`).join('\n')}
@@ -458,6 +466,8 @@ ${escapeHtml(i18n.t('offgridL2.fieldOperationStatus'))}: ${escapeHtml(i18n.t(L.f
 ${(L.fieldOperationGate?.blockers || []).slice(0, 3).map(item => `- ${escapeHtml(item)}`).join('\n')}
 ${escapeHtml(i18n.t('offgridL2.fieldRevalidationStatus'))}: ${escapeHtml(i18n.t(L.fieldRevalidationGate?.phase6Ready ? 'offgridL2.fieldRevalidationReady' : 'offgridL2.fieldRevalidationBlocked'))}
 ${(L.fieldRevalidationGate?.blockers || []).slice(0, 3).map(item => `- ${escapeHtml(item)}`).join('\n')}
+${escapeHtml(i18n.t('offgridL2.fieldImportStatus'))}: ${escapeHtml(i18n.t(L.fieldImportGate?.phase7Ready ? 'offgridL2.fieldImportReady' : 'offgridL2.fieldImportBlocked'))}
+${(L.fieldImportGate?.blockers || []).slice(0, 3).map(item => `- ${escapeHtml(item)}`).join('\n')}
 ${stress?.worstCriticalScenario ? `\n${escapeHtml(i18n.t('offgridL2.stressWorstCriticalLabel'))}: ${escapeHtml(stress.worstCriticalScenario.label || stress.worstCriticalScenario.key || '—')} — ${formatOffgridCoverageValue(stress.worstCriticalScenario.criticalLoadCoverage, L)}` : ''}
 ${stress?.worstTotalScenario ? `\n${escapeHtml(i18n.t('offgridL2.stressWorstTotalLabel'))}: ${escapeHtml(stress.worstTotalScenario.label || stress.worstTotalScenario.key || '—')} — ${formatOffgridCoverageValue(stress.worstTotalScenario.totalLoadCoverage, L)}` : ''}
 ${stress?.maxUnmetCriticalScenario ? `\n${escapeHtml(i18n.t('offgridL2.stressMaxUnmetCriticalLabel'))}: ${escapeHtml(stress.maxUnmetCriticalScenario.label || stress.maxUnmetCriticalScenario.key || '—')} — ${fmt(stress.maxUnmetCriticalScenario.unmetCriticalKwh || 0)} kWh` : ''}

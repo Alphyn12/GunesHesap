@@ -221,6 +221,76 @@ def test_backend_offgrid_calculate_returns_dispatch_results():
     assert data["offgridL2Results"]["fieldGuaranteeReadiness"]["status"] in {"blocked", "phase-1-input-ready"}
 
 
+def test_backend_offgrid_returns_field_design_corrections():
+    request = offgrid_sample_request()
+    request["load"]["hourlyConsumption8760"] = None
+    request["load"]["offgridCriticalLoad8760"] = None
+    request["load"]["offgridDevices"] = [
+        {"name": "Pump", "category": "pump", "powerW": 1200, "hoursPerDay": 2.5, "isCritical": True, "usageType": "scheduled"},
+        {"name": "Kettle", "category": "kitchen", "powerW": 2200, "hoursPerDay": 0.4, "isCritical": False, "usageType": "manual"},
+        {"name": "Washer", "category": "laundry", "powerW": 1800, "hoursPerDay": 1.0, "isCritical": False, "usageType": "cyclic"},
+    ]
+    request["governance"]["fieldImports"] = {
+        "highResolutionLoad": {
+            "sampleCount": 1440,
+            "observedPeakKw": 7.8,
+            "p95Kw": 4.6,
+            "intervalMinutes": 1,
+            "durationDays": 1.0,
+        },
+        "inverterEventLog": {
+            "eventCount": 3,
+            "tripCount": 1,
+            "overloadCount": 2,
+        },
+    }
+
+    response = client.post("/api/pv/calculate", json=request)
+    assert response.status_code == 200
+    design = response.json()["offgridL2Results"]["designCorrections"]
+    assert design is not None
+    assert design["severity"] == "high"
+    assert "inverter-trip-events" in design["reasons"]
+    assert design["recommended"]["inverterAcKw"] > design["current"]["inverterAcKw"]
+    assert design["recommended"]["batteryMaxDischargeKw"] >= design["current"]["batteryMaxDischargeKw"]
+
+
+def test_offgrid_field_import_endpoint_parses_csv_payload():
+    content = "\n".join([
+        "timestamp,power_kw",
+        "2026-01-01 00:00,0.8",
+        "2026-01-01 00:01,1.2",
+        "2026-01-01 00:02,4.7",
+        "2026-01-01 00:03,1.1",
+    ])
+    response = client.post(
+        "/api/offgrid/field-import?kind=load",
+        files={"file": ("field-load.csv", content, "text/csv")},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert data["summary"]["intervalMinutes"] == 1
+    assert data["summary"]["observedPeakKw"] == 4.7
+
+
+def test_offgrid_field_import_endpoint_parses_inverter_log_csv():
+    content = "\n".join([
+        "timestamp,severity,code,message",
+        "2026-01-01 12:00,alarm,OVR-1,Overload trip detected",
+        "2026-01-01 12:05,error,FLT-9,Generic inverter fault",
+    ])
+    response = client.post(
+        "/api/offgrid/field-import?kind=inverter-log",
+        files={"file": ("inv-log.csv", content, "text/csv")},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["summary"]["eventCount"] == 2
+    assert data["summary"]["tripCount"] == 1
+    assert data["summary"]["overloadCount"] == 1
+
+
 @pytest.mark.parametrize(
     "scenario_key,proposal_tone,tariff_type",
     [
