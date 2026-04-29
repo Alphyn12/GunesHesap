@@ -1,5 +1,5 @@
-// v40: Faz 1 audit fixes and complete static precache assets.
-const CACHE_NAME = 'solarRota-v40';
+// v43: Ensure direct step navigation reveals the app shell.
+const CACHE_NAME = 'solarRota-v43';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -11,6 +11,7 @@ const STATIC_ASSETS = [
   '/css/mobile.css',
   '/css/landing.css',
   '/js/app.js',
+  '/js/analytics-init.js',
   '/js/bill-analysis.js',
   '/js/backend-config.js',
   '/js/calc-core.js',

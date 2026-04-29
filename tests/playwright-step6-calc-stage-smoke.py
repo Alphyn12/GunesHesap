@@ -1,5 +1,7 @@
 from playwright.sync_api import sync_playwright
 
+from playwright_helpers import install_local_analytics_stub
+
 
 def main():
     console_errors = []
@@ -7,6 +9,7 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1366, "height": 900})
+        install_local_analytics_stub(page)
         page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
         page.on("pageerror", lambda exc: page_errors.append(str(exc)))
         page.goto("http://127.0.0.1:3020/index.html", wait_until="networkidle")

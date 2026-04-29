@@ -10,8 +10,30 @@
   var LANDING_ROUTE = '#/landing';
   var pendingScenario = null;
 
-  function showApp(){
+  function setAppMode(){
     document.body.classList.remove('landing-active');
+    document.body.dataset.route = 'app';
+  }
+
+  function setLandingMode(){
+    document.body.classList.add('landing-active');
+    document.body.dataset.route = 'landing';
+  }
+
+  function getModeForHash(hash){
+    if (!hash || hash === LANDING_ROUTE) return 'landing';
+    if (hash === APP_ROUTE) return 'app';
+    if (hash.indexOf('#lp-') === 0) return 'landing';
+    return 'app';
+  }
+
+  function syncModeFromLocation(){
+    if (getModeForHash(location.hash) === 'app') setAppMode();
+    else setLandingMode();
+  }
+
+  function showApp(){
+    setAppMode();
     // Scroll app'in başına
     window.scrollTo({top:0, behavior:'auto'});
     // Hash'i senkronla
@@ -25,7 +47,7 @@
   }
 
   function showLanding(){
-    document.body.classList.add('landing-active');
+    setLandingMode();
     window.scrollTo({top:0, behavior:'auto'});
     if (location.hash !== LANDING_ROUTE) {
       history.replaceState(null, '', LANDING_ROUTE);
@@ -119,25 +141,26 @@
   window.lpTourPrev = function(){ window.lpTourStep(lpTourCurrent === 1 ? 7 : lpTourCurrent - 1); };
   window.lpTourNext = function(){ window.lpTourStep(lpTourCurrent === 7 ? 1 : lpTourCurrent + 1); };
 
+  window.SolarRotaRoutes = {
+    app: APP_ROUTE,
+    landing: LANDING_ROUTE
+  };
+
   // İlk açılışta hash'e göre mod
   function initialRoute(){
-    if (!location.hash || location.hash === LANDING_ROUTE) {
-      document.body.classList.add('landing-active');
+    if (!location.hash) {
+      setLandingMode();
       if (!location.hash) {
         history.replaceState(null, '', LANDING_ROUTE);
       }
     } else {
-      document.body.classList.remove('landing-active');
+      syncModeFromLocation();
     }
   }
 
   // Hash değişirse mod değiştir
   window.addEventListener('hashchange', function(){
-    if (location.hash === LANDING_ROUTE) {
-      document.body.classList.add('landing-active');
-    } else {
-      document.body.classList.remove('landing-active');
-    }
+    syncModeFromLocation();
   });
 
   initialRoute();

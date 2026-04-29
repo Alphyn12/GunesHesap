@@ -15,6 +15,8 @@ from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
 
+from playwright_helpers import enter_calculator
+
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -48,7 +50,7 @@ def run_iphone_se(base_url, browser):
         service_workers="block",
     )
     page = ctx.new_page()
-    page.goto(f"{base_url}/index.html", wait_until="networkidle")
+    enter_calculator(page, base_url)
 
     # Sayfa yüklendi
     assert "Solar Rota" in page.title()
@@ -106,7 +108,7 @@ def run_ipad_mini(base_url, browser):
         service_workers="block",
     )
     page = ctx.new_page()
-    page.goto(f"{base_url}/index.html", wait_until="networkidle")
+    enter_calculator(page, base_url)
 
     assert_no_overflow(page, "ipad-mini initial")
     # iPad'te de bottom bar görünür (768 = sınır)

@@ -6,6 +6,8 @@ from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
 
+from playwright_helpers import enter_calculator
+
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -22,6 +24,27 @@ def assert_no_page_overflow(page, label):
     )
     assert overflow["doc"] <= overflow["width"] + 2, (label, overflow)
     assert overflow["body"] <= overflow["width"] + 2, (label, overflow)
+
+
+def assert_app_route_visible(page):
+    route_state = page.evaluate(
+        """() => ({
+            route: document.body.dataset.route,
+            hash: location.hash,
+            landingActive: document.body.classList.contains('landing-active'),
+            step: document.body.dataset.step,
+            headerVisible: getComputedStyle(document.getElementById('app-header')).display !== 'none',
+            mainVisible: getComputedStyle(document.getElementById('main-content')).display !== 'none'
+        })"""
+    )
+    assert route_state == {
+        "route": "app",
+        "hash": "#/app",
+        "landingActive": False,
+        "step": "1",
+        "headerVisible": True,
+        "mainVisible": True,
+    }, route_state
 
 
 def main():
@@ -54,18 +77,23 @@ def main():
                 });"""
             )
             page = ctx.new_page()
-            page.goto(f"{base_url}/index.html", wait_until="networkidle")
+            enter_calculator(page, base_url)
 
             assert "Solar Rota" in page.title()
+            assert_app_route_visible(page)
             assert page.locator(".logo-text").inner_text() == "Solar Rota"
             body_text = page.locator("body").inner_text()
             assert "GüneşHesap" not in body_text
             assert "GunesHesap" not in body_text
-            assert_no_page_overflow(page, "initial mobile landing")
+            assert_no_page_overflow(page, "initial mobile app")
 
-            first_card = page.locator(".scenario-choice-card").first
+            scenario_cards = page.locator("#step-1.active .scenario-choice-card")
+            assert scenario_cards.count() >= 2
+            first_card = scenario_cards.first
+            assert first_card.is_visible()
             card_box = first_card.bounding_box()
-            assert card_box and card_box["width"] <= 390, card_box
+            viewport_width = page.evaluate("window.innerWidth")
+            assert card_box and card_box["width"] <= viewport_width, card_box
             assert card_box["height"] >= 64, card_box
 
             assert page.locator(".header-lang-btn").count() == 0

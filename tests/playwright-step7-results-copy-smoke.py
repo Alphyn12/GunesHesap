@@ -6,6 +6,8 @@ from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
 
+from playwright_helpers import install_local_analytics_stub
+
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -32,6 +34,7 @@ def main():
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page(viewport={"width": 1440, "height": 1400})
+            install_local_analytics_stub(page)
             page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
             page.on("pageerror", lambda exc: page_errors.append(str(exc)))
             page.goto(f"{base_url}/index.html", wait_until="networkidle")

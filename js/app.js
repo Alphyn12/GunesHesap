@@ -3201,9 +3201,19 @@ function requestStepChange(n) {
   goToStep(n);
 }
 
+function ensureAppRouteVisible() {
+  document.body.classList.remove('landing-active');
+  document.body.dataset.route = 'app';
+  const appRoute = window.SolarRotaRoutes?.app || '#/app';
+  if (location.hash !== appRoute) {
+    history.replaceState(null, '', appRoute);
+  }
+}
+
 function goToStep(n) {
   const state = window.state;
   if (n < 1 || n > 7) return;
+  ensureAppRouteVisible();
   if (n === state.step) return;
   unlockStep(n);
   const fromEl = document.getElementById(`step-${state.step}`);

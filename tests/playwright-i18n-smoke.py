@@ -6,6 +6,8 @@ from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
 
+from playwright_helpers import enter_calculator
+
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -30,8 +32,7 @@ def main():
             browser = p.chromium.launch(headless=True)
             ctx = browser.new_context(service_workers="block")
             page = ctx.new_page()
-            page.goto(f"{base_url}/index.html")
-            page.wait_for_load_state("networkidle")
+            enter_calculator(page, base_url)
             assert page.locator(".header-lang-btn").count() == 0
             assert page.locator("#exchange-rate-status-header").count() == 0
             page.click('[data-testid="open-settings"]')

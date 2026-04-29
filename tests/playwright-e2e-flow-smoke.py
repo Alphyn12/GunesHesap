@@ -6,6 +6,8 @@ from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
 
+from playwright_helpers import enter_calculator
+
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -22,6 +24,10 @@ def pvgis_payload():
             "monthly": {"fixed": [{"E_m": value} for value in PVGIS_MONTHLY]},
         }
     }
+
+
+def pvgis_series_payload():
+    return {"outputs": {"hourly": []}}
 
 
 def backend_payload():
@@ -74,6 +80,11 @@ def install_common_routes(page):
         status=200,
         headers={"content-type": "application/json", "access-control-allow-origin": "*"},
         json=pvgis_payload(),
+    ))
+    page.route("**/seriescalc**", lambda route: route.fulfill(
+        status=200,
+        headers={"content-type": "application/json", "access-control-allow-origin": "*"},
+        json=pvgis_series_payload(),
     ))
 
 
@@ -243,7 +254,7 @@ def desktop_backend_flow(browser, base_url):
     page.on("pageerror", lambda exc: page_errors.append(str(exc)))
     install_common_routes(page)
     install_backend_routes(page)
-    page.goto(f"{base_url}/index.html", wait_until="networkidle")
+    enter_calculator(page, base_url)
     page.evaluate("window.state.enginePreference = 'python-backend'")
 
     run_click_flow_to_results(
@@ -316,7 +327,7 @@ def backend_unavailable_fallback_flow(browser, base_url):
     page.on("pageerror", lambda exc: page_errors.append(str(exc)))
     install_common_routes(page)
     page.route("http://127.0.0.1:8000/**", lambda route: route.abort())
-    page.goto(f"{base_url}/index.html", wait_until="networkidle")
+    enter_calculator(page, base_url)
     run_click_flow_to_results(
         page,
         roof_area="45",

@@ -6,6 +6,8 @@ from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
 
+from playwright_helpers import enter_calculator
+
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -30,7 +32,7 @@ def main():
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page(viewport={"width": 1440, "height": 1400})
-            page.goto(f"{base_url}/index.html", wait_until="networkidle")
+            enter_calculator(page, base_url)
             page.evaluate(
                 """() => {
                     window.state.lat = 41.0;
