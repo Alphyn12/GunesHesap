@@ -121,8 +121,11 @@
 
   // İlk açılışta hash'e göre mod
   function initialRoute(){
-    if (location.hash === LANDING_ROUTE) {
+    if (!location.hash || location.hash === LANDING_ROUTE) {
       document.body.classList.add('landing-active');
+      if (!location.hash) {
+        history.replaceState(null, '', LANDING_ROUTE);
+      }
     } else {
       document.body.classList.remove('landing-active');
     }

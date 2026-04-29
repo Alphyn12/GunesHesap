@@ -11,7 +11,7 @@
   --scenario-heatpump:  #EC4899;
   --scenario-mobile:    #06B6D4;
   --scenario-ev:        #3B82F6;
-  --hero-gradient: linear-gradient(135deg,#0A0F1E 0%,#0F172A 40%,#12203A 70%,#0A0F1E 100%);
+  --hero-gradient: var(--secondary);
   --radius-xl:  28px;
   --radius-2xl: 40px;
   --header-h: 88px;
@@ -101,7 +101,7 @@ h2, .h2, .step-heading-title {
 .step-hero {
   min-height: calc(100vh - var(--header-h));
   min-height: calc(100dvh - var(--header-h));
-  background: var(--hero-gradient);
+  background: transparent;
   margin: -24px -16px 0;
   padding: 0;
   position: relative;
