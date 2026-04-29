@@ -149,11 +149,16 @@ OFFGRID_STRESS_SCENARIOS = [
     {"key": "combined-design-stress", "label": "Combined design stress", "pvFactor": 0.85, "loadFactor": 1.15, "criticalLoadFactor": 1.15, "batteryEol": True},
 ]
 
+REQUIRED_FIELD_STRESS_SCENARIO_KEYS = [scenario["key"] for scenario in OFFGRID_STRESS_SCENARIOS]
+
 DEFAULT_FIELD_MODEL_THRESHOLDS = {
     "criticalCoverageMin": 0.999,
     "totalCoverageMin": 0.98,
     "unmetCriticalMaxKwh": 1.0,
     "generatorCriticalPeakReservePct": 0.10,
+    "badWeatherCriticalCoverageMin": 0.999,
+    "badWeatherTotalCoverageMin": 0.98,
+    "badWeatherUnmetCriticalMaxKwh": 1.0,
 }
 
 BATTERY_DYNAMIC_EFFICIENCY_PRESETS = {
@@ -620,19 +625,121 @@ def build_accuracy_assessment(
     }
 
 
+def build_field_stress_scenario_coverage(scenarios: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    executed_keys = list(dict.fromkeys(row.get("key") for row in (scenarios or []) if isinstance(row, dict) and row.get("key")))
+    return {
+        "requiredKeys": list(REQUIRED_FIELD_STRESS_SCENARIO_KEYS),
+        "executedKeys": executed_keys,
+        "missingKeys": [key for key in REQUIRED_FIELD_STRESS_SCENARIO_KEYS if key not in executed_keys],
+        "unexpectedKeys": [key for key in executed_keys if key not in REQUIRED_FIELD_STRESS_SCENARIO_KEYS],
+    }
+
+
+def evaluate_bad_weather_field_stress(
+    bad_weather_scenario: dict[str, Any] | None,
+    thresholds: dict[str, float],
+) -> dict[str, Any]:
+    blockers: list[str] = []
+    warnings: list[str] = []
+    if not bad_weather_scenario:
+        return {
+            "evaluated": False,
+            "ready": False,
+            "blockers": ["Faz 3 kotu hava pencere testi calistirilmadi."],
+            "warnings": warnings,
+        }
+
+    dispatch = bad_weather_scenario.get("dispatch") if isinstance(bad_weather_scenario.get("dispatch"), dict) else {}
+    raw_critical = bad_weather_scenario.get("windowCriticalCoverage")
+    raw_total = bad_weather_scenario.get("windowCoverage")
+    window_critical_coverage = finite(raw_critical, float("nan"))
+    if not isfinite(window_critical_coverage):
+        window_critical_coverage = finite(dispatch.get("criticalLoadCoverage"), float("nan"))
+    window_coverage = finite(raw_total, float("nan"))
+    if not isfinite(window_coverage):
+        window_coverage = finite(dispatch.get("totalLoadCoverage"), float("nan"))
+    unmet_critical_kwh = max(0.0, finite(dispatch.get("unmetCriticalLoadKwh", bad_weather_scenario.get("unmetCriticalKwh")), 0.0))
+
+    if not isfinite(window_critical_coverage):
+        blockers.append("Kotu hava penceresi kritik yuk kapsamasi hesaplanamadi.")
+        window_critical_value = None
+    else:
+        window_critical_value = window_critical_coverage
+        if window_critical_coverage < thresholds["badWeatherCriticalCoverageMin"]:
+            blockers.append(
+                f'Kotu hava penceresi kritik yuk kapsamasi {(window_critical_coverage * 100):.2f}%; '
+                f'esik {(thresholds["badWeatherCriticalCoverageMin"] * 100):.2f}%.'
+            )
+
+    if not isfinite(window_coverage):
+        blockers.append("Kotu hava penceresi toplam yuk kapsamasi hesaplanamadi.")
+        window_total_value = None
+    else:
+        window_total_value = window_coverage
+        if window_coverage < thresholds["badWeatherTotalCoverageMin"]:
+            blockers.append(
+                f'Kotu hava penceresi toplam yuk kapsamasi {(window_coverage * 100):.2f}%; '
+                f'esik {(thresholds["badWeatherTotalCoverageMin"] * 100):.2f}%.'
+            )
+
+    if unmet_critical_kwh > thresholds["badWeatherUnmetCriticalMaxKwh"]:
+        blockers.append(
+            f'Kotu hava penceresinde karsilanamayan kritik yuk {round(unmet_critical_kwh)} kWh; '
+            f'esik {thresholds["badWeatherUnmetCriticalMaxKwh"]} kWh.'
+        )
+
+    window_min_soc = finite(bad_weather_scenario.get("windowMinSocKwh"), float("nan"))
+    window_min_soc_value = window_min_soc if isfinite(window_min_soc) else None
+    if window_min_soc_value is not None and window_min_soc_value <= 0:
+        warnings.append("Kotu hava penceresinde batarya SOC sifira kadar dusuyor; saha garanti marji dusuk.")
+
+    return {
+        "evaluated": True,
+        "ready": len(blockers) == 0,
+        "weatherLevel": bad_weather_scenario.get("weatherLevel"),
+        "consecutiveDays": bad_weather_scenario.get("consecutiveDays"),
+        "worstWindowDayOfYear": bad_weather_scenario.get("worstWindowDayOfYear"),
+        "windowCoverage": window_total_value,
+        "windowCriticalCoverage": window_critical_value,
+        "unmetCriticalKwh": unmet_critical_kwh,
+        "windowMinSocKwh": window_min_soc_value,
+        "additionalGeneratorKwh": finite(bad_weather_scenario.get("additionalGeneratorKwh"), 0.0),
+        "blockers": blockers,
+        "warnings": warnings,
+    }
+
+
 def build_field_model_maturity_gate(
     stress_analysis: dict[str, Any],
     phase1_ready: bool = False,
     phase2_ready: bool = False,
     generator: dict[str, Any] | None = None,
     thresholds: dict[str, float] | None = None,
+    bad_weather_scenario: dict[str, Any] | None = None,
+    require_bad_weather_scenario: bool = False,
 ) -> dict[str, Any]:
-    applied_thresholds = thresholds or DEFAULT_FIELD_MODEL_THRESHOLDS
+    applied_thresholds = dict(DEFAULT_FIELD_MODEL_THRESHOLDS)
+    if thresholds:
+        applied_thresholds.update(thresholds)
     blockers = []
     warnings = []
     scenarios = stress_analysis.get("scenarios") if isinstance(stress_analysis, dict) else None
     scenarios = scenarios if isinstance(scenarios, list) else []
+    scenario_coverage = (
+        stress_analysis.get("scenarioCoverage")
+        if isinstance(stress_analysis, dict) and isinstance(stress_analysis.get("scenarioCoverage"), dict)
+        else build_field_stress_scenario_coverage(scenarios)
+    )
+    scenario_readiness = []
     gen_enabled = bool(generator and generator.get("enabled") and finite(generator.get("capacityKw"), 0.0) > 0)
+    should_evaluate_bad_weather = bool(require_bad_weather_scenario or bad_weather_scenario)
+    bad_weather_stress = evaluate_bad_weather_field_stress(bad_weather_scenario, applied_thresholds) if should_evaluate_bad_weather else {
+        "evaluated": False,
+        "ready": None,
+        "blockers": [],
+        "warnings": [],
+    }
+    bad_weather_stress["required"] = bool(require_bad_weather_scenario)
 
     if not phase1_ready:
         blockers.append("Faz 1 saatlik dispatch girdileri tamamlanmadan Faz 3 model olgunlugu kabul edilemez.")
@@ -640,27 +747,52 @@ def build_field_model_maturity_gate(
         blockers.append("Faz 2 dogrulanmis saha kanitlari tamamlanmadan Faz 3 model olgunlugu kabul edilemez.")
     if not scenarios:
         blockers.append("Faz 3 stres senaryolari calistirilmadi.")
+    if scenario_coverage.get("missingKeys"):
+        blockers.append(f'Faz 3 zorunlu stres senaryolari eksik: {", ".join(scenario_coverage["missingKeys"])}.')
+    if scenario_coverage.get("unexpectedKeys"):
+        warnings.append(f'Faz 3 beklenmeyen stres senaryolari iceriyor: {", ".join(scenario_coverage["unexpectedKeys"])}.')
 
     for row in scenarios:
-        if finite(row.get("criticalLoadCoverage"), 0.0) < applied_thresholds["criticalCoverageMin"]:
-            blockers.append(
-                f'{row.get("key")}: kritik yuk kapsamasi {(finite(row.get("criticalLoadCoverage"), 0.0) * 100):.2f}%; '
+        key = row.get("key") or "unknown-stress-scenario"
+        row_blockers: list[str] = []
+        row_warnings: list[str] = []
+        critical_load_coverage = finite(row.get("criticalLoadCoverage"), 0.0)
+        total_load_coverage = finite(row.get("totalLoadCoverage"), 0.0)
+        unmet_critical_kwh = max(0.0, finite(row.get("unmetCriticalKwh"), 0.0))
+        if critical_load_coverage < applied_thresholds["criticalCoverageMin"]:
+            row_blockers.append(
+                f'{key}: kritik yuk kapsamasi {(critical_load_coverage * 100):.2f}%; '
                 f'esik {(applied_thresholds["criticalCoverageMin"] * 100):.2f}%.'
             )
-        if finite(row.get("unmetCriticalKwh"), 0.0) > applied_thresholds["unmetCriticalMaxKwh"]:
-            blockers.append(
-                f'{row.get("key")}: karsilanamayan kritik yuk {round(finite(row.get("unmetCriticalKwh"), 0.0))} kWh/yil; '
+        if unmet_critical_kwh > applied_thresholds["unmetCriticalMaxKwh"]:
+            row_blockers.append(
+                f'{key}: karsilanamayan kritik yuk {round(unmet_critical_kwh)} kWh/yil; '
                 f'esik {applied_thresholds["unmetCriticalMaxKwh"]} kWh/yil.'
             )
-        if finite(row.get("totalLoadCoverage"), 0.0) < applied_thresholds["totalCoverageMin"]:
-            blockers.append(
-                f'{row.get("key")}: toplam yuk kapsamasi {(finite(row.get("totalLoadCoverage"), 0.0) * 100):.2f}%; '
+        if total_load_coverage < applied_thresholds["totalCoverageMin"]:
+            row_blockers.append(
+                f'{key}: toplam yuk kapsamasi {(total_load_coverage * 100):.2f}%; '
                 f'esik {(applied_thresholds["totalCoverageMin"] * 100):.2f}%.'
             )
         if finite(row.get("inverterPowerLimitedKwh"), 0.0) > 0:
-            warnings.append(f'{row.get("key")}: inverter guc limiti {round(finite(row.get("inverterPowerLimitedKwh"), 0.0))} kWh/yil yuku etkiliyor.')
+            row_warnings.append(f'{key}: inverter guc limiti {round(finite(row.get("inverterPowerLimitedKwh"), 0.0))} kWh/yil yuku etkiliyor.')
         if finite(row.get("batteryDischargeLimitedKwh"), 0.0) > 0:
-            warnings.append(f'{row.get("key")}: batarya desarj kW limiti {round(finite(row.get("batteryDischargeLimitedKwh"), 0.0))} kWh/yil yuku etkiliyor.')
+            row_warnings.append(f'{key}: batarya desarj kW limiti {round(finite(row.get("batteryDischargeLimitedKwh"), 0.0))} kWh/yil yuku etkiliyor.')
+        blockers.extend(row_blockers)
+        warnings.extend(row_warnings)
+        scenario_readiness.append({
+            "key": key,
+            "status": "blocked" if row_blockers else "ready",
+            "criticalLoadCoverage": critical_load_coverage,
+            "totalLoadCoverage": total_load_coverage,
+            "unmetCriticalKwh": unmet_critical_kwh,
+            "blockers": row_blockers,
+            "warnings": row_warnings,
+        })
+
+    if should_evaluate_bad_weather:
+        blockers.extend(bad_weather_stress["blockers"])
+        warnings.extend(bad_weather_stress["warnings"])
 
     if gen_enabled:
         reserve = stress_analysis.get("generatorCriticalPeakReservePct") if isinstance(stress_analysis, dict) else None
@@ -675,12 +807,15 @@ def build_field_model_maturity_gate(
     unique_warnings = list(dict.fromkeys(warnings))
     phase3_ready = len(unique_blockers) == 0
     return {
-        "version": "OGD-FIELD-MODEL-2026.04-v3",
+        "version": "OGD-FIELD-MODEL-2026.04-v3.1",
         "status": "phase3-ready" if phase3_ready else "blocked",
         "phase3Ready": phase3_ready,
-        "stressReady": len(scenarios) > 0 and phase3_ready,
+        "stressReady": len(scenarios) > 0 and not scenario_coverage.get("missingKeys") and (not should_evaluate_bad_weather or bool(bad_weather_stress["ready"])) and phase3_ready,
         "fieldGuaranteeReady": False,
         "thresholds": applied_thresholds,
+        "scenarioCoverage": scenario_coverage,
+        "scenarioReadiness": scenario_readiness,
+        "badWeatherStress": bad_weather_stress,
         "blockers": unique_blockers,
         "warnings": unique_warnings,
         "worstCriticalScenario": stress_analysis.get("worstCriticalScenario") if isinstance(stress_analysis, dict) else None,
@@ -1517,12 +1652,24 @@ def run_bad_weather_scenario(normal_dispatch: dict[str, Any], pv_hourly: list[fl
         for idx, value in enumerate(pv_hourly)
     ]
     bad_dispatch = run_offgrid_dispatch(scaled_pv, load_hourly, critical_hourly, battery, generator, options)
+    n_hours = config["days"] * 24
+    window_rows = bad_dispatch["hourly8760"][worst_start:worst_start + n_hours]
+    window_load = sum(finite(row.get("loadKwh"), 0.0) for row in window_rows)
+    window_unmet = sum(finite(row.get("unmet"), 0.0) for row in window_rows)
+    window_critical_load = sum(finite(row.get("criticalKwh"), 0.0) for row in window_rows)
+    window_unmet_critical = sum(finite(row.get("unmetCritical"), 0.0) for row in window_rows)
+    window_coverage = max(0.0, 1 - (window_unmet / window_load)) if window_load > 0 else 1.0
+    window_critical_coverage = max(0.0, 1 - (window_unmet_critical / window_critical_load)) if window_critical_load > 0 else 1.0
+    window_min_soc = min((finite(row.get("soc"), float("inf")) for row in window_rows), default=0.0)
     return {
         "weatherLevel": weather_level,
         "pvScaleFactor": config["pvFactor"],
         "consecutiveDays": config["days"],
         "worstWindowStartHour": worst_start,
         "worstWindowDayOfYear": int(worst_start / 24) + 1,
+        "windowCoverage": window_coverage,
+        "windowCriticalCoverage": window_critical_coverage,
+        "windowMinSocKwh": window_min_soc if isfinite(window_min_soc) else 0.0,
         "dispatch": bad_dispatch,
         "criticalCoverageDropPct": max(0.0, (normal_dispatch["criticalLoadCoverage"] - bad_dispatch["criticalLoadCoverage"]) * 100),
         "totalCoverageDropPct": max(0.0, (normal_dispatch["totalLoadCoverage"] - bad_dispatch["totalLoadCoverage"]) * 100),
@@ -1572,8 +1719,9 @@ def run_stress_scenarios(pv_hourly: list[float], load_profile: dict[str, Any], b
     generator_capacity = max(0.0, finite(generator.get("capacityKw"), 0.0))
     reserve = (generator_capacity / max_critical_peak) - 1 if generator_capacity > 0 and max_critical_peak > 0 else None
     return {
-        "version": "OGD-FIELD-MODEL-2026.04-v3",
+        "version": "OGD-FIELD-MODEL-2026.04-v3.1",
         "scenarios": scenarios,
+        "scenarioCoverage": build_field_stress_scenario_coverage(scenarios),
         "worstCriticalScenario": worst_critical,
         "worstTotalScenario": worst_total,
         "maxUnmetCriticalScenario": max_unmet_critical,
@@ -1720,6 +1868,8 @@ def build_backend_offgrid_results(request: EngineRequest, production: dict[str, 
         phase1_ready=bool(readiness.get("phase1Ready")),
         phase2_ready=False,
         generator=generator,
+        bad_weather_scenario=bad_weather,
+        require_bad_weather_scenario=True,
     )
     has_real_pv_hourly = bool(pv_profile["hasRealHourlyProduction"])
     has_real_load_hourly = bool(load_profile["hasRealHourlyLoad"])

@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import {
+  buildOffgridFieldAcceptanceSnapshot,
   buildOffgridFieldAcceptanceGate,
   buildOffgridFieldEvidenceGate,
   buildOffgridFieldImportGate,
   buildOffgridFieldOperationGate,
+  buildOffgridFieldOperationSnapshot,
   buildOffgridFieldRevalidationGate,
   buildEvidenceRegistry,
   buildStructuredProposalExport,
@@ -119,6 +121,93 @@ const evidenceFile = (id, sha) => {
 const pvHourlyEvidence = buildHourlyProfileEvidence(new Array(8760).fill(0.5));
 const loadHourlyEvidence = buildHourlyProfileEvidence(new Array(8760).fill(1));
 const criticalHourlyEvidence = buildHourlyProfileEvidence(new Array(8760).fill(0.3));
+const phase4AcceptanceSnapshot = {
+  version: 'GH-OFFGRID-FIELD-ACCEPT-2026.04-v2',
+  capturedAt: '2026-04-12T10:00:00.000Z',
+  fieldDataState: 'stress-validated-hourly-evidence',
+  dispatchVersion: 'OGD-2026.04-v1.1',
+  fieldModelVersion: 'OGD-FIELD-MODEL-2026.04-v3.1',
+  fieldStressVersion: 'OGD-FIELD-MODEL-2026.04-v3.1',
+  phase1Ready: true,
+  phase2Ready: true,
+  phase3Ready: true,
+  modelStatus: 'phase3-ready',
+  scenarioCoverage: {
+    requiredKeys: ['low-pv-year', 'load-growth', 'battery-eol', 'combined-design-stress'],
+    executedKeys: ['low-pv-year', 'load-growth', 'battery-eol', 'combined-design-stress'],
+    missingKeys: []
+  },
+  badWeatherStress: {
+    required: true,
+    evaluated: true,
+    ready: true,
+    weatherLevel: 'moderate',
+    windowCoverage: 1,
+    windowCriticalCoverage: 1,
+    unmetCriticalKwh: 0
+  },
+  coverage: {
+    totalLoadCoverage: 1,
+    criticalLoadCoverage: 1,
+    solarBatteryLoadCoverage: 1,
+    badWeatherWindowCoverage: 1,
+    badWeatherWindowCriticalCoverage: 1,
+    unmetCriticalKwh: 0
+  },
+  equipment: {
+    generatorEnabled: false,
+    generatorCapacityKw: 0,
+    batteryUsableCapacityKwh: 50,
+    inverterAcLimitKw: 10
+  }
+};
+const phase5OperationSnapshot = (evidenceType, overrides = {}) => ({
+  version: 'GH-OFFGRID-FIELD-OPS-2026.04-v2',
+  capturedAt: '2026-04-12T12:00:00.000Z',
+  evidenceType,
+  phase4Ready: true,
+  acceptanceSnapshotStatus: 'matched',
+  acceptanceCapturedAt: phase4AcceptanceSnapshot.capturedAt,
+  fieldDataState: 'accepted-hourly-evidence',
+  telemetry: {
+    durationDays: 30,
+    availabilityPct: 99.9,
+    criticalEventCount: 0,
+    outageEventCount: 0,
+    tripCount: 1,
+    overloadCount: 2,
+    ...(overrides.telemetry || {})
+  },
+  performance: {
+    baselineAccepted: evidenceType === 'offgridPerformanceBaseline',
+    totalLoadCoverage: 1,
+    criticalLoadCoverage: 1,
+    badWeatherWindowCoverage: 1,
+    badWeatherWindowCriticalCoverage: 1,
+    unmetCriticalKwh: 0,
+    ...(overrides.performance || {})
+  },
+  maintenance: {
+    logAttached: evidenceType === 'offgridMaintenanceLog',
+    openCriticalItems: 0,
+    ...(overrides.maintenance || {})
+  },
+  incident: {
+    logAttached: evidenceType === 'offgridIncidentLog',
+    unresolvedCriticalIncidents: 0,
+    ...(overrides.incident || {})
+  },
+  monitoring: {
+    slaActive: evidenceType === 'offgridRemoteMonitoringSla',
+    responseHours: 24,
+    ...(overrides.monitoring || {})
+  },
+  ...Object.fromEntries(Object.entries(overrides).filter(([key]) => !['telemetry', 'performance', 'maintenance', 'incident', 'monitoring'].includes(key)))
+});
+const operationEvidenceFile = (id, sha, evidenceType, overrides = {}) => ({
+  ...evidenceFile(id, sha),
+  operationSnapshot: phase5OperationSnapshot(evidenceType, overrides)
+});
 const verifiedOffgridEvidence = {
   offgridPvProduction: { status: 'verified', ref: 'pv.csv', checkedAt: '2026-04-12', files: [evidenceFile('pv', 'a')], ...pvHourlyEvidence },
   offgridLoadProfile: { status: 'verified', ref: 'load.csv', checkedAt: '2026-04-12', files: [evidenceFile('load', 'b')], ...loadHourlyEvidence },
@@ -126,15 +215,15 @@ const verifiedOffgridEvidence = {
   offgridSiteShading: { status: 'verified', ref: 'shade.pdf', checkedAt: '2026-04-12', files: [evidenceFile('shade', 'd')] },
   offgridEquipmentDatasheets: { status: 'verified', ref: 'datasheets.pdf', checkedAt: '2026-04-12', files: [evidenceFile('datasheets', 'e')] },
   offgridCommissioningReport: { status: 'verified', ref: 'commissioning.pdf', checkedAt: '2026-04-12', files: [evidenceFile('commissioning', 'f')] },
-  offgridAcceptanceTest: { status: 'verified', ref: 'acceptance.pdf', checkedAt: '2026-04-12', files: [evidenceFile('acceptance', 'g')] },
+  offgridAcceptanceTest: { status: 'verified', ref: 'acceptance.pdf', checkedAt: '2026-04-12', files: [{ ...evidenceFile('acceptance', 'g'), acceptanceSnapshot: phase4AcceptanceSnapshot }], acceptanceSnapshot: phase4AcceptanceSnapshot },
   offgridMonitoringCalibration: { status: 'verified', ref: 'calibration.pdf', checkedAt: '2026-04-12', files: [evidenceFile('calibration', 'h')] },
   offgridAsBuiltDocs: { status: 'verified', ref: 'asbuilt.pdf', checkedAt: '2026-04-12', files: [evidenceFile('asbuilt', 'i')] },
   offgridWarrantyOandM: { status: 'verified', ref: 'warranty-om.pdf', checkedAt: '2026-04-12', files: [evidenceFile('warranty', 'j')] },
-  offgridTelemetry30Day: { status: 'verified', ref: 'telemetry.csv', checkedAt: '2026-04-12', notes: 'availability 99.9%; critical events 0', files: [evidenceFile('telemetry', 'k')] },
-  offgridPerformanceBaseline: { status: 'verified', ref: 'baseline.pdf', checkedAt: '2026-04-12', notes: 'measured baseline accepted', files: [evidenceFile('baseline', 'l')] },
-  offgridMaintenanceLog: { status: 'verified', ref: 'maintenance.pdf', checkedAt: '2026-04-12', files: [evidenceFile('maintenance', 'm')] },
-  offgridIncidentLog: { status: 'verified', ref: 'incidents.pdf', checkedAt: '2026-04-12', files: [evidenceFile('incidents', 'n')] },
-  offgridRemoteMonitoringSla: { status: 'verified', ref: 'sla.pdf', checkedAt: '2026-04-12', files: [evidenceFile('sla', 'o')] },
+  offgridTelemetry30Day: { status: 'verified', ref: 'telemetry.csv', checkedAt: '2026-04-12', notes: 'availability 99.9%; critical events 0', files: [operationEvidenceFile('telemetry', 'k', 'offgridTelemetry30Day')], operationSnapshot: phase5OperationSnapshot('offgridTelemetry30Day') },
+  offgridPerformanceBaseline: { status: 'verified', ref: 'baseline.pdf', checkedAt: '2026-04-12', notes: 'measured baseline accepted', files: [operationEvidenceFile('baseline', 'l', 'offgridPerformanceBaseline')], operationSnapshot: phase5OperationSnapshot('offgridPerformanceBaseline') },
+  offgridMaintenanceLog: { status: 'verified', ref: 'maintenance.pdf', checkedAt: '2026-04-12', files: [operationEvidenceFile('maintenance', 'm', 'offgridMaintenanceLog')], operationSnapshot: phase5OperationSnapshot('offgridMaintenanceLog') },
+  offgridIncidentLog: { status: 'verified', ref: 'incidents.pdf', checkedAt: '2026-04-12', files: [operationEvidenceFile('incidents', 'n', 'offgridIncidentLog')], operationSnapshot: phase5OperationSnapshot('offgridIncidentLog') },
+  offgridRemoteMonitoringSla: { status: 'verified', ref: 'sla.pdf', checkedAt: '2026-04-12', files: [operationEvidenceFile('sla', 'o', 'offgridRemoteMonitoringSla')], operationSnapshot: phase5OperationSnapshot('offgridRemoteMonitoringSla') },
   offgridAnnualRevalidation: { status: 'verified', ref: 'annual.pdf', checkedAt: '2026-04-12', notes: 'annual coverage/SOC/generator drift accepted', files: [evidenceFile('annual', 'p')] },
   offgridBatteryHealthReport: { status: 'verified', ref: 'battery-soh.pdf', checkedAt: '2026-04-12', notes: 'SOH 94%; capacity test accepted', files: [evidenceFile('battery', 'q')] },
   offgridGeneratorServiceRecord: { status: 'verified', ref: 'generator-service.pdf', checkedAt: '2026-04-12', files: [evidenceFile('generator', 'r')] },
@@ -273,8 +362,13 @@ const offgridAcceptanceReady = buildOffgridFieldAcceptanceGate(
     offgridL2Results: {
       fieldGuaranteeReadiness: { phase1Ready: true },
       fieldEvidenceGate: { phase2Ready: true },
-      fieldModelMaturityGate: { phase3Ready: true },
-      fieldStressAnalysis: { scenarios: [{ key: 'combined-design-stress' }] },
+      fieldModelMaturityGate: {
+        version: 'OGD-FIELD-MODEL-2026.04-v3.1',
+        phase3Ready: true,
+        badWeatherStress: { required: true, ready: true },
+        scenarioCoverage: phase4AcceptanceSnapshot.scenarioCoverage
+      },
+      fieldStressAnalysis: { version: 'OGD-FIELD-MODEL-2026.04-v3.1', scenarios: [{ key: 'combined-design-stress' }] },
       generatorEnabled: false
     }
   },
@@ -282,6 +376,47 @@ const offgridAcceptanceReady = buildOffgridFieldAcceptanceGate(
 );
 assert.equal(offgridAcceptanceReady.phase4Ready, true);
 assert.equal(offgridAcceptanceReady.fieldGuaranteeReady, true);
+assert.equal(offgridAcceptanceReady.acceptanceSnapshotBinding.status, 'matched');
+
+const offgridAcceptanceNoSnapshot = buildOffgridFieldAcceptanceGate(
+  {
+    registry: {
+      ...offgridRegistry.registry,
+      offgridAcceptanceTest: {
+        ...offgridRegistry.registry.offgridAcceptanceTest,
+        acceptanceSnapshot: null,
+        files: offgridRegistry.registry.offgridAcceptanceTest.files.map(file => ({ ...file, acceptanceSnapshot: null }))
+      }
+    }
+  },
+  {
+    offgridL2Results: {
+      fieldGuaranteeReadiness: { phase1Ready: true },
+      fieldEvidenceGate: { phase2Ready: true },
+      fieldModelMaturityGate: { version: 'OGD-FIELD-MODEL-2026.04-v3.1', phase3Ready: true, badWeatherStress: { required: true, ready: true } },
+      fieldStressAnalysis: { version: 'OGD-FIELD-MODEL-2026.04-v3.1', scenarios: [{ key: 'combined-design-stress' }] },
+      generatorEnabled: false
+    }
+  },
+  { today: '2026-04-13' }
+);
+assert.equal(offgridAcceptanceNoSnapshot.phase4Ready, false);
+assert.equal(offgridAcceptanceNoSnapshot.acceptanceSnapshotBinding.status, 'missing');
+assert.ok(offgridAcceptanceNoSnapshot.blockers.some(item => item.includes('kabul testi güncel hesap/model özeti')));
+
+const generatedAcceptanceSnapshot = buildOffgridFieldAcceptanceSnapshot({
+  offgridL2Results: {
+    fieldGuaranteeReadiness: { phase1Ready: true },
+    fieldEvidenceGate: { phase2Ready: true },
+    fieldModelMaturityGate: { version: 'OGD-FIELD-MODEL-2026.04-v3.1', phase3Ready: true, status: 'phase3-ready', badWeatherStress: { required: true, evaluated: true, ready: true } },
+    fieldStressAnalysis: { version: 'OGD-FIELD-MODEL-2026.04-v3.1', scenarioCoverage: phase4AcceptanceSnapshot.scenarioCoverage },
+    totalLoadCoverage: 1,
+    criticalLoadCoverage: 1,
+    badWeatherScenario: { windowCoverage: 1, windowCriticalCoverage: 1 }
+  }
+}, { capturedAt: '2026-04-12T11:00:00.000Z' });
+assert.equal(generatedAcceptanceSnapshot.phase3Ready, true);
+assert.equal(generatedAcceptanceSnapshot.badWeatherStress.ready, true);
 
 const offgridOperationBlocked = buildOffgridFieldOperationGate(
   { registry: {} },
@@ -293,11 +428,64 @@ assert.ok(offgridOperationBlocked.blockers.some(item => item.includes('Faz 4')))
 
 const offgridOperationReady = buildOffgridFieldOperationGate(
   offgridRegistry,
-  { offgridL2Results: { fieldAcceptanceGate: { phase4Ready: true } } },
+  {
+    offgridL2Results: {
+      fieldAcceptanceGate: {
+        phase4Ready: true,
+        acceptanceSnapshotBinding: { status: 'matched', capturedAt: phase4AcceptanceSnapshot.capturedAt }
+      }
+    }
+  },
   { today: '2026-04-13' }
 );
 assert.equal(offgridOperationReady.phase5Ready, true);
 assert.equal(offgridOperationReady.fieldGuaranteeReady, true);
+assert.equal(offgridOperationReady.operationSnapshotBindings.offgridTelemetry30Day.status, 'matched');
+assert.equal(offgridOperationReady.records.offgridPerformanceBaseline.operationSnapshotStatus, 'matched');
+
+const offgridOperationNoSnapshot = buildOffgridFieldOperationGate(
+  {
+    registry: {
+      ...offgridRegistry.registry,
+      offgridTelemetry30Day: {
+        ...offgridRegistry.registry.offgridTelemetry30Day,
+        operationSnapshot: null,
+        files: offgridRegistry.registry.offgridTelemetry30Day.files.map(file => ({ ...file, operationSnapshot: null }))
+      }
+    }
+  },
+  {
+    offgridL2Results: {
+      fieldAcceptanceGate: {
+        phase4Ready: true,
+        acceptanceSnapshotBinding: { status: 'matched', capturedAt: phase4AcceptanceSnapshot.capturedAt }
+      }
+    }
+  },
+  { today: '2026-04-13' }
+);
+assert.equal(offgridOperationNoSnapshot.phase5Ready, false);
+assert.equal(offgridOperationNoSnapshot.operationSnapshotBindings.offgridTelemetry30Day.status, 'missing');
+assert.ok(offgridOperationNoSnapshot.blockers.some(item => item.includes('operasyon kanıtı güncel Faz 4 kabul snapshot')));
+
+const generatedOperationSnapshot = buildOffgridFieldOperationSnapshot({
+  offgridL2Results: {
+    fieldAcceptanceGate: {
+      phase4Ready: true,
+      acceptanceSnapshotBinding: { status: 'matched', capturedAt: phase4AcceptanceSnapshot.capturedAt }
+    },
+    fieldDataState: 'accepted-hourly-evidence',
+    criticalLoadCoverage: 1,
+    totalLoadCoverage: 1,
+    fieldImportSummary: {
+      highResolutionLoad: { durationDays: 7 },
+      inverterEventLog: { faultCount: 0, tripCount: 1, overloadCount: 2 }
+    }
+  }
+}, { evidenceType: 'offgridTelemetry30Day', capturedAt: '2026-04-12T13:00:00.000Z' });
+assert.equal(generatedOperationSnapshot.phase4Ready, true);
+assert.equal(generatedOperationSnapshot.telemetry.durationDays, 30);
+assert.equal(generatedOperationSnapshot.telemetry.availabilityPct, 100);
 
 const offgridRevalidationBlocked = buildOffgridFieldRevalidationGate(
   { registry: {} },

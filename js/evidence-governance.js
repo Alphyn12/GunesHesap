@@ -5,8 +5,8 @@ import { localizeMessageList, statusLabel } from './output-i18n.js';
 
 export const EVIDENCE_GOVERNANCE_VERSION = 'GH-EVID-2026.04-v1';
 export const OFFGRID_FIELD_EVIDENCE_VERSION = 'GH-OFFGRID-FIELD-EVID-2026.04-v1';
-export const OFFGRID_FIELD_ACCEPTANCE_VERSION = 'GH-OFFGRID-FIELD-ACCEPT-2026.04-v1';
-export const OFFGRID_FIELD_OPERATION_VERSION = 'GH-OFFGRID-FIELD-OPS-2026.04-v1';
+export const OFFGRID_FIELD_ACCEPTANCE_VERSION = 'GH-OFFGRID-FIELD-ACCEPT-2026.04-v2';
+export const OFFGRID_FIELD_OPERATION_VERSION = 'GH-OFFGRID-FIELD-OPS-2026.04-v2';
 export const OFFGRID_FIELD_REVALIDATION_VERSION = 'GH-OFFGRID-FIELD-REVALIDATE-2026.04-v1';
 export const OFFGRID_FIELD_IMPORT_VERSION = 'GH-OFFGRID-FIELD-IMPORT-2026.04-v1';
 
@@ -79,6 +79,215 @@ function cleanProfileSummary(summary = null) {
   };
 }
 
+function cleanStringArray(value) {
+  return Array.isArray(value)
+    ? value.map(item => String(item || '').trim()).filter(Boolean)
+    : [];
+}
+
+function cleanCoverageValue(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function cleanScenarioCoverage(value = {}) {
+  if (!value || typeof value !== 'object') {
+    return { requiredKeys: [], executedKeys: [], missingKeys: [], unexpectedKeys: [] };
+  }
+  return {
+    requiredKeys: cleanStringArray(value.requiredKeys),
+    executedKeys: cleanStringArray(value.executedKeys),
+    missingKeys: cleanStringArray(value.missingKeys),
+    unexpectedKeys: cleanStringArray(value.unexpectedKeys)
+  };
+}
+
+function cleanBadWeatherStress(value = {}) {
+  if (!value || typeof value !== 'object') {
+    return { required: false, evaluated: false, ready: null };
+  }
+  return {
+    required: !!value.required,
+    evaluated: !!value.evaluated,
+    ready: value.ready === true ? true : value.ready === false ? false : null,
+    weatherLevel: String(value.weatherLevel || '').trim() || null,
+    consecutiveDays: Number.isFinite(Number(value.consecutiveDays)) ? Number(value.consecutiveDays) : null,
+    worstWindowDayOfYear: Number.isFinite(Number(value.worstWindowDayOfYear)) ? Number(value.worstWindowDayOfYear) : null,
+    windowCoverage: cleanCoverageValue(value.windowCoverage),
+    windowCriticalCoverage: cleanCoverageValue(value.windowCriticalCoverage),
+    unmetCriticalKwh: cleanCoverageValue(value.unmetCriticalKwh),
+    additionalGeneratorKwh: cleanCoverageValue(value.additionalGeneratorKwh)
+  };
+}
+
+function cleanAcceptanceSnapshot(snapshot = null) {
+  if (!snapshot || typeof snapshot !== 'object') return null;
+  const coverage = snapshot.coverage && typeof snapshot.coverage === 'object' ? snapshot.coverage : {};
+  const equipment = snapshot.equipment && typeof snapshot.equipment === 'object' ? snapshot.equipment : {};
+  return {
+    version: String(snapshot.version || OFFGRID_FIELD_ACCEPTANCE_VERSION).trim(),
+    capturedAt: snapshot.capturedAt || null,
+    fieldDataState: String(snapshot.fieldDataState || '').trim() || null,
+    dispatchVersion: String(snapshot.dispatchVersion || '').trim() || null,
+    fieldModelVersion: String(snapshot.fieldModelVersion || '').trim() || null,
+    fieldStressVersion: String(snapshot.fieldStressVersion || '').trim() || null,
+    phase1Ready: snapshot.phase1Ready === true,
+    phase2Ready: snapshot.phase2Ready === true,
+    phase3Ready: snapshot.phase3Ready === true,
+    modelStatus: String(snapshot.modelStatus || '').trim() || null,
+    scenarioCoverage: cleanScenarioCoverage(snapshot.scenarioCoverage),
+    badWeatherStress: cleanBadWeatherStress(snapshot.badWeatherStress),
+    coverage: {
+      totalLoadCoverage: cleanCoverageValue(coverage.totalLoadCoverage),
+      criticalLoadCoverage: cleanCoverageValue(coverage.criticalLoadCoverage),
+      solarBatteryLoadCoverage: cleanCoverageValue(coverage.solarBatteryLoadCoverage),
+      badWeatherWindowCoverage: cleanCoverageValue(coverage.badWeatherWindowCoverage),
+      badWeatherWindowCriticalCoverage: cleanCoverageValue(coverage.badWeatherWindowCriticalCoverage),
+      unmetCriticalKwh: cleanCoverageValue(coverage.unmetCriticalKwh)
+    },
+    equipment: {
+      generatorEnabled: !!equipment.generatorEnabled,
+      generatorCapacityKw: cleanCoverageValue(equipment.generatorCapacityKw),
+      batteryUsableCapacityKwh: cleanCoverageValue(equipment.batteryUsableCapacityKwh),
+      inverterAcLimitKw: cleanCoverageValue(equipment.inverterAcLimitKw)
+    }
+  };
+}
+
+function cleanOperationSnapshot(snapshot = null) {
+  if (!snapshot || typeof snapshot !== 'object') return null;
+  const telemetry = snapshot.telemetry && typeof snapshot.telemetry === 'object' ? snapshot.telemetry : {};
+  const performance = snapshot.performance && typeof snapshot.performance === 'object' ? snapshot.performance : {};
+  const maintenance = snapshot.maintenance && typeof snapshot.maintenance === 'object' ? snapshot.maintenance : {};
+  const incident = snapshot.incident && typeof snapshot.incident === 'object' ? snapshot.incident : {};
+  const monitoring = snapshot.monitoring && typeof snapshot.monitoring === 'object' ? snapshot.monitoring : {};
+  return {
+    version: String(snapshot.version || OFFGRID_FIELD_OPERATION_VERSION).trim(),
+    capturedAt: snapshot.capturedAt || null,
+    evidenceType: String(snapshot.evidenceType || '').trim() || null,
+    phase4Ready: snapshot.phase4Ready === true,
+    acceptanceSnapshotStatus: String(snapshot.acceptanceSnapshotStatus || '').trim() || null,
+    acceptanceCapturedAt: snapshot.acceptanceCapturedAt || null,
+    fieldDataState: String(snapshot.fieldDataState || '').trim() || null,
+    telemetry: {
+      durationDays: cleanCoverageValue(telemetry.durationDays),
+      availabilityPct: cleanCoverageValue(telemetry.availabilityPct),
+      criticalEventCount: cleanCoverageValue(telemetry.criticalEventCount),
+      outageEventCount: cleanCoverageValue(telemetry.outageEventCount),
+      tripCount: cleanCoverageValue(telemetry.tripCount),
+      overloadCount: cleanCoverageValue(telemetry.overloadCount)
+    },
+    performance: {
+      baselineAccepted: performance.baselineAccepted === true,
+      totalLoadCoverage: cleanCoverageValue(performance.totalLoadCoverage),
+      criticalLoadCoverage: cleanCoverageValue(performance.criticalLoadCoverage),
+      badWeatherWindowCoverage: cleanCoverageValue(performance.badWeatherWindowCoverage),
+      badWeatherWindowCriticalCoverage: cleanCoverageValue(performance.badWeatherWindowCriticalCoverage),
+      unmetCriticalKwh: cleanCoverageValue(performance.unmetCriticalKwh)
+    },
+    maintenance: {
+      logAttached: maintenance.logAttached === true,
+      openCriticalItems: cleanCoverageValue(maintenance.openCriticalItems)
+    },
+    incident: {
+      logAttached: incident.logAttached === true,
+      unresolvedCriticalIncidents: cleanCoverageValue(incident.unresolvedCriticalIncidents)
+    },
+    monitoring: {
+      slaActive: monitoring.slaActive === true,
+      responseHours: cleanCoverageValue(monitoring.responseHours)
+    }
+  };
+}
+
+export function buildOffgridFieldAcceptanceSnapshot(results = {}, { capturedAt = new Date().toISOString() } = {}) {
+  const offgrid = results.offgridL2Results || results;
+  if (!offgrid || typeof offgrid !== 'object') return null;
+  const modelGate = offgrid.fieldModelMaturityGate || {};
+  const stress = offgrid.fieldStressAnalysis || {};
+  return cleanAcceptanceSnapshot({
+    version: OFFGRID_FIELD_ACCEPTANCE_VERSION,
+    capturedAt,
+    fieldDataState: offgrid.fieldDataState || null,
+    dispatchVersion: offgrid.dispatchVersion || null,
+    fieldModelVersion: modelGate.version || null,
+    fieldStressVersion: stress.version || null,
+    phase1Ready: offgrid.fieldGuaranteeReadiness?.phase1Ready === true,
+    phase2Ready: offgrid.fieldEvidenceGate?.phase2Ready === true,
+    phase3Ready: modelGate.phase3Ready === true,
+    modelStatus: modelGate.status || null,
+    scenarioCoverage: modelGate.scenarioCoverage || stress.scenarioCoverage,
+    badWeatherStress: modelGate.badWeatherStress,
+    coverage: {
+      totalLoadCoverage: offgrid.totalLoadCoverage,
+      criticalLoadCoverage: offgrid.criticalLoadCoverage,
+      solarBatteryLoadCoverage: offgrid.pvBatteryLoadCoverage || offgrid.solarBatteryLoadCoverage,
+      badWeatherWindowCoverage: offgrid.badWeatherScenario?.windowCoverage,
+      badWeatherWindowCriticalCoverage: offgrid.badWeatherScenario?.windowCriticalCoverage,
+      unmetCriticalKwh: offgrid.unmetCriticalKwh
+    },
+    equipment: {
+      generatorEnabled: !!offgrid.generatorEnabled,
+      generatorCapacityKw: offgrid.generatorCapacityKw,
+      batteryUsableCapacityKwh: offgrid.batteryUsableCapacityKwh || offgrid.usableCapacityKwh,
+      inverterAcLimitKw: offgrid.inverterAcLimitKw
+    }
+  });
+}
+
+export function buildOffgridFieldOperationSnapshot(results = {}, { evidenceType = '', capturedAt = new Date().toISOString() } = {}) {
+  const offgrid = results.offgridL2Results || results;
+  if (!offgrid || typeof offgrid !== 'object') return null;
+  const acceptanceGate = offgrid.fieldAcceptanceGate || {};
+  const highResLoad = offgrid.fieldImportSummary?.highResolutionLoad || {};
+  const inverterLog = offgrid.fieldImportSummary?.inverterEventLog || {};
+  const criticalLoadCoverage = cleanCoverageValue(offgrid.criticalLoadCoverage);
+  const totalLoadCoverage = cleanCoverageValue(offgrid.totalLoadCoverage);
+  const inferredAvailabilityPct = criticalLoadCoverage != null
+    ? Math.max(0, Math.min(100, criticalLoadCoverage * 100))
+    : null;
+  const criticalEventCount = Math.max(0, Number(inverterLog.faultCount || 0) || 0);
+  return cleanOperationSnapshot({
+    version: OFFGRID_FIELD_OPERATION_VERSION,
+    capturedAt,
+    evidenceType,
+    phase4Ready: acceptanceGate.phase4Ready === true,
+    acceptanceSnapshotStatus: acceptanceGate.acceptanceSnapshotBinding?.status || null,
+    acceptanceCapturedAt: acceptanceGate.acceptanceSnapshotBinding?.capturedAt || null,
+    fieldDataState: offgrid.fieldDataState || null,
+    telemetry: {
+      durationDays: evidenceType === 'offgridTelemetry30Day'
+        ? Math.max(30, Number(highResLoad.durationDays) || 0)
+        : cleanCoverageValue(highResLoad.durationDays),
+      availabilityPct: inferredAvailabilityPct,
+      criticalEventCount,
+      outageEventCount: Math.max(0, Number(inverterLog.outageCount || 0) || 0),
+      tripCount: Math.max(0, Number(inverterLog.tripCount || 0) || 0),
+      overloadCount: Math.max(0, Number(inverterLog.overloadCount || 0) || 0)
+    },
+    performance: {
+      baselineAccepted: evidenceType === 'offgridPerformanceBaseline' && acceptanceGate.phase4Ready === true,
+      totalLoadCoverage,
+      criticalLoadCoverage,
+      badWeatherWindowCoverage: cleanCoverageValue(offgrid.badWeatherScenario?.windowCoverage),
+      badWeatherWindowCriticalCoverage: cleanCoverageValue(offgrid.badWeatherScenario?.windowCriticalCoverage),
+      unmetCriticalKwh: cleanCoverageValue(offgrid.unmetCriticalKwh)
+    },
+    maintenance: {
+      logAttached: evidenceType === 'offgridMaintenanceLog',
+      openCriticalItems: 0
+    },
+    incident: {
+      logAttached: evidenceType === 'offgridIncidentLog',
+      unresolvedCriticalIncidents: 0
+    },
+    monitoring: {
+      slaActive: evidenceType === 'offgridRemoteMonitoringSla',
+      responseHours: evidenceType === 'offgridRemoteMonitoringSla' ? 24 : null
+    }
+  });
+}
+
 function profileEvidenceFromHourly(value) {
   return buildHourlyProfileEvidence(value) || { profileFingerprint: '', profileSummary: null };
 }
@@ -111,12 +320,18 @@ function normalizeEvidenceRecord(record = {}, defaults = {}) {
       attachedAt: file.attachedAt || null,
       validationStatus: file.validationStatus || 'unvalidated',
       profileFingerprint: String(file.profileFingerprint || '').trim(),
-      profileSummary: cleanProfileSummary(file.profileSummary)
+      profileSummary: cleanProfileSummary(file.profileSummary),
+      acceptanceSnapshot: cleanAcceptanceSnapshot(file.acceptanceSnapshot),
+      operationSnapshot: cleanOperationSnapshot(file.operationSnapshot)
     })).filter(file => file.id && file.sha256)
   };
   const latestProfileFile = [...normalized.files].reverse().find(file => file.profileFingerprint);
+  const latestAcceptanceFile = [...normalized.files].reverse().find(file => file.acceptanceSnapshot);
+  const latestOperationFile = [...normalized.files].reverse().find(file => file.operationSnapshot);
   normalized.profileFingerprint = String(record.profileFingerprint || defaults.profileFingerprint || latestProfileFile?.profileFingerprint || '').trim();
   normalized.profileSummary = cleanProfileSummary(record.profileSummary || defaults.profileSummary || latestProfileFile?.profileSummary);
+  normalized.acceptanceSnapshot = cleanAcceptanceSnapshot(record.acceptanceSnapshot || defaults.acceptanceSnapshot || latestAcceptanceFile?.acceptanceSnapshot);
+  normalized.operationSnapshot = cleanOperationSnapshot(record.operationSnapshot || defaults.operationSnapshot || latestOperationFile?.operationSnapshot);
   normalized.runtimeProfileFingerprint = String(defaults.runtimeProfileFingerprint || '').trim();
   normalized.runtimeProfileSummary = cleanProfileSummary(defaults.runtimeProfileSummary);
   return normalized;
@@ -472,6 +687,50 @@ export function buildOffgridFieldEvidenceGate(evidenceGovernance = {}, results =
   };
 }
 
+function evaluateAcceptanceSnapshotBinding(record = {}, offgrid = {}) {
+  const snapshot = cleanAcceptanceSnapshot(record.acceptanceSnapshot);
+  const blockers = [];
+  const warnings = [];
+  if (!snapshot) {
+    blockers.push('offgridAcceptanceTest: kabul testi güncel hesap/model özeti ile bağlanmamış; hesaplama tamamlandıktan sonra kabul testini tekrar ekleyin.');
+    return { status: 'missing', snapshot: null, blockers, warnings };
+  }
+
+  if (!snapshot.phase1Ready) blockers.push('offgridAcceptanceTest: kabul snapshot içinde Faz 1 hazır değil.');
+  if (!snapshot.phase2Ready) blockers.push('offgridAcceptanceTest: kabul snapshot içinde Faz 2 hazır değil.');
+  if (!snapshot.phase3Ready) blockers.push('offgridAcceptanceTest: kabul snapshot içinde Faz 3 hazır değil.');
+
+  const currentModelVersion = offgrid.fieldModelMaturityGate?.version || '';
+  if (snapshot.fieldModelVersion && currentModelVersion && snapshot.fieldModelVersion !== currentModelVersion) {
+    blockers.push(`offgridAcceptanceTest: kabul snapshot model versiyonu (${snapshot.fieldModelVersion}) güncel Faz 3 modeliyle (${currentModelVersion}) eşleşmiyor.`);
+  }
+
+  const missingStress = snapshot.scenarioCoverage?.missingKeys || [];
+  if (missingStress.length) {
+    blockers.push(`offgridAcceptanceTest: kabul snapshot içinde eksik stres senaryosu var: ${missingStress.join(', ')}.`);
+  }
+
+  const currentBadWeatherRequired = offgrid.fieldModelMaturityGate?.badWeatherStress?.required === true;
+  const snapshotBadWeatherRequired = snapshot.badWeatherStress?.required === true;
+  if ((currentBadWeatherRequired || snapshotBadWeatherRequired) && snapshot.badWeatherStress?.ready !== true) {
+    blockers.push('offgridAcceptanceTest: kabul snapshot kötü hava pencere testini başarıyla bağlamıyor.');
+  }
+
+  if (!snapshot.capturedAt) {
+    warnings.push('offgridAcceptanceTest: kabul snapshot zaman damgası eksik.');
+  }
+  if (!snapshot.fieldStressVersion) {
+    warnings.push('offgridAcceptanceTest: Faz 3 stres versiyonu kabul snapshot içinde yok.');
+  }
+
+  return {
+    status: blockers.length ? 'blocked' : 'matched',
+    snapshot,
+    blockers,
+    warnings
+  };
+}
+
 export function buildOffgridFieldAcceptanceGate(evidenceGovernance = {}, results = {}, { today = currentDateIso() } = {}) {
   const registry = evidenceGovernance.registry || evidenceGovernance || {};
   const offgrid = results.offgridL2Results || {};
@@ -505,8 +764,15 @@ export function buildOffgridFieldAcceptanceGate(evidenceGovernance = {}, results
     }
   });
 
+  const acceptanceSnapshotBinding = evaluateAcceptanceSnapshotBinding(registry.offgridAcceptanceTest || {}, offgrid);
+  blockers.push(...acceptanceSnapshotBinding.blockers);
+  warnings.push(...acceptanceSnapshotBinding.warnings);
+
   if (!offgrid.fieldStressAnalysis?.scenarios?.length) {
     warnings.push('Faz 4 kabul dosyası, Faz 3 stres senaryosu özeti olmadan eksik kalır.');
+  }
+  if (offgrid.fieldModelMaturityGate?.badWeatherStress?.required === true && offgrid.fieldModelMaturityGate.badWeatherStress.ready !== true) {
+    blockers.push('Faz 4 kabul kapısı, Faz 3 kötü hava pencere testi hazır olmadan açılamaz.');
   }
   if (offgrid.generatorEnabled && (offgrid.generatorCapexMissing || !offgrid.generatorCapacityKw)) {
     warnings.push('Jeneratör içeren saha kabulünde jeneratör kapasite ve yatırım kaydı ayrıca doğrulanmalıdır.');
@@ -521,6 +787,14 @@ export function buildOffgridFieldAcceptanceGate(evidenceGovernance = {}, results
     phase4Ready,
     fieldGuaranteeReady: phase4Ready,
     requiredEvidenceKeys,
+    acceptanceSnapshotBinding: {
+      status: acceptanceSnapshotBinding.status,
+      capturedAt: acceptanceSnapshotBinding.snapshot?.capturedAt || null,
+      fieldModelVersion: acceptanceSnapshotBinding.snapshot?.fieldModelVersion || null,
+      fieldStressVersion: acceptanceSnapshotBinding.snapshot?.fieldStressVersion || null,
+      badWeatherReady: acceptanceSnapshotBinding.snapshot?.badWeatherStress?.ready ?? null,
+      missingStressScenarioKeys: acceptanceSnapshotBinding.snapshot?.scenarioCoverage?.missingKeys || []
+    },
     blockers: uniqueBlockers,
     warnings: uniqueWarnings,
     records: Object.fromEntries(requiredEvidenceKeys.map(key => {
@@ -531,9 +805,90 @@ export function buildOffgridFieldAcceptanceGate(evidenceGovernance = {}, results
         ref: record.ref || '',
         checkedAt: record.checkedAt || record.issuedAt || null,
         fileCount: Array.isArray(record.files) ? record.files.length : 0,
-        hasValidatedFile: hasValidatedFile(record)
+        hasValidatedFile: hasValidatedFile(record),
+        acceptanceSnapshotStatus: key === 'offgridAcceptanceTest' ? acceptanceSnapshotBinding.status : 'not-required'
       }];
     }))
+  };
+}
+
+function evaluateOperationSnapshotBinding(record = {}, offgrid = {}, evidenceKey = '') {
+  const snapshot = cleanOperationSnapshot(record.operationSnapshot);
+  const blockers = [];
+  const warnings = [];
+  if (!snapshot) {
+    blockers.push(`${evidenceKey}: operasyon kanıtı güncel Faz 4 kabul snapshot'ı ile bağlanmamış; kabul sonrası operasyon dosyasını tekrar ekleyin.`);
+    return { status: 'missing', snapshot: null, blockers, warnings };
+  }
+
+  if (!snapshot.phase4Ready) {
+    blockers.push(`${evidenceKey}: operasyon snapshot içinde Faz 4 saha kabulü hazır değil.`);
+  }
+  if (snapshot.acceptanceSnapshotStatus && snapshot.acceptanceSnapshotStatus !== 'matched') {
+    blockers.push(`${evidenceKey}: operasyon snapshot kabul testiyle eşleşmiyor (${snapshot.acceptanceSnapshotStatus}).`);
+  }
+  const currentAcceptanceCapturedAt = offgrid.fieldAcceptanceGate?.acceptanceSnapshotBinding?.capturedAt || null;
+  if (currentAcceptanceCapturedAt && snapshot.acceptanceCapturedAt && currentAcceptanceCapturedAt !== snapshot.acceptanceCapturedAt) {
+    blockers.push(`${evidenceKey}: operasyon snapshot eski kabul dosyasına bağlı; güncel kabul dosyasından sonra operasyon kanıtı yenilenmeli.`);
+  }
+
+  if (evidenceKey === 'offgridTelemetry30Day') {
+    if ((snapshot.telemetry.durationDays ?? 0) < 30) {
+      blockers.push('offgridTelemetry30Day: en az 30 günlük aktif telemetri snapshotı yok.');
+    }
+    if (snapshot.telemetry.availabilityPct == null || snapshot.telemetry.availabilityPct < 99) {
+      blockers.push('offgridTelemetry30Day: aktif izleme kullanılabilirliği %99 eşiğini sağlamıyor veya ölçülmemiş.');
+    }
+    if ((snapshot.telemetry.criticalEventCount ?? 0) > 0) {
+      blockers.push(`offgridTelemetry30Day: kapanmamış kritik olay sayısı ${Math.round(snapshot.telemetry.criticalEventCount)}.`);
+    }
+    if ((snapshot.telemetry.tripCount ?? 0) > 0 || (snapshot.telemetry.overloadCount ?? 0) > 0) {
+      warnings.push('offgridTelemetry30Day: telemetride inverter trip/overload olayı var; operasyon kabul notunda açıklanmalı.');
+    }
+  }
+
+  if (evidenceKey === 'offgridPerformanceBaseline') {
+    if (!snapshot.performance.baselineAccepted) {
+      blockers.push('offgridPerformanceBaseline: ölçülen performans baseline kabul edildi olarak işaretlenmemiş.');
+    }
+    if ((snapshot.performance.criticalLoadCoverage ?? 0) < 0.999) {
+      blockers.push('offgridPerformanceBaseline: operasyon baseline kritik yük kapsaması Faz 3 eşiğini sağlamıyor.');
+    }
+  }
+
+  if (evidenceKey === 'offgridMaintenanceLog') {
+    if (!snapshot.maintenance.logAttached) {
+      blockers.push('offgridMaintenanceLog: bakım logu operasyon snapshot içinde doğrulanmamış.');
+    }
+    if ((snapshot.maintenance.openCriticalItems ?? 0) > 0) {
+      blockers.push(`offgridMaintenanceLog: açık kritik bakım maddesi var (${Math.round(snapshot.maintenance.openCriticalItems)}).`);
+    }
+  }
+
+  if (evidenceKey === 'offgridIncidentLog') {
+    if (!snapshot.incident.logAttached) {
+      blockers.push('offgridIncidentLog: olay/kesinti logu operasyon snapshot içinde doğrulanmamış.');
+    }
+    if ((snapshot.incident.unresolvedCriticalIncidents ?? 0) > 0) {
+      blockers.push(`offgridIncidentLog: kapanmamış kritik incident var (${Math.round(snapshot.incident.unresolvedCriticalIncidents)}).`);
+    }
+  }
+
+  if (evidenceKey === 'offgridRemoteMonitoringSla') {
+    if (!snapshot.monitoring.slaActive) {
+      blockers.push('offgridRemoteMonitoringSla: aktif uzaktan izleme SLA snapshot içinde doğrulanmamış.');
+    }
+  }
+
+  if (!snapshot.capturedAt) {
+    warnings.push(`${evidenceKey}: operasyon snapshot zaman damgası eksik.`);
+  }
+
+  return {
+    status: blockers.length ? 'blocked' : 'matched',
+    snapshot,
+    blockers,
+    warnings
   };
 }
 
@@ -543,6 +898,7 @@ export function buildOffgridFieldOperationGate(evidenceGovernance = {}, results 
   const blockers = [];
   const warnings = [];
   const requiredEvidenceKeys = OFFGRID_FIELD_OPERATION_REQUIREMENTS.map(item => item.key);
+  const operationSnapshotBindings = {};
 
   if (offgrid.fieldAcceptanceGate?.phase4Ready !== true) {
     blockers.push('Faz 4 saha kabul kapısı tamamlanmadan Faz 5 garanti operasyon kapısı açılamaz.');
@@ -562,6 +918,10 @@ export function buildOffgridFieldOperationGate(evidenceGovernance = {}, results 
     if (record.status === 'verified' && !isEvidenceFresh(record, { today, maxAgeDays: req.maxAgeDays })) {
       blockers.push(`${req.key}: kaynak kontrol tarihi ${req.maxAgeDays} günden eski veya eksik.`);
     }
+    const binding = evaluateOperationSnapshotBinding(record, offgrid, req.key);
+    operationSnapshotBindings[req.key] = binding;
+    blockers.push(...binding.blockers);
+    warnings.push(...binding.warnings);
   });
 
   const telemetry = registry.offgridTelemetry30Day || {};
@@ -583,6 +943,14 @@ export function buildOffgridFieldOperationGate(evidenceGovernance = {}, results 
     activeGuaranteeReady: phase5Ready,
     fieldGuaranteeReady: phase5Ready,
     requiredEvidenceKeys,
+    operationSnapshotBindings: Object.fromEntries(Object.entries(operationSnapshotBindings).map(([key, binding]) => [key, {
+      status: binding.status,
+      capturedAt: binding.snapshot?.capturedAt || null,
+      phase4Ready: binding.snapshot?.phase4Ready ?? false,
+      acceptanceSnapshotStatus: binding.snapshot?.acceptanceSnapshotStatus || null,
+      telemetryDurationDays: binding.snapshot?.telemetry?.durationDays ?? null,
+      telemetryAvailabilityPct: binding.snapshot?.telemetry?.availabilityPct ?? null
+    }])),
     blockers: uniqueBlockers,
     warnings: uniqueWarnings,
     records: Object.fromEntries(requiredEvidenceKeys.map(key => {
@@ -593,7 +961,8 @@ export function buildOffgridFieldOperationGate(evidenceGovernance = {}, results 
         ref: record.ref || '',
         checkedAt: record.checkedAt || record.issuedAt || null,
         fileCount: Array.isArray(record.files) ? record.files.length : 0,
-        hasValidatedFile: hasValidatedFile(record)
+        hasValidatedFile: hasValidatedFile(record),
+        operationSnapshotStatus: operationSnapshotBindings[key]?.status || 'missing'
       }];
     }))
   };

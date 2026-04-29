@@ -43,7 +43,7 @@ import { attachEvidenceFile } from './evidence-files.js';
 import { SCENARIO_ICONS, SCENARIO_COLORS } from './scenario-icons.js';
 import { normalizeUserIdentity } from './identity.js';
 import { buildApprovalWorkflow } from './proposal-governance.js';
-import { currentDateIso } from './evidence-governance.js';
+import { buildOffgridFieldAcceptanceSnapshot, buildOffgridFieldOperationSnapshot } from './evidence-governance.js';
 import { TARIFF_DATA_LIFECYCLE, TURKEY_REGULATORY_VERSION } from './turkey-regulation.js';
 import { isLocationInTurkey } from './location-validation.js';
 import { applyScenarioDefaults, getScenarioDefinition, listScenarioDefinitions, localizeScenarioDefinition, DEFAULT_SCENARIO_KEY } from './scenario-workflows.js';
@@ -1964,7 +1964,30 @@ async function handleOffgridEvidenceFileUpload(event, evidenceType, statusId) {
     statusEl.textContent = 'Kanıt dosyası parmak izi alınıyor...';
   }
   try {
-    const result = await attachEvidenceFile(window.state, evidenceType, file, currentUser());
+    const acceptanceSnapshotTypes = new Set(['offgridCommissioningReport', 'offgridAcceptanceTest']);
+    const operationSnapshotTypes = new Set([
+      'offgridTelemetry30Day',
+      'offgridPerformanceBaseline',
+      'offgridMaintenanceLog',
+      'offgridIncidentLog',
+      'offgridRemoteMonitoringSla'
+    ]);
+    const acceptanceSnapshot = acceptanceSnapshotTypes.has(evidenceType) && window.state.results?.offgridL2Results
+      ? buildOffgridFieldAcceptanceSnapshot(window.state.results)
+      : null;
+    const operationSnapshot = operationSnapshotTypes.has(evidenceType) && window.state.results?.offgridL2Results
+      ? buildOffgridFieldOperationSnapshot(window.state.results, { evidenceType })
+      : null;
+    const result = await attachEvidenceFile(
+      window.state,
+      evidenceType,
+      file,
+      currentUser(),
+      {
+        ...(acceptanceSnapshot ? { acceptanceSnapshot } : {}),
+        ...(operationSnapshot ? { operationSnapshot } : {})
+      }
+    );
     if (!result.ok) {
       if (statusEl) {
         statusEl.style.color = 'var(--danger, #ef4444)';
@@ -1976,7 +1999,10 @@ async function handleOffgridEvidenceFileUpload(event, evidenceType, statusId) {
     persistState();
     if (statusEl) {
       statusEl.style.color = 'var(--accent, #22c55e)';
-      statusEl.textContent = `Kanıt eklendi: ${result.metadata.name} | SHA: ${result.metadata.sha256.slice(0, 12)}`;
+      const snapshotNote = result.metadata.acceptanceSnapshot
+        ? ' | Kabul snapshot bağlandı'
+        : result.metadata.operationSnapshot ? ' | Operasyon snapshot bağlandı' : '';
+      statusEl.textContent = `Kanıt eklendi: ${result.metadata.name} | SHA: ${result.metadata.sha256.slice(0, 12)}${snapshotNote}`;
     }
   } catch (error) {
     if (statusEl) {

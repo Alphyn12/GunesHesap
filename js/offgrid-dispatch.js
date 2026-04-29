@@ -16,7 +16,7 @@ function getLoadSeasonForMonth(monthIdx) {
 }
 
 export const OFFGRID_DISPATCH_VERSION = 'OGD-2026.04-v1.1';
-export const OFFGRID_FIELD_MODEL_VERSION = 'OGD-FIELD-MODEL-2026.04-v3';
+export const OFFGRID_FIELD_MODEL_VERSION = 'OGD-FIELD-MODEL-2026.04-v3.1';
 export const OFFGRID_ACCURACY_VERSION = 'OGD-ACCURACY-2026.04-v1';
 
 const HOURS_PER_YEAR = 8760;
@@ -97,11 +97,16 @@ export const OFFGRID_STRESS_SCENARIOS = [
   { key: 'combined-design-stress', label: 'Combined design stress', pvFactor: 0.85, loadFactor: 1.15, criticalLoadFactor: 1.15, batteryEol: true }
 ];
 
+const REQUIRED_FIELD_STRESS_SCENARIO_KEYS = OFFGRID_STRESS_SCENARIOS.map(row => row.key);
+
 const DEFAULT_FIELD_MODEL_THRESHOLDS = {
   criticalCoverageMin: 0.999,
   totalCoverageMin: 0.98,
   unmetCriticalMaxKwh: 1,
-  generatorCriticalPeakReservePct: 0.10
+  generatorCriticalPeakReservePct: 0.10,
+  badWeatherCriticalCoverageMin: 0.999,
+  badWeatherTotalCoverageMin: 0.98,
+  badWeatherUnmetCriticalMaxKwh: 1
 };
 
 const REAL_PV_PROFILE_RULE = { minAnnualKwh: 1, minPositiveHours: 24 };
@@ -1861,6 +1866,82 @@ export function runBadWeatherScenario(normalDispatchResult, pvHourly8760, loadHo
   };
 }
 
+function buildFieldStressScenarioCoverage(scenarios = []) {
+  const executedKeys = [...new Set((Array.isArray(scenarios) ? scenarios : [])
+    .map(row => row?.key)
+    .filter(Boolean))];
+  return {
+    requiredKeys: [...REQUIRED_FIELD_STRESS_SCENARIO_KEYS],
+    executedKeys,
+    missingKeys: REQUIRED_FIELD_STRESS_SCENARIO_KEYS.filter(key => !executedKeys.includes(key)),
+    unexpectedKeys: executedKeys.filter(key => !REQUIRED_FIELD_STRESS_SCENARIO_KEYS.includes(key))
+  };
+}
+
+function finiteOrNull(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function evaluateBadWeatherFieldStress(badWeatherScenario, thresholds) {
+  const blockers = [];
+  const warnings = [];
+  if (!badWeatherScenario) {
+    return {
+      evaluated: false,
+      ready: false,
+      blockers: ['Faz 3 kötü hava pencere testi çalıştırılmadı.'],
+      warnings
+    };
+  }
+
+  const dispatch = badWeatherScenario.dispatch || {};
+  const windowCriticalCoverage = finiteOrNull(badWeatherScenario.windowCriticalCoverage)
+    ?? finiteOrNull(dispatch.criticalLoadCoverage);
+  const windowCoverage = finiteOrNull(badWeatherScenario.windowCoverage)
+    ?? finiteOrNull(dispatch.totalLoadCoverage);
+  const unmetCriticalKwh = Math.max(
+    0,
+    finiteOrNull(dispatch.unmetCriticalLoadKwh)
+      ?? finiteOrNull(badWeatherScenario.unmetCriticalKwh)
+      ?? 0
+  );
+
+  if (windowCriticalCoverage == null) {
+    blockers.push('Kötü hava penceresi kritik yük kapsaması hesaplanamadı.');
+  } else if (windowCriticalCoverage < thresholds.badWeatherCriticalCoverageMin) {
+    blockers.push(`Kötü hava penceresi kritik yük kapsaması ${(windowCriticalCoverage * 100).toFixed(2)}%; eşik ${(thresholds.badWeatherCriticalCoverageMin * 100).toFixed(2)}%.`);
+  }
+  if (windowCoverage == null) {
+    blockers.push('Kötü hava penceresi toplam yük kapsaması hesaplanamadı.');
+  } else if (windowCoverage < thresholds.badWeatherTotalCoverageMin) {
+    blockers.push(`Kötü hava penceresi toplam yük kapsaması ${(windowCoverage * 100).toFixed(2)}%; eşik ${(thresholds.badWeatherTotalCoverageMin * 100).toFixed(2)}%.`);
+  }
+  if (unmetCriticalKwh > thresholds.badWeatherUnmetCriticalMaxKwh) {
+    blockers.push(`Kötü hava penceresinde karşılanamayan kritik yük ${Math.round(unmetCriticalKwh)} kWh; eşik ${thresholds.badWeatherUnmetCriticalMaxKwh} kWh.`);
+  }
+
+  const windowMinSocKwh = finiteOrNull(badWeatherScenario.windowMinSocKwh);
+  if (windowMinSocKwh != null && windowMinSocKwh <= 0) {
+    warnings.push('Kötü hava penceresinde batarya SOC sıfıra kadar düşüyor; saha garanti marjı düşük.');
+  }
+
+  return {
+    evaluated: true,
+    ready: blockers.length === 0,
+    weatherLevel: badWeatherScenario.weatherLevel || null,
+    consecutiveDays: badWeatherScenario.consecutiveDays ?? null,
+    worstWindowDayOfYear: badWeatherScenario.worstWindowDayOfYear ?? null,
+    windowCoverage,
+    windowCriticalCoverage,
+    unmetCriticalKwh,
+    windowMinSocKwh,
+    additionalGeneratorKwh: finiteOrNull(badWeatherScenario.additionalGeneratorKwh),
+    blockers,
+    warnings
+  };
+}
+
 export function runOffgridStressScenarios({
   pvHourly8760 = [],
   loadHourly8760 = [],
@@ -1901,6 +1982,7 @@ export function runOffgridStressScenarios({
   return {
     version: OFFGRID_FIELD_MODEL_VERSION,
     scenarios: results,
+    scenarioCoverage: buildFieldStressScenarioCoverage(results),
     worstCriticalScenario: worstCritical,
     worstTotalScenario: worstTotal,
     maxUnmetCriticalScenario: maxUnmetCritical,
@@ -1914,41 +1996,81 @@ export function buildOffgridFieldModelMaturityGate(stressAnalysis = {}, {
   phase1Ready = false,
   phase2Ready = false,
   generator = {},
-  thresholds = DEFAULT_FIELD_MODEL_THRESHOLDS
+  thresholds = DEFAULT_FIELD_MODEL_THRESHOLDS,
+  badWeatherScenario = null,
+  requireBadWeatherScenario = false
 } = {}) {
+  const appliedThresholds = { ...DEFAULT_FIELD_MODEL_THRESHOLDS, ...(thresholds || {}) };
   const blockers = [];
   const warnings = [];
   const scenarios = Array.isArray(stressAnalysis.scenarios) ? stressAnalysis.scenarios : [];
+  const scenarioCoverage = stressAnalysis.scenarioCoverage || buildFieldStressScenarioCoverage(scenarios);
+  const scenarioReadiness = [];
   const genEnabled = !!(generator && generator.enabled && Number(generator.capacityKw) > 0);
+  const shouldEvaluateBadWeather = !!requireBadWeatherScenario || !!badWeatherScenario;
+  const badWeatherStress = {
+    required: !!requireBadWeatherScenario,
+    ...(shouldEvaluateBadWeather
+      ? evaluateBadWeatherFieldStress(badWeatherScenario, appliedThresholds)
+      : { evaluated: false, ready: null, blockers: [], warnings: [] })
+  };
 
   if (!phase1Ready) blockers.push('Faz 1 saatlik dispatch girdileri tamamlanmadan Faz 3 model olgunluğu kabul edilemez.');
   if (!phase2Ready) blockers.push('Faz 2 doğrulanmış saha kanıtları tamamlanmadan Faz 3 model olgunluğu kabul edilemez.');
   if (!scenarios.length) blockers.push('Faz 3 stres senaryoları çalıştırılmadı.');
+  if (scenarioCoverage.missingKeys.length) {
+    blockers.push(`Faz 3 zorunlu stres senaryoları eksik: ${scenarioCoverage.missingKeys.join(', ')}.`);
+  }
+  if (scenarioCoverage.unexpectedKeys.length) {
+    warnings.push(`Faz 3 beklenmeyen stres senaryoları içeriyor: ${scenarioCoverage.unexpectedKeys.join(', ')}.`);
+  }
 
   scenarios.forEach(row => {
-    if ((row.criticalLoadCoverage ?? 0) < thresholds.criticalCoverageMin) {
-      blockers.push(`${row.key}: kritik yük kapsaması ${(row.criticalLoadCoverage * 100).toFixed(2)}%; eşik ${(thresholds.criticalCoverageMin * 100).toFixed(2)}%.`);
+    const key = row.key || 'unknown-stress-scenario';
+    const rowBlockers = [];
+    const rowWarnings = [];
+    const criticalLoadCoverage = finiteOrNull(row.criticalLoadCoverage) ?? 0;
+    const totalLoadCoverage = finiteOrNull(row.totalLoadCoverage) ?? 0;
+    const unmetCriticalKwh = Math.max(0, finiteOrNull(row.unmetCriticalKwh) ?? 0);
+    if (criticalLoadCoverage < appliedThresholds.criticalCoverageMin) {
+      rowBlockers.push(`${key}: kritik yük kapsaması ${(criticalLoadCoverage * 100).toFixed(2)}%; eşik ${(appliedThresholds.criticalCoverageMin * 100).toFixed(2)}%.`);
     }
-    if ((row.unmetCriticalKwh ?? 0) > thresholds.unmetCriticalMaxKwh) {
-      blockers.push(`${row.key}: karşılanamayan kritik yük ${Math.round(row.unmetCriticalKwh)} kWh/yıl; eşik ${thresholds.unmetCriticalMaxKwh} kWh/yıl.`);
+    if (unmetCriticalKwh > appliedThresholds.unmetCriticalMaxKwh) {
+      rowBlockers.push(`${key}: karşılanamayan kritik yük ${Math.round(unmetCriticalKwh)} kWh/yıl; eşik ${appliedThresholds.unmetCriticalMaxKwh} kWh/yıl.`);
     }
-    if ((row.totalLoadCoverage ?? 0) < thresholds.totalCoverageMin) {
-      blockers.push(`${row.key}: toplam yük kapsaması ${(row.totalLoadCoverage * 100).toFixed(2)}%; eşik ${(thresholds.totalCoverageMin * 100).toFixed(2)}%.`);
+    if (totalLoadCoverage < appliedThresholds.totalCoverageMin) {
+      rowBlockers.push(`${key}: toplam yük kapsaması ${(totalLoadCoverage * 100).toFixed(2)}%; eşik ${(appliedThresholds.totalCoverageMin * 100).toFixed(2)}%.`);
     }
     if ((row.inverterPowerLimitedKwh || 0) > 0) {
-      warnings.push(`${row.key}: inverter güç limiti ${Math.round(row.inverterPowerLimitedKwh)} kWh/yıl yükü etkiliyor.`);
+      rowWarnings.push(`${key}: inverter güç limiti ${Math.round(row.inverterPowerLimitedKwh)} kWh/yıl yükü etkiliyor.`);
     }
     if ((row.batteryDischargeLimitedKwh || 0) > 0) {
-      warnings.push(`${row.key}: batarya deşarj kW limiti ${Math.round(row.batteryDischargeLimitedKwh)} kWh/yıl yükü etkiliyor.`);
+      rowWarnings.push(`${key}: batarya deşarj kW limiti ${Math.round(row.batteryDischargeLimitedKwh)} kWh/yıl yükü etkiliyor.`);
     }
+    blockers.push(...rowBlockers);
+    warnings.push(...rowWarnings);
+    scenarioReadiness.push({
+      key,
+      status: rowBlockers.length ? 'blocked' : 'ready',
+      criticalLoadCoverage,
+      totalLoadCoverage,
+      unmetCriticalKwh,
+      blockers: rowBlockers,
+      warnings: rowWarnings
+    });
   });
+
+  if (shouldEvaluateBadWeather) {
+    blockers.push(...badWeatherStress.blockers);
+    warnings.push(...badWeatherStress.warnings);
+  }
 
   if (genEnabled) {
     const reserve = stressAnalysis.generatorCriticalPeakReservePct;
-    if (reserve == null || reserve < thresholds.generatorCriticalPeakReservePct) {
-      blockers.push(`Jeneratör kritik pik yük için en az %${Math.round(thresholds.generatorCriticalPeakReservePct * 100)} kapasite payı sağlamıyor.`);
+    if (reserve == null || reserve < appliedThresholds.generatorCriticalPeakReservePct) {
+      blockers.push(`Jeneratör kritik pik yük için en az %${Math.round(appliedThresholds.generatorCriticalPeakReservePct * 100)} kapasite payı sağlamıyor.`);
     }
-  } else if (scenarios.some(row => (row.unmetCriticalKwh || 0) > thresholds.unmetCriticalMaxKwh)) {
+  } else if (scenarios.some(row => (row.unmetCriticalKwh || 0) > appliedThresholds.unmetCriticalMaxKwh)) {
     blockers.push('Jeneratör yokken stres senaryolarında kritik yük karşılanamıyor.');
   }
 
@@ -1960,9 +2082,12 @@ export function buildOffgridFieldModelMaturityGate(stressAnalysis = {}, {
     version: OFFGRID_FIELD_MODEL_VERSION,
     status: phase3Ready ? 'phase3-ready' : 'blocked',
     phase3Ready,
-    stressReady: scenarios.length > 0 && uniqueBlockers.length === 0,
+    stressReady: scenarios.length > 0 && scenarioCoverage.missingKeys.length === 0 && (!shouldEvaluateBadWeather || badWeatherStress.ready) && uniqueBlockers.length === 0,
     fieldGuaranteeReady: false,
-    thresholds,
+    thresholds: appliedThresholds,
+    scenarioCoverage,
+    scenarioReadiness,
+    badWeatherStress,
     blockers: uniqueBlockers,
     warnings: uniqueWarnings,
     worstCriticalScenario: stressAnalysis.worstCriticalScenario || null,

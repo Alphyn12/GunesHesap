@@ -35,6 +35,113 @@ function cleanProfileSummary(summary = null) {
   };
 }
 
+function cleanArray(value) {
+  return Array.isArray(value) ? value.map(item => String(item || '').trim()).filter(Boolean) : [];
+}
+
+function cleanNumberOrNull(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function cleanAcceptanceSnapshot(snapshot = null) {
+  if (!snapshot || typeof snapshot !== 'object') return null;
+  const scenarioCoverage = snapshot.scenarioCoverage || {};
+  const badWeather = snapshot.badWeatherStress || {};
+  const coverage = snapshot.coverage || {};
+  const equipment = snapshot.equipment || {};
+  return {
+    version: cleanString(snapshot.version, 80),
+    capturedAt: snapshot.capturedAt || null,
+    fieldDataState: cleanString(snapshot.fieldDataState, 80) || null,
+    dispatchVersion: cleanString(snapshot.dispatchVersion, 80) || null,
+    fieldModelVersion: cleanString(snapshot.fieldModelVersion, 80) || null,
+    fieldStressVersion: cleanString(snapshot.fieldStressVersion, 80) || null,
+    phase1Ready: snapshot.phase1Ready === true,
+    phase2Ready: snapshot.phase2Ready === true,
+    phase3Ready: snapshot.phase3Ready === true,
+    modelStatus: cleanString(snapshot.modelStatus, 80) || null,
+    scenarioCoverage: {
+      requiredKeys: cleanArray(scenarioCoverage.requiredKeys),
+      executedKeys: cleanArray(scenarioCoverage.executedKeys),
+      missingKeys: cleanArray(scenarioCoverage.missingKeys),
+      unexpectedKeys: cleanArray(scenarioCoverage.unexpectedKeys)
+    },
+    badWeatherStress: {
+      required: !!badWeather.required,
+      evaluated: !!badWeather.evaluated,
+      ready: badWeather.ready === true ? true : badWeather.ready === false ? false : null,
+      weatherLevel: cleanString(badWeather.weatherLevel, 40) || null,
+      consecutiveDays: cleanNumberOrNull(badWeather.consecutiveDays),
+      worstWindowDayOfYear: cleanNumberOrNull(badWeather.worstWindowDayOfYear),
+      windowCoverage: cleanNumberOrNull(badWeather.windowCoverage),
+      windowCriticalCoverage: cleanNumberOrNull(badWeather.windowCriticalCoverage),
+      unmetCriticalKwh: cleanNumberOrNull(badWeather.unmetCriticalKwh),
+      additionalGeneratorKwh: cleanNumberOrNull(badWeather.additionalGeneratorKwh)
+    },
+    coverage: {
+      totalLoadCoverage: cleanNumberOrNull(coverage.totalLoadCoverage),
+      criticalLoadCoverage: cleanNumberOrNull(coverage.criticalLoadCoverage),
+      solarBatteryLoadCoverage: cleanNumberOrNull(coverage.solarBatteryLoadCoverage),
+      badWeatherWindowCoverage: cleanNumberOrNull(coverage.badWeatherWindowCoverage),
+      badWeatherWindowCriticalCoverage: cleanNumberOrNull(coverage.badWeatherWindowCriticalCoverage),
+      unmetCriticalKwh: cleanNumberOrNull(coverage.unmetCriticalKwh)
+    },
+    equipment: {
+      generatorEnabled: !!equipment.generatorEnabled,
+      generatorCapacityKw: cleanNumberOrNull(equipment.generatorCapacityKw),
+      batteryUsableCapacityKwh: cleanNumberOrNull(equipment.batteryUsableCapacityKwh),
+      inverterAcLimitKw: cleanNumberOrNull(equipment.inverterAcLimitKw)
+    }
+  };
+}
+
+function cleanOperationSnapshot(snapshot = null) {
+  if (!snapshot || typeof snapshot !== 'object') return null;
+  const telemetry = snapshot.telemetry || {};
+  const performance = snapshot.performance || {};
+  const maintenance = snapshot.maintenance || {};
+  const incident = snapshot.incident || {};
+  const monitoring = snapshot.monitoring || {};
+  return {
+    version: cleanString(snapshot.version, 80),
+    capturedAt: snapshot.capturedAt || null,
+    evidenceType: cleanString(snapshot.evidenceType, 60) || null,
+    phase4Ready: snapshot.phase4Ready === true,
+    acceptanceSnapshotStatus: cleanString(snapshot.acceptanceSnapshotStatus, 60) || null,
+    acceptanceCapturedAt: snapshot.acceptanceCapturedAt || null,
+    fieldDataState: cleanString(snapshot.fieldDataState, 80) || null,
+    telemetry: {
+      durationDays: cleanNumberOrNull(telemetry.durationDays),
+      availabilityPct: cleanNumberOrNull(telemetry.availabilityPct),
+      criticalEventCount: cleanNumberOrNull(telemetry.criticalEventCount),
+      outageEventCount: cleanNumberOrNull(telemetry.outageEventCount),
+      tripCount: cleanNumberOrNull(telemetry.tripCount),
+      overloadCount: cleanNumberOrNull(telemetry.overloadCount)
+    },
+    performance: {
+      baselineAccepted: performance.baselineAccepted === true,
+      totalLoadCoverage: cleanNumberOrNull(performance.totalLoadCoverage),
+      criticalLoadCoverage: cleanNumberOrNull(performance.criticalLoadCoverage),
+      badWeatherWindowCoverage: cleanNumberOrNull(performance.badWeatherWindowCoverage),
+      badWeatherWindowCriticalCoverage: cleanNumberOrNull(performance.badWeatherWindowCriticalCoverage),
+      unmetCriticalKwh: cleanNumberOrNull(performance.unmetCriticalKwh)
+    },
+    maintenance: {
+      logAttached: maintenance.logAttached === true,
+      openCriticalItems: cleanNumberOrNull(maintenance.openCriticalItems)
+    },
+    incident: {
+      logAttached: incident.logAttached === true,
+      unresolvedCriticalIncidents: cleanNumberOrNull(incident.unresolvedCriticalIncidents)
+    },
+    monitoring: {
+      slaActive: monitoring.slaActive === true,
+      responseHours: cleanNumberOrNull(monitoring.responseHours)
+    }
+  };
+}
+
 async function fingerprintFile(file) {
   const buffer = await file.arrayBuffer();
   if (globalThis.crypto?.subtle?.digest) {
@@ -73,6 +180,8 @@ export async function attachEvidenceFile(state = {}, evidenceType, file, user = 
   const now = new Date().toISOString();
   const profileFingerprint = cleanString(context.profileFingerprint, 80);
   const profileSummary = cleanProfileSummary(context.profileSummary);
+  const acceptanceSnapshot = cleanAcceptanceSnapshot(context.acceptanceSnapshot);
+  const operationSnapshot = cleanOperationSnapshot(context.operationSnapshot);
   const id = `${type}-${Date.now()}-${sha256.slice(0, 12)}`;
   const metadata = {
     id,
@@ -87,7 +196,9 @@ export async function attachEvidenceFile(state = {}, evidenceType, file, user = 
     storage: 'indexeddb',
     validationStatus: 'validated',
     ...(profileFingerprint ? { profileFingerprint } : {}),
-    ...(profileSummary ? { profileSummary } : {})
+    ...(profileSummary ? { profileSummary } : {}),
+    ...(acceptanceSnapshot ? { acceptanceSnapshot } : {}),
+    ...(operationSnapshot ? { operationSnapshot } : {})
   };
 
   await saveEvidenceBlob(metadata, file);
@@ -103,6 +214,8 @@ export async function attachEvidenceFile(state = {}, evidenceType, file, user = 
     checkedAt: now.slice(0, 10),
     ...(profileFingerprint ? { profileFingerprint } : {}),
     ...(profileSummary ? { profileSummary } : {}),
+    ...(acceptanceSnapshot ? { acceptanceSnapshot } : {}),
+    ...(operationSnapshot ? { operationSnapshot } : {}),
     files: [...files, metadata].slice(-10)
   };
   appendAuditEntry(state, 'evidence.file_attached', {

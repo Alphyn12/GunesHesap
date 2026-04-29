@@ -15,6 +15,7 @@ import {
   buildOffgridResults,
   BAD_WEATHER_PV_FACTORS,
   OFFGRID_DISPATCH_VERSION,
+  OFFGRID_STRESS_SCENARIOS,
   DEVICE_LOAD_TEMPLATES
 } from '../js/offgrid-dispatch.js';
 
@@ -930,6 +931,27 @@ describe('buildOffgridAccuracyAssessment', () => {
 
 // ── 9b. Faz 3 saha model olgunluğu ───────────────────────────────────────────
 describe('runOffgridStressScenarios / buildOffgridFieldModelMaturityGate', () => {
+  const passingStressAnalysis = () => ({
+    version: 'test',
+    scenarios: OFFGRID_STRESS_SCENARIOS.map(row => ({
+      key: row.key,
+      label: row.label,
+      totalLoadCoverage: 1,
+      criticalLoadCoverage: 1,
+      pvBatteryLoadCoverage: 1,
+      pvBatteryCriticalCoverage: 1,
+      unmetLoadKwh: 0,
+      unmetCriticalKwh: 0,
+      generatorKwh: 0,
+      generatorRunHours: 0,
+      batteryChargeLimitedKwh: 0,
+      batteryDischargeLimitedKwh: 0,
+      inverterPowerLimitedKwh: 0,
+      peakCriticalKw: 4
+    })),
+    generatorCriticalPeakReservePct: null
+  });
+
   it('dört zorunlu stres senaryosunu üretir', () => {
     const pv = makeFlatPvHourly(8760 * 3);
     const load = makeLoadHourly(12);
@@ -943,6 +965,7 @@ describe('runOffgridStressScenarios / buildOffgridFieldModelMaturityGate', () =>
       dispatchOptions: {}
     });
     assert.equal(stress.scenarios.length, 4);
+    assert.deepEqual(stress.scenarioCoverage.missingKeys, []);
     assert.ok(stress.scenarios.some(row => row.key === 'combined-design-stress'));
     assert.ok(stress.worstCriticalScenario);
   });
@@ -962,6 +985,51 @@ describe('runOffgridStressScenarios / buildOffgridFieldModelMaturityGate', () =>
     const gate = buildOffgridFieldModelMaturityGate(stress, { phase1Ready: true, phase2Ready: true, generator: NO_GENERATOR });
     assert.equal(gate.phase3Ready, false);
     assert.ok(gate.blockers.some(item => item.includes('kritik yük')));
+  });
+
+  it('zorunlu stres senaryosu eksikse Faz 3 kapısı bloklar', () => {
+    const stress = passingStressAnalysis();
+    stress.scenarios = stress.scenarios.filter(row => row.key !== 'combined-design-stress');
+    const gate = buildOffgridFieldModelMaturityGate(stress, { phase1Ready: true, phase2Ready: true, generator: NO_GENERATOR });
+    assert.equal(gate.phase3Ready, false);
+    assert.ok(gate.scenarioCoverage.missingKeys.includes('combined-design-stress'));
+    assert.ok(gate.blockers.some(item => item.includes('zorunlu stres senaryoları eksik')));
+  });
+
+  it('kötü hava pencere testi zorunluysa yokluğunu Faz 3 kapısında bloklar', () => {
+    const gate = buildOffgridFieldModelMaturityGate(passingStressAnalysis(), {
+      phase1Ready: true,
+      phase2Ready: true,
+      generator: NO_GENERATOR,
+      requireBadWeatherScenario: true
+    });
+    assert.equal(gate.phase3Ready, false);
+    assert.equal(gate.badWeatherStress.required, true);
+    assert.equal(gate.badWeatherStress.evaluated, false);
+    assert.ok(gate.blockers.some(item => item.includes('kötü hava')));
+  });
+
+  it('kötü hava pencere kapsaması eşik altındaysa Faz 3 kapısı bloklar', () => {
+    const badWeatherScenario = {
+      weatherLevel: 'severe',
+      consecutiveDays: 15,
+      worstWindowDayOfYear: 42,
+      windowCoverage: 0.95,
+      windowCriticalCoverage: 0.998,
+      windowMinSocKwh: 0,
+      dispatch: { unmetCriticalLoadKwh: 2 }
+    };
+    const gate = buildOffgridFieldModelMaturityGate(passingStressAnalysis(), {
+      phase1Ready: true,
+      phase2Ready: true,
+      generator: NO_GENERATOR,
+      badWeatherScenario,
+      requireBadWeatherScenario: true
+    });
+    assert.equal(gate.phase3Ready, false);
+    assert.equal(gate.badWeatherStress.evaluated, true);
+    assert.equal(gate.badWeatherStress.ready, false);
+    assert.ok(gate.blockers.some(item => item.includes('Kötü hava penceresi')));
   });
 
   it('faz 1+2 ve stres eşikleri sağlanırsa faz 3 ready olur ama saha garantisi vermez', () => {

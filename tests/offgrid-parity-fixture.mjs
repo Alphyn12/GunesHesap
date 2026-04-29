@@ -298,7 +298,9 @@ function buildParityResult(request, production) {
   const fieldModelMaturityGate = buildOffgridFieldModelMaturityGate(fieldStressAnalysis, {
     phase1Ready: !!fieldGuaranteeReadiness.phase1Ready,
     phase2Ready: false,
-    generator
+    generator,
+    badWeatherScenario,
+    requireBadWeatherScenario: true
   });
 
   const systemCapexTry = 0;

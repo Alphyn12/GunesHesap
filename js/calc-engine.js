@@ -1548,7 +1548,9 @@ export async function runCalculation() {
       generator: {
         enabled: !!results.offgridL2Results.generatorEnabled,
         capacityKw: results.offgridL2Results.generatorCapacityKw
-      }
+      },
+      badWeatherScenario: results.offgridL2Results.badWeatherScenario || null,
+      requireBadWeatherScenario: true
     });
     results.offgridL2Results.fieldGuaranteeCandidate = !!(
       results.offgridL2Results.fieldGuaranteeReadiness?.phase1Ready
