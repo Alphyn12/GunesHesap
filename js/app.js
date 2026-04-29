@@ -389,7 +389,7 @@ window.state = {
   shadingQuality: 'user-estimate',
   distributionFee: 0,
   tariffInputMode: 'net-plus-fee',
-  tariffSourceType: 'manual',
+  tariffSourceType: 'estimate',
   costSourceType: 'catalog',
   hourlyProfileSource: 'synthetic',
   tariffMode: 'auto',
@@ -407,7 +407,7 @@ window.state = {
   discountRate: 0.18,
   tariffIncludesTax: true,
   tariffSourceDate: DEFAULT_TARIFF_SOURCE_DATE,
-  tariffSourceCheckedAt: DEFAULT_TARIFF_SOURCE_CHECKED_AT,
+  tariffSourceCheckedAt: null,
   // Kirlenme
   soilingFactor: 3,
   // Bakım & İşletme
@@ -417,7 +417,7 @@ window.state = {
   evidence: {
     customerBill: { type: 'customerBill', status: 'missing', ref: '', checkedAt: null },
     supplierQuote: { type: 'supplierQuote', status: 'missing', ref: '', issuedAt: null, validUntil: null },
-    tariffSource: { type: 'tariffSource', status: 'verified', ref: 'EPDK/SKTT-2026-local', checkedAt: DEFAULT_TARIFF_SOURCE_CHECKED_AT, sourceUrl: 'https://www.epdk.gov.tr/Detay/Icerik/16-38/son-kaynak-tedarik-tarifesi-sktt-ile-ilgili-bil' },
+    tariffSource: { type: 'tariffSource', status: 'missing', ref: '', checkedAt: null, sourceUrl: '' },
     regulationSource: { type: 'regulationSource', status: 'verified', ref: TURKEY_REGULATORY_VERSION, checkedAt: DEFAULT_REGULATION_SOURCE_CHECKED_AT, sourceUrl: 'https://www.epdk.gov.tr/detay/icerik/3-0-0-1160/elektrik-piyasasinda-lisanssiz-elektrik-uretimi-' },
     gridApplication: { type: 'gridApplication', status: 'missing', ref: '', checkedAt: null },
     offgridPvProduction: { type: 'offgridPvProduction', status: 'missing', ref: '', checkedAt: null },
@@ -1212,7 +1212,7 @@ function syncScenarioControls() {
   setVal('on-grid-shading-quality', s.shadingQuality || 'user-estimate');
   setVal('distribution-fee-input', s.distributionFee || 0);
   setVal('tariff-input-mode', s.tariffInputMode || 'net-plus-fee');
-  setVal('tariff-source-type', s.tariffSourceType || 'manual');
+  setVal('tariff-source-type', s.tariffSourceType || 'estimate');
   setVal('cost-source-type', s.costSourceType || 'catalog');
   renderOnGridMonthlyInputs();
   setOnGridInputMode(s.onGridInputMode || 'basic');
@@ -2307,7 +2307,7 @@ function updateTariffAssumptions() {
   importTariffBase = readNumber('tariff-input', s.importTariffBase || importTariffBase);
   s.importTariffBase = importTariffBase;
   s.tariffInputMode = document.getElementById('tariff-input-mode')?.value || s.tariffInputMode || 'net-plus-fee';
-  s.tariffSourceType = document.getElementById('tariff-source-type')?.value || s.tariffSourceType || 'manual';
+  s.tariffSourceType = document.getElementById('tariff-source-type')?.value || s.tariffSourceType || 'estimate';
   s.costSourceType = document.getElementById('cost-source-type')?.value || s.costSourceType || 'catalog';
   // Keep state.tariff as the import tariff entered by the user. buildTariffModel
   // combines it with distributionFee for net-plus-fee mode.
@@ -2370,8 +2370,16 @@ function updateTariffAssumptions() {
   s.hasSignedCustomerBillData = document.getElementById('quote-bill-verified')?.checked ?? false;
   s.quoteInputsVerified = document.getElementById('quote-inputs-verified')?.checked ?? false;
   s.quoteReadyApproved = document.getElementById('quote-ready-approved')?.checked ?? false;
-  s.tariffSourceDate = document.getElementById('tariff-source-date')?.value || s.tariffSourceDate || DEFAULT_TARIFF_SOURCE_DATE;
-  s.tariffSourceCheckedAt = document.getElementById('tariff-source-checked-at')?.value || s.tariffSourceDate;
+  const tariffSourceDateInput = document.getElementById('tariff-source-date')?.value || '';
+  const tariffSourceCheckedInput = document.getElementById('tariff-source-checked-at')?.value || '';
+  s.tariffSourceDate = tariffSourceDateInput || (s.tariffSourceType === 'official' ? (s.tariffSourceDate || DEFAULT_TARIFF_SOURCE_DATE) : null);
+  s.tariffSourceCheckedAt = tariffSourceCheckedInput || s.tariffSourceCheckedAt || null;
+  if (s.tariffSourceType !== 'official' && !tariffSourceCheckedInput) {
+    s.tariffSourceCheckedAt = null;
+  }
+  const tariffEvidenceStatus = s.tariffSourceType === 'official'
+    ? (document.getElementById('tariff-evidence-status')?.value || s.evidence?.tariffSource?.status || 'missing')
+    : 'missing';
   s.evidence = {
     ...(s.evidence || {}),
     customerBill: {
@@ -2382,10 +2390,12 @@ function updateTariffAssumptions() {
     },
     tariffSource: {
       ...(s.evidence?.tariffSource || {}),
-      status: document.getElementById('tariff-evidence-status')?.value || s.evidence?.tariffSource?.status || 'missing',
-      ref: document.getElementById('tariff-evidence-ref')?.value || s.evidence?.tariffSource?.ref || 'manual-tariff',
+      status: tariffEvidenceStatus,
+      ref: document.getElementById('tariff-evidence-ref')?.value || (s.tariffSourceType === 'official' ? s.evidence?.tariffSource?.ref : '') || '',
       checkedAt: s.tariffSourceCheckedAt,
-      sourceUrl: document.getElementById('tariff-evidence-url')?.value || s.evidence?.tariffSource?.sourceUrl || ''
+      sourceUrl: s.tariffSourceType === 'official'
+        ? (document.getElementById('tariff-evidence-url')?.value || s.evidence?.tariffSource?.sourceUrl || '')
+        : ''
     }
   };
   const snapshot = JSON.stringify({
@@ -3682,10 +3692,13 @@ function updateBatDod(val) {
 function updateBatEff(val) {
   window.state.battery = { ...(window.state.battery || BATTERY_MODELS.custom) };
   window.state.battery.efficiency = Math.max(0.75, Math.min(0.97, (parseInt(val, 10) || 90) / 100));
+  const effPct = Math.round(window.state.battery.efficiency * 100);
   const el = document.getElementById('bat-eff-val');
-  if (el) el.textContent = Math.round(window.state.battery.efficiency * 100) + '%';
+  if (el) el.textContent = effPct + '%';
   const effInput = document.getElementById('bat-eff-input');
-  if (effInput) effInput.value = Math.round(window.state.battery.efficiency * 100);
+  if (effInput) effInput.value = effPct;
+  const effRange = document.getElementById('bat-eff');
+  if (effRange) effRange.value = effPct;
   updateBatterySummary();
   updatePanelPreview();
 }
@@ -3694,14 +3707,36 @@ function syncBatteryEfficiencyInputs(val, source = 'range') {
   const normalized = Math.max(75, Math.min(97, parseInt(val, 10) || 90));
   const rangeEl = document.getElementById('bat-eff');
   const inputEl = document.getElementById('bat-eff-input');
-  if (source !== 'range' && rangeEl) rangeEl.value = normalized;
-  if (source !== 'number' && inputEl) inputEl.value = normalized;
+  if (rangeEl) rangeEl.value = normalized;
+  if (inputEl) inputEl.value = normalized;
   updateBatteryCustom();
 }
+
+function resolveBatteryEfficiencyInput() {
+  const rangeEl = document.getElementById('bat-eff');
+  const inputEl = document.getElementById('bat-eff-input');
+  const rangeValue = parseInt(rangeEl?.value, 10);
+  const inputValue = parseInt(inputEl?.value, 10);
+  const hasRange = Number.isFinite(rangeValue);
+  const hasInput = Number.isFinite(inputValue);
+  const currentPct = Math.round(Number(window.state.battery?.efficiency ?? BATTERY_MODELS.custom.efficiency) * 100);
+  const activeId = document.activeElement?.id;
+
+  if (hasRange && hasInput && rangeValue !== inputValue) {
+    if (activeId === 'bat-eff') return rangeValue;
+    if (activeId === 'bat-eff-input') return inputValue;
+    if (rangeValue !== currentPct && inputValue === currentPct) return rangeValue;
+    if (inputValue !== currentPct && rangeValue === currentPct) return inputValue;
+  }
+  if (hasInput) return inputValue;
+  if (hasRange) return rangeValue;
+  return currentPct;
+}
+
 function updateBatteryCustom() {
   const capValue = document.getElementById('bat-capacity')?.value;
   const dodValue = document.getElementById('bat-dod')?.value;
-  const effValue = document.getElementById('bat-eff-input')?.value || document.getElementById('bat-eff')?.value;
+  const effValue = resolveBatteryEfficiencyInput();
   const base = { ...BATTERY_MODELS.custom, ...(window.state.battery || {}) };
   window.state.battery = { ...base, model: 'custom', name: BATTERY_MODELS.custom.name, spec: BATTERY_MODELS.custom.spec, price_try: 0 };
   document.querySelectorAll('.bat-model-btn').forEach(b => b.classList.toggle('selected', b.dataset.batteryModel === 'custom'));

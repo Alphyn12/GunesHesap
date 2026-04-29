@@ -57,8 +57,9 @@ const fallbackTemperatureAdjustment = resolveProductionTemperatureAdjustment({
   avgSummerTemp: 38
 });
 assert.ok(fallbackTemperatureAdjustment.applied);
-nearly(fallbackTemperatureAdjustment.factor, 1 + (-0.0037 * 13));
+nearly(fallbackTemperatureAdjustment.factor, 1 + (-0.0037 * 13 * 0.45));
 assert.ok(fallbackTemperatureAdjustment.factor < 1);
+assert.equal(fallbackTemperatureAdjustment.basis, 'fallback-annualized-temperature-derate');
 
 const hourly = simulateHourlyEnergy(
   new Array(12).fill(100),

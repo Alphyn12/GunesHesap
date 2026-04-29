@@ -300,10 +300,10 @@ def classify_event(text: str) -> str:
         return "trip"
     if re.search(r"(overload|over current|overcurrent|surge|aşırı yük|over power)", lower):
         return "overload"
-    if re.search(r"(fault|alarm|error|fail|hata|arıza)", lower):
-        return "fault"
-    if re.search(r"(battery low|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)", lower):
+    if re.search(r"(battery low|low battery|battery voltage|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)", lower):
         return "battery"
+    if re.search(r"(fault|error|fail|hata|arıza)", lower):
+        return "fault"
     return "other"
 
 
@@ -312,8 +312,8 @@ def event_flags(text: str) -> dict[str, bool]:
     return {
         "trip": bool(re.search(r"(trip|shutdown|stopped|disconnect|tripped|kesinti|kapand)", lower)),
         "overload": bool(re.search(r"(overload|over current|overcurrent|surge|aşırı yük|over power)", lower)),
-        "fault": bool(re.search(r"(fault|alarm|error|fail|hata|arıza)", lower)),
-        "battery": bool(re.search(r"(battery low|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)", lower)),
+        "fault": bool(re.search(r"(fault|error|fail|hata|arıza)", lower)),
+        "battery": bool(re.search(r"(battery low|low battery|battery voltage|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)", lower)),
     }
 
 

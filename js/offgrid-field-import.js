@@ -173,8 +173,8 @@ function classifyEvent(text = '') {
   if (!lower) return 'other';
   if (/(trip|shutdown|stopped|disconnect|tripped|kesinti|kapandi)/.test(lower)) return 'trip';
   if (/(overload|over current|overcurrent|surge|aşırı yük|over power)/.test(lower)) return 'overload';
-  if (/(fault|alarm|error|fail|hata|arıza)/.test(lower)) return 'fault';
-  if (/(battery low|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)/.test(lower)) return 'battery';
+  if (/(battery low|low battery|battery voltage|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)/.test(lower)) return 'battery';
+  if (/(fault|error|fail|hata|arıza)/.test(lower)) return 'fault';
   return 'other';
 }
 
@@ -183,8 +183,8 @@ function eventFlags(text = '') {
   return {
     trip: /(trip|shutdown|stopped|disconnect|tripped|kesinti|kapandi)/.test(lower),
     overload: /(overload|over current|overcurrent|surge|aşırı yük|over power)/.test(lower),
-    fault: /(fault|alarm|error|fail|hata|arıza)/.test(lower),
-    battery: /(battery low|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)/.test(lower)
+    fault: /(fault|error|fail|hata|arıza)/.test(lower),
+    battery: /(battery low|low battery|battery voltage|low soc|low voltage|under voltage|undervoltage|düşük gerilim|düşük soc)/.test(lower)
   };
 }
 

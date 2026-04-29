@@ -25,6 +25,10 @@ function formatOffgridCoverageValue(value, L = {}, { decimals = 1 } = {}) {
   return `~${pct.toFixed(0)}%`;
 }
 
+function hasDefinedCriticalLoad(L = {}) {
+  return Number(L.annualCriticalLoadKwh) > 0;
+}
+
 export function toggleEngReport() {
   const body    = document.getElementById('eng-report-body');
   const header  = document.getElementById('eng-report-toggle');
@@ -407,8 +411,9 @@ ${escapeHtml(report('batteryInstalledCost'))}: ${money(bm.batteryCost)}${offGrid
     const criticalCoverageWithoutGenerator = L.criticalCoverageWithoutGenerator ?? L.criticalLoadCoverageWithoutGenerator ?? L.pvBatteryCriticalCoverage;
     const pvBessCoverageText = formatOffgridCoverageValue(L.pvBatteryLoadCoverage ?? L.totalLoadCoverage, L);
     const totalCoverageText = formatOffgridCoverageValue(L.totalLoadCoverage, L);
-    const pvBessCriticalCoverageText = formatOffgridCoverageValue(criticalCoverageWithoutGenerator ?? L.criticalLoadCoverage, L);
-    const criticalCoverageWithGeneratorText = formatOffgridCoverageValue(criticalCoverageWithGenerator, L);
+    const criticalLoadDefined = hasDefinedCriticalLoad(L);
+    const pvBessCriticalCoverageText = criticalLoadDefined ? formatOffgridCoverageValue(criticalCoverageWithoutGenerator ?? L.criticalLoadCoverage, L) : i18n.t('offgridL2.criticalLoadNotDefinedShort');
+    const criticalCoverageWithGeneratorText = criticalLoadDefined ? formatOffgridCoverageValue(criticalCoverageWithGenerator, L) : i18n.t('offgridL2.criticalLoadNotDefinedShort');
     const syntheticPeakModel = L.syntheticPeakModel || null;
     const syntheticWeatherMeta = L.productionDispatchMetadata?.syntheticWeatherMetadata || null;
     const designCorrections = L.designCorrections || null;

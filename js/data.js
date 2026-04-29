@@ -150,7 +150,7 @@ const PANEL_TYPE_PROFILES = {
     warranty: 25,
     powerWarranty: 30,
     standard: "IEC 61215 / IEC TS 60904-1-2",
-    bifacialGain: 0.15
+    bifacialGain: 0.05
   },
   hjt: {
     name: "HJT Premium",
@@ -391,25 +391,25 @@ export const DEFAULT_TARIFFS = {
 export const TARIFF_META = {
   residential: {
     label: 'Konut',
-    sourceLabel: 'EPDK/SKTT 2026 bilgilendirme, kullanıcı manuel TL/kWh girişi',
+    sourceLabel: 'EPDK/SKTT 2026 kaynak notu',
     sourceDate: '2026-04-12',
     skttLimitKwh: 4000
   },
   commercial: {
     label: 'Ticari',
-    sourceLabel: 'EPDK/SKTT 2026 bilgilendirme, kullanıcı manuel TL/kWh girişi',
+    sourceLabel: 'EPDK/SKTT 2026 kaynak notu',
     sourceDate: '2026-04-12',
     skttLimitKwh: 15000
   },
   industrial: {
     label: 'Sanayi',
-    sourceLabel: 'EPDK/SKTT 2026 bilgilendirme, kullanıcı manuel TL/kWh girişi',
+    sourceLabel: 'EPDK/SKTT 2026 kaynak notu',
     sourceDate: '2026-04-12',
     skttLimitKwh: 15000
   },
   agriculture: {
     label: 'Tarımsal Sulama',
-    sourceLabel: 'EPDK tarımsal sulama tarife doğrulaması, kullanıcı manuel TL/kWh girişi',
+    sourceLabel: 'EPDK tarımsal sulama kaynak notu',
     sourceDate: '2026-04-12',
     skttLimitKwh: 150000000
   },

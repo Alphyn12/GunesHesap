@@ -202,7 +202,21 @@ function formatOffgridCoverageValue(value, L = {}, { decimals = 1 } = {}) {
   return `~${pct.toFixed(0)}%`;
 }
 
+function hasDefinedCriticalLoad(L = {}) {
+  return Number(L.annualCriticalLoadKwh) > 0;
+}
+
+function criticalLoadUndefinedText() {
+  return i18n.t('offgridL2.criticalLoadNotDefinedShort');
+}
+
 function offgridCoverageInterpretationMeta(L = {}) {
+  if (!hasDefinedCriticalLoad(L)) {
+    return {
+      total: i18n.t('offgridL2.coverageNoteApprox'),
+      critical: i18n.t('offgridL2.criticalLoadNotDefinedNote')
+    };
+  }
   if (!isOffgridCoverageApproximate(L)) {
     return {
       total: i18n.t('offgridL2.coverageNoteMeasured'),
@@ -404,6 +418,7 @@ export function renderResults() {
     [tt('summaryCoverage'), `%${coveragePct.toFixed(0)} civarı`],
     [tt('summaryOrientation'), `${state.azimuthName || '—'} · ${state.tilt}° eğim`],
     [tt('summarySavingsEffect'), money(r.annualSavings)],
+    [i18n.t('settings.currency'), state.displayCurrency === 'USD' ? `USD · 1 USD = ${Number(state.usdToTry || 0).toLocaleString(activeLocale)} TL` : 'TRY'],
     [tt('summaryPayback'), r.grossSimplePaybackYear ? `${Number(r.grossSimplePaybackYear).toFixed(1)} ${i18n.t('units.year')}` : `>25 ${i18n.t('units.year')}`],
     [tt('summarySource'), engineSummaryText(r, state)],
     [tt('summaryNextStep'), state.scenarioContext?.nextAction || i18n.t('onGridResult.commercialNextAction')],
@@ -566,6 +581,7 @@ function renderOffgridL2Results(offgridL2Results, state) {
   const L = offgridL2Results;
   const locale = localeTag();
   const accuracy = L.accuracyAssessment || null;
+  const criticalLoadDefined = hasDefinedCriticalLoad(L);
   const criticalCoverageWithGenerator = Number(L.criticalCoverageWithGenerator ?? L.criticalLoadCoverage ?? 0);
   const criticalCoverageWithoutGenerator = Number(L.criticalCoverageWithoutGenerator ?? L.criticalLoadCoverageWithoutGenerator ?? L.pvBatteryCriticalCoverage ?? 0);
   const financialBasisMeta = offgridFinancialBasisMeta(state?.results?.financialSavingsBasis);
@@ -574,8 +590,8 @@ function renderOffgridL2Results(offgridL2Results, state) {
     ? `±${Number(uncertainty.lowPct || 0).toFixed(0)}-${Number(uncertainty.highPct || 0).toFixed(0)}%`
     : '—';
   const totalCoverageText = formatOffgridCoverageValue(L.totalLoadCoverage, L);
-  const criticalCoverageWithGeneratorText = formatOffgridCoverageValue(criticalCoverageWithGenerator, L);
-  const criticalCoverageWithoutGeneratorText = formatOffgridCoverageValue(criticalCoverageWithoutGenerator, L);
+  const criticalCoverageWithGeneratorText = criticalLoadDefined ? formatOffgridCoverageValue(criticalCoverageWithGenerator, L) : criticalLoadUndefinedText();
+  const criticalCoverageWithoutGeneratorText = criticalLoadDefined ? formatOffgridCoverageValue(criticalCoverageWithoutGenerator, L) : criticalLoadUndefinedText();
   const coverageNotes = offgridCoverageInterpretationMeta(L);
   const syntheticPeakMeta = offgridSyntheticPeakMeta(L);
   const syntheticPvMeta = offgridSyntheticPvMeta(L);
@@ -826,8 +842,8 @@ function renderOffgridL2Results(offgridL2Results, state) {
       L.annualCriticalLoadKwh > 0 ? { label: i18n.t('offgridL2.resultCriticalLoad'), value: `${Math.round(L.annualCriticalLoadKwh).toLocaleString(locale)} kWh/yıl`, note: 'Kesintide öncelikli tutulacak kritik kısım' } : '',
       { label: i18n.t('offgridL2.directPvLabel'), value: `${Math.round(L.directPvKwh || 0).toLocaleString(locale)} kWh/yıl`, note: 'Güneşten gelip anında kullanılan enerji' },
       { label: i18n.t('offgridL2.batteryLabel'), value: `${Math.round(L.batteryKwh || 0).toLocaleString(locale)} kWh/yıl`, note: 'Bataryanın devreye girip taşıdığı enerji' },
-      { label: i18n.t('offgridL2.pvBessCriticalCoverageLabel'), value: criticalCoverageWithoutGeneratorText, note: 'Sadece PV ve batarya ile kritik yük koruması' },
-      L.generatorEnabled ? { label: i18n.t('offgridL2.criticalCoverageWithGeneratorLabel'), value: criticalCoverageWithGeneratorText, note: 'Jeneratör dahil kritik yük koruması' } : '',
+      criticalLoadDefined ? { label: i18n.t('offgridL2.pvBessCriticalCoverageLabel'), value: criticalCoverageWithoutGeneratorText, note: 'Sadece PV ve batarya ile kritik yük koruması' } : '',
+      criticalLoadDefined && L.generatorEnabled ? { label: i18n.t('offgridL2.criticalCoverageWithGeneratorLabel'), value: criticalCoverageWithGeneratorText, note: 'Jeneratör dahil kritik yük koruması' } : '',
       L.batteryReservePct != null ? { label: i18n.t('offgridL2.batteryReserveLabel'), value: `%${Number(L.batteryReservePct).toFixed(0)}`, note: 'Korunan minimum batarya rezervi' } : '',
       L.batteryChargeEfficiencyPct != null ? { label: i18n.t('offgridL2.batteryChargeEfficiencyLabel'), value: `%${Number(L.batteryChargeEfficiencyPct).toFixed(1)}`, note: 'Şarj tarafı verimi' } : '',
       L.batteryDischargeEfficiencyPct != null ? { label: i18n.t('offgridL2.batteryDischargeEfficiencyLabel'), value: `%${Number(L.batteryDischargeEfficiencyPct).toFixed(1)}`, note: 'Deşarj tarafı verimi' } : '',
@@ -1155,7 +1171,7 @@ function renderOnGridResultLayers(state, r) {
     'estimate': i18n.t('onGridFlow.tariffSourceEstimate')
   };
   const tariffSourceText = tariffSourceLabels[tariffSourceType] || tariffSourceType;
-  const tariffSourceClass = tariffSourceType === 'official' ? 'data-source-good' : tariffSourceType === 'manual' ? 'data-source-ok' : 'data-source-warn';
+  const tariffSourceClass = tariffSourceType === 'official' ? 'data-source-good' : 'data-source-warn';
 
   // Cost source display
   const costSourceType = assessment.costSourceType;
@@ -1170,11 +1186,11 @@ function renderOnGridResultLayers(state, r) {
   // Engine parity — intentionalDifference=true only when backend pvlib was used
   const engineMode = r.calculationMode || r.authoritativeEngineMode || '—';
   const engineModeLabels = {
-    'python-pvlib-backed': 'Detaylı mühendislik hesap motoru',
-    'python-backend': 'Detaylı mühendislik hesap motoru',
-    'browser-pvgis': 'Canlı güneş verisiyle standart hesap',
-    'pvgis-live': 'Canlı güneş verisiyle standart hesap',
-    'pvlib-service': 'Detaylı mühendislik hesap motoru',
+    'python-pvlib-backed': 'Doğrulanmış pvlib backend hesabı',
+    'python-backend': 'Backend destekli tahmin (otoriter değil)',
+    'browser-pvgis': 'PVGIS canlı verisiyle standart hesap',
+    'pvgis-live': 'PVGIS canlı verisiyle standart hesap',
+    'pvlib-service': 'pvlib servis çıktısı (hava kaynağı doğrulanmalı)',
     'local-fallback': 'Yerel tahmin modeli',
     'fallback-psh': 'Yerel tahmin modeli'
   };

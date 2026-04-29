@@ -514,6 +514,14 @@ export async function runCalculation() {
   const osmShadowFactor = baseOsmFactor > 0
     ? Math.min(35, MONTH_WEIGHTS.reduce((sum, w, m) => sum + w * baseOsmFactor * _OSM_SHADOW_SEASONAL_MULT[m], 0))
     : 0;
+  const combineManualAndOsmShading = (manual, osm) => {
+    const manualShade = Math.max(0, Number(manual) || 0);
+    const osmShade = Math.max(0, Number(osm) || 0);
+    if (manualShade > 0 && osmShade > 0) {
+      return Math.min(80, Math.max(manualShade, osmShade));
+    }
+    return Math.min(80, manualShade + osmShade);
+  };
 
   const sectionResults = await Promise.all(allSections.map(async sec => {
     try {
@@ -569,16 +577,15 @@ export async function runCalculation() {
     }
 
     // Kayıp sıralaması (doğru fiziksel sıra):
-    // 1. Sıcaklık: fallback yolunda yaz ortalaması kullanılır; PVGIS yolunda yıllık
-    //    ağırlıklı sıcaklık düzeltmesi uygulanır (PVGIS loss=0 ile STC bazlı çıktı verir,
-    //    gerçek modüller 25°C'de çalışmaz → yıllık ortalama düzeltme gerekli).
+    // 1. Sıcaklık: fallback yolunda yıllıklaştırılmış sıcaklık derate'i kullanılır;
+    //    PVGIS yolunda sıcaklık PVGIS tarafından modellendiği için ek düzeltme uygulanmaz.
     // 2. Azimut/eğim (fallback için; PVGIS kendi geometri modelini kullanıyor)
     // 3. Gölgelenme (yer-spesifik, PVGIS bilmiyor)
     // 4. Kirlenme (yer-spesifik)
     // 5. Bifaciyal kazanım (arka yüzeyden ek enerji)
     // 6. İnverter verimi (AC dönüşümü)
     // 7. Kablo kaybı (iletim)
-    const effectiveShadingFactor = Math.min(80, Math.max(0, Number(sec.shadingFactor) || 0) + osmShadowFactor);
+    const effectiveShadingFactor = combineManualAndOsmShading(sec.shadingFactor, osmShadowFactor);
     // Faz-3 Fix-10: Bifacial gain reduced by shading (rear-side sees less ground reflection
     // when shading blocks diffuse component). Factor: (1 − shadingFactor/200) approximates
     // the partial loss of rear-irradiance at high shading levels.
@@ -1241,7 +1248,7 @@ export async function runCalculation() {
       let nightLoad = 0, nightBatt = 0;
       (normalDispatch.hourly8760 || []).forEach((row, i) => {
         if (NIGHT_H.has(i % 24)) {
-          nightLoad += row.load        || 0;
+          nightLoad += row.loadKwh     || 0;
           nightBatt += row.batteryDischarge || 0;
         }
       });
@@ -1691,10 +1698,10 @@ export async function runCalculation() {
   if (window.renderEngCalcPanel) window.renderEngCalcPanel();
 
   setTimeout(() => {
-    if (window.state?.step !== 6) return; // hard timeout zaten başka adıma geçmişse dur
-    window.goToStep(7);
+    const shouldNavigateToResults = window.state?.step === 6;
+    if (shouldNavigateToResults) window.goToStep(7);
     window.renderResults();
-    window.launchConfetti();
+    if (shouldNavigateToResults) window.launchConfetti();
     // Saatlik profili güncelle
     if (window.renderHourlyProfile) window.renderHourlyProfile();
     // Senaryo analizini güncelle

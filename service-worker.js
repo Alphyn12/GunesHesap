@@ -1,5 +1,5 @@
-// v39: Faz 0 — canonical logo, datasheet sizing module and UI readiness assets.
-const CACHE_NAME = 'solarRota-v39';
+// v40: Faz 1 audit fixes and complete static precache assets.
+const CACHE_NAME = 'solarRota-v40';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',

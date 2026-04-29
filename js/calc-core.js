@@ -152,12 +152,18 @@ export function resolveProductionTemperatureAdjustment({ source = 'fallback-psh'
       basis: `${source}-temperature-already-modeled`
     };
   }
-  const lossRate = coeff * (summerTemp - 25);
+  // Fallback PSH has no hourly cell-temperature model. A summer peak temperature
+  // derate applied to all 8760 hours overstates annual losses, so use an
+  // annualized delta that represents roughly the production-weighted year.
+  const annualizedDeltaC = (summerTemp - 25) * 0.45;
+  const lossRate = coeff * annualizedDeltaC;
   return {
-    factor: Math.max(0, 1 + lossRate),
+    factor: Math.max(0.85, Math.min(1.08, 1 + lossRate)),
     lossRate,
     applied: true,
-    basis: 'fallback-summer-temperature-derate'
+    basis: 'fallback-annualized-temperature-derate',
+    annualizedDeltaC,
+    summerReferenceTempC: summerTemp
   };
 }
 
@@ -676,6 +682,15 @@ export function resolveAnnualOperatingCosts({ costBasis = 0, omEnabled = false, 
 export function buildTariffModel(state) {
   const tariffType = state.tariffType || 'residential';
   const meta = TARIFF_META[tariffType] || TARIFF_META.residential;
+  const tariffSourceType = state.tariffSourceType || 'estimate';
+  const tariffSourceDate = tariffSourceType === 'official'
+    ? (state.tariffSourceDate || meta.sourceDate)
+    : (state.tariffSourceCheckedAt ? (state.tariffSourceDate || state.tariffSourceCheckedAt) : null);
+  const tariffSourceLabels = {
+    official: meta.sourceLabel,
+    manual: 'Kullanıcı tanımlı manuel tarife girdisi; fatura veya resmi kaynakla doğrulanmalı',
+    estimate: 'Varsayılan tarife varsayımı; resmi kaynakla doğrulanmadı'
+  };
   const annualConsumptionKwh = Math.max(0, Number(state.annualConsumptionKwh) || Number(state.dailyConsumption || 0) * 365);
   const skttRate = Math.max(0, Number(state.skttTariff) || Number(state.tariff) || 0);
   const contractedRate = Math.max(0, Number(state.contractedTariff) || Number(state.tariff) || 0);
@@ -705,8 +720,8 @@ export function buildTariffModel(state) {
     annualPriceIncrease,
     discountRate: Math.max(0, Number(state.discountRate ?? 0.18)),
     expenseEscalationRate: Math.max(-0.5, Number(state.expenseEscalationRate ?? Math.min(0.25, annualPriceIncrease))),
-    sourceDate: state.tariffSourceDate || meta.sourceDate,
-    sourceLabel: meta.sourceLabel,
+    sourceDate: tariffSourceDate,
+    sourceLabel: tariffSourceLabels[tariffSourceType] || tariffSourceLabels.estimate,
     sourceUrl: state.evidence?.tariffSource?.sourceUrl || '',
     sourceLifecycle: TARIFF_DATA_LIFECYCLE,
     skttLimitKwh: meta.skttLimitKwh,
@@ -714,7 +729,7 @@ export function buildTariffModel(state) {
     tariffInputMode: state.tariffInputMode || 'net-plus-fee',
     distributionFee: state.tariffInputMode === 'gross' ? 0 : Math.max(0, Number(state.distributionFee) || 0),
     effectiveImportRate: importRateByRegime + (state.tariffInputMode === 'gross' ? 0 : Math.max(0, Number(state.distributionFee) || 0)),
-    tariffSourceType: state.tariffSourceType || 'manual',
+    tariffSourceType,
     regulation,
     exportCompensationPolicy
   };
