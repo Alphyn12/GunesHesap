@@ -52,6 +52,19 @@ function fmtPct(p) {
   return Number.isFinite(p) ? `${Number(p).toFixed(2)} %/°C` : '—';
 }
 
+function roundNumber(value, digits = 3) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return n;
+  return Number(n.toFixed(digits));
+}
+
+function formatInputNumber(value, digits = 3) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '';
+  if (digits <= 0) return n.toFixed(0);
+  return n.toFixed(digits).replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.0+$/, '');
+}
+
 export function getPanelDatasheetDefaults() {
   const state = window.state || {};
   const useCatalog = state.panelSelectionMode === 'advanced' && state.panelCatalogId;
@@ -73,8 +86,8 @@ export function getPanelDatasheetDefaults() {
     pmaxStcW: Number.isFinite(fallback.modeledWattPeak) ? fallback.modeledWattPeak : FALLBACK_PANEL.modeledWattPeak,
     // modeledTempCoeffPerC oran cinsinden (-0.0034) → backend %/°C bekliyor (-0.34)
     pmaxCoeffPctPerC: Number.isFinite(fallback.modeledTempCoeffPerC)
-      ? fallback.modeledTempCoeffPerC * 100
-      : FALLBACK_PANEL.modeledTempCoeffPerC * 100,
+      ? roundNumber(fallback.modeledTempCoeffPerC * 100)
+      : roundNumber(FALLBACK_PANEL.modeledTempCoeffPerC * 100),
     sourceLabel: fallback.displayName || fallback.brand || ''
   };
 }
@@ -111,6 +124,89 @@ export function buildThermalRequest(override = null) {
     });
   }
   return { request: merged, panelLabel: panel.sourceLabel, inverterLabel: inverter.inverterLabel };
+}
+
+function validateThermalRequest(request) {
+  const checks = [
+    ['vocStcV', 'Voc STC'],
+    ['vmpStcV', 'Vmp STC'],
+    ['pmaxStcW', 'Pmax STC'],
+    ['inverterMaxInputV', 'İnverter max DC giriş'],
+    ['inverterMpptOptimalV', 'İnverter MPPT optimal']
+  ];
+  checks.forEach(([key, label]) => {
+    const value = Number(request[key]);
+    if (!Number.isFinite(value) || value <= 0) throw new Error(`${label} pozitif olmalıdır.`);
+  });
+  if (Number(request.inverterMpptOptimalV) > Number(request.inverterMaxInputV)) {
+    throw new Error('İnverter MPPT optimal gerilimi max DC giriş geriliminden büyük olamaz.');
+  }
+}
+
+function temperatureCorrected(stcValue, coeffPctPerC, targetTempC) {
+  const deltaT = targetTempC - 25;
+  return stcValue * (1 + (coeffPctPerC / 100) * deltaT);
+}
+
+function localThermalScenario(request, targetTempC) {
+  const vmpCoeff = Number.isFinite(Number(request.vmpCoeffPctPerC))
+    ? Number(request.vmpCoeffPctPerC)
+    : Number(request.vocCoeffPctPerC);
+  return {
+    ambientTempC: roundNumber(targetTempC, 2),
+    deltaTC: roundNumber(targetTempC - 25, 2),
+    vocV: roundNumber(temperatureCorrected(Number(request.vocStcV), Number(request.vocCoeffPctPerC), targetTempC), 3),
+    vmpV: roundNumber(temperatureCorrected(Number(request.vmpStcV), vmpCoeff, targetTempC), 3),
+    pmaxW: roundNumber(temperatureCorrected(Number(request.pmaxStcW), Number(request.pmaxCoeffPctPerC), targetTempC), 3),
+    vocCoeffUsedPctPerC: Number(request.vocCoeffPctPerC),
+    vmpCoeffUsedPctPerC: vmpCoeff,
+    pmaxCoeffUsedPctPerC: Number(request.pmaxCoeffPctPerC)
+  };
+}
+
+export function calculatePanelThermalSizingLocal(request) {
+  validateThermalRequest(request);
+  const scenarios = [-10, 25, 60].map(temp => localThermalScenario(request, temp));
+  const coldest = scenarios.reduce((min, item) => item.ambientTempC < min.ambientTempC ? item : min, scenarios[0]);
+  const hottest = scenarios.reduce((max, item) => item.ambientTempC > max.ambientTempC ? item : max, scenarios[0]);
+  const coldestVoc = Number(coldest.vocV);
+  const safeMaxSeriesPanels = Math.floor(Number(request.inverterMaxInputV) / coldestVoc);
+  const realisticPeakPowerW = safeMaxSeriesPanels * Number(hottest.pmaxW);
+  const stringVmpCold = safeMaxSeriesPanels * Number(coldest.vmpV);
+  const stringVmpHot = safeMaxSeriesPanels * Number(hottest.vmpV);
+  return {
+    inputs: {
+      ...request,
+      vmpCoeffPctPerC: Number(request.vocCoeffPctPerC),
+      vmpCoeffSource: 'fallback-voc-coeff',
+      temperaturesC: [-10, 25, 60],
+      referenceTempC: 25
+    },
+    scenarios,
+    coldestScenario: coldest,
+    hottestScenario: hottest,
+    stringSizing: {
+      rawMaxSeriesPanels: roundNumber(Number(request.inverterMaxInputV) / coldestVoc, 4),
+      safeMaxSeriesPanels,
+      roundingRule: 'math.floor',
+      limitingScenario: {
+        ambientTempC: coldest.ambientTempC,
+        vocV: coldestVoc,
+        inverterMaxInputV: Number(request.inverterMaxInputV)
+      },
+      stringVmpAtColdestV: roundNumber(stringVmpCold, 3),
+      stringVmpAtHottestV: roundNumber(stringVmpHot, 3),
+      mpptOptimalDeltaColdV: roundNumber(stringVmpCold - Number(request.inverterMpptOptimalV), 3),
+      mpptOptimalDeltaHotV: roundNumber(stringVmpHot - Number(request.inverterMpptOptimalV), 3)
+    },
+    realisticPeakPower: {
+      panelCount: safeMaxSeriesPanels,
+      perPanelWattAtHottestC: hottest.pmaxW,
+      totalWatt: roundNumber(realisticPeakPowerW, 2),
+      totalKw: roundNumber(realisticPeakPowerW / 1000, 4),
+      method: 'safe_max_series_panels * P_max(hottestScenarioC)'
+    }
+  };
 }
 
 function setText(id, value) {
@@ -166,16 +262,25 @@ export function renderDatasheetSizingCard(result, meta = {}) {
   const note = document.getElementById('datasheet-sizing-note');
   if (note) {
     const lines = [];
+    if (meta.source === 'local') {
+      lines.push(t('step4.datasheetSizing.localFallbackNote',
+        'Tarayıcı ön kontrolü aktif: backend kapalı olsa bile aynı sıcaklık katsayısı formülüyle hesaplandı.'));
+    } else if (meta.source === 'backend') {
+      lines.push(t('step4.datasheetSizing.backendNote', 'Python backend doğrulaması tamamlandı.'));
+    }
     const limiting = sizing.limitingScenario || cold;
     if (Number.isFinite(limiting.vocV) && Number.isFinite(meta.inverterMaxInputV)) {
       lines.push(t('step4.datasheetSizing.limitingNote',
-        `Güvenlik kuralı: ${meta.inverterMaxInputV} V ÷ ${fmtV(limiting.vocV)} (Voc en soğukta) → math.floor.`));
+        `Güvenlik kuralı: ${meta.inverterMaxInputV} V inverter sınırı, en soğuk senaryodaki ${fmtV(limiting.vocV)} panel Voc değerine bölünür ve güvenli tarafta kalmak için aşağı yuvarlanır.`));
     }
     if (meta.panelLabel || meta.inverterLabel) {
       const panelPart = meta.panelLabel ? `${meta.panelLabel}` : '';
       const invPart = meta.inverterLabel ? `${meta.inverterLabel}` : '';
       const sep = panelPart && invPart ? ' + ' : '';
       lines.push(`${panelPart}${sep}${invPart}`);
+    }
+    if (meta.fallbackReason) {
+      lines.push(`Backend notu: ${meta.fallbackReason}`);
     }
     note.textContent = lines.join(' • ');
   }
@@ -214,8 +319,22 @@ function fillFormWithDefaults() {
   const { request } = buildThermalRequest(null);
   Object.entries(request).forEach(([key, value]) => {
     const input = form.querySelector(`[name="${key}"]`);
-    if (input) input.value = String(value);
+    if (!input) return;
+    const digits = key.includes('Coeff') ? 3 : key === 'pmaxStcW' || key.includes('inverter') ? 0 : 2;
+    input.value = formatInputNumber(value, digits);
   });
+}
+
+function renderLocalThermalFallback(request, meta = {}, reason = '') {
+  const result = calculatePanelThermalSizingLocal(request);
+  if (window.state) window.state.datasheetSizing = result;
+  renderDatasheetSizingCard(result, {
+    ...meta,
+    inverterMaxInputV: request.inverterMaxInputV,
+    source: 'local',
+    fallbackReason: reason
+  });
+  return result;
 }
 
 export async function runDatasheetSizing(options = {}) {
@@ -231,26 +350,36 @@ export async function runDatasheetSizing(options = {}) {
 
   showError('');
   const { request, panelLabel, inverterLabel } = buildThermalRequest(override);
-  card.dataset.thermalState = 'loading';
+  const renderMeta = { panelLabel, inverterLabel };
+  let localResult;
+  try {
+    localResult = renderLocalThermalFallback(request, renderMeta);
+  } catch (localErr) {
+    showError(localErr?.message || t('step4.datasheetSizing.errorIncompatible', 'Datasheet doğrulaması reddedildi.'));
+    card.dataset.thermalState = 'error';
+    return;
+  }
 
   let result;
   try {
     const resp = await callPanelThermalCheck(request);
     if (!resp.ok) {
-      showError(resp.error || t('step4.datasheetSizing.errorIncompatible', 'Datasheet doğrulaması reddedildi.'));
-      card.dataset.thermalState = 'error';
+      renderDatasheetSizingCard(localResult, {
+        ...renderMeta,
+        inverterMaxInputV: request.inverterMaxInputV,
+        source: 'local',
+        fallbackReason: resp.error || 'Backend doğrulaması tamamlanamadı.'
+      });
       return;
     }
     result = resp.data;
   } catch (err) {
-    // Backend offline → kart "bilgi yok" haliyle kalsın, hata sessiz.
-    card.dataset.thermalState = 'offline';
-    setText('datasheet-sizing-cold-voc', '—');
-    setText('datasheet-sizing-hot-pmax', '—');
-    setText('datasheet-sizing-safe-strings', '—');
-    setText('datasheet-sizing-peak-power', '—');
-    const note = document.getElementById('datasheet-sizing-note');
-    if (note) note.textContent = t('step4.datasheetSizing.offlineNote', 'Python backend çevrimdışı — datasheet doğrulaması atlandı.');
+    renderDatasheetSizingCard(localResult, {
+      ...renderMeta,
+      inverterMaxInputV: request.inverterMaxInputV,
+      source: 'local',
+      fallbackReason: err?.message || 'Backend çevrimdışı.'
+    });
     return;
   }
 
@@ -258,7 +387,8 @@ export async function runDatasheetSizing(options = {}) {
   renderDatasheetSizingCard(result, {
     inverterMaxInputV: request.inverterMaxInputV,
     panelLabel,
-    inverterLabel
+    inverterLabel,
+    source: 'backend'
   });
 }
 
@@ -274,6 +404,7 @@ export function attachDatasheetSizingHandlers() {
       if (willOpen) fillFormWithDefaults();
       form.hidden = !willOpen;
       toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      toggle.textContent = willOpen ? t('common.close', 'Kapat') : t('step4.datasheetSizing.edit', 'Düzenle');
     });
   }
 

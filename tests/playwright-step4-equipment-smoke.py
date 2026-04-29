@@ -79,6 +79,15 @@ def main():
             assert page.locator(".bat-model-btn").count() == 6
 
             assert "Ortalama profil" in page.locator("#panel-cards-wrap").inner_text()
+            page.wait_for_function("document.querySelector('#datasheet-sizing-cold-voc')?.innerText.includes('V')")
+            assert page.locator("#datasheet-sizing-scenario-tbody tr").count() == 3
+            assert "Tarayıcı ön kontrolü" in page.locator("#datasheet-sizing-note").inner_text()
+            page.click("#datasheet-sizing-edit-toggle")
+            assert page.locator(".datasheet-sizing-form-intro").is_visible()
+            pmax_coeff_value = page.locator('[name="pmaxCoeffPctPerC"]').input_value()
+            assert pmax_coeff_value.startswith("-0.29")
+            assert len(pmax_coeff_value) <= 6
+            page.click("#datasheet-sizing-edit-toggle")
             assert "SolarEdge Home Hub + S440" in page.locator(".inverter-card.selected").inner_text()
             assert page.locator("#battery-summary").is_visible()
             assert "Tesla Powerwall 3" in page.locator("#battery-summary").inner_text()

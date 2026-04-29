@@ -166,10 +166,10 @@
     "systemSummary": "Sistem Özeti",
     "next": "Sonraki Adım →",
     "datasheetSizing": {
-      "title": "Datasheet & İnverter Boyutlandırma",
+      "title": "Panel & İnverter Güvenlik Kontrolü",
       "edit": "Düzenle",
       "lead": "Sıcaklık & invertör güvenlik kontrolü",
-      "sub": "−10 / +25 / +60 °C senaryolarında Voc, Vmp ve panel gücü düzeltmesi; invertör için math.floor ile güvenli maksimum seri panel sayısı ve en sıcak senaryoda gerçekçi tepe güç.",
+      "sub": "Soğuk ve sıcak hava senaryolarında panel gerilimi ile gücü yeniden hesaplanır; sistem inverteri koruyan güvenli seri panel adedini ve sıcak havadaki gerçekçi string gücünü gösterir.",
       "coldVocLabel": "Voc (−10 °C)",
       "hotPmaxLabel": "Pmax (+60 °C)",
       "safeStringLabel": "Güvenli seri (max)",
@@ -190,8 +190,10 @@
       "recalc": "Yeniden hesapla",
       "errorIncompatible": "Datasheet doğrulaması reddedildi.",
       "errorInvalidNumber": "Geçersiz sayı girildi.",
-      "limitingNote": "Güvenlik kuralı: invertör max ÷ Voc(en soğuk) → math.floor.",
-      "offlineNote": "Python backend çevrimdışı — datasheet doğrulaması atlandı."
+      "limitingNote": "Güvenlik kuralı: inverter sınırı, en soğuk senaryodaki panel Voc değerine bölünür ve güvenli tarafta kalmak için aşağı yuvarlanır.",
+      "localFallbackNote": "Tarayıcı ön kontrolü aktif: backend kapalı olsa bile aynı sıcaklık katsayısı formülüyle hesaplandı.",
+      "backendNote": "Python backend doğrulaması tamamlandı.",
+      "offlineNote": "Python backend çevrimdışı — tarayıcı ön kontrolü kullanıldı."
     }
   },
   "step5": {

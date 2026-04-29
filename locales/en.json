@@ -166,10 +166,10 @@
     "systemSummary": "System Summary",
     "next": "Next Step →",
     "datasheetSizing": {
-      "title": "Datasheet & Inverter Sizing",
+      "title": "Panel & Inverter Safety Check",
       "edit": "Edit",
       "lead": "Temperature & inverter safety check",
-      "sub": "Voc / Vmp / Pmax correction at −10 / +25 / +60 °C, safe maximum series panel count via math.floor against the inverter ceiling, and a realistic peak power at the hottest scenario.",
+      "sub": "Panel voltage and power are recalculated for cold and hot weather; the system shows the inverter-safe series panel count and realistic hot-weather string peak power.",
       "coldVocLabel": "Voc at −10 °C",
       "hotPmaxLabel": "Pmax at +60 °C",
       "safeStringLabel": "Safe series (max)",
@@ -190,8 +190,10 @@
       "recalc": "Recalculate",
       "errorIncompatible": "Datasheet validation rejected.",
       "errorInvalidNumber": "Invalid number entered.",
-      "limitingNote": "Safety rule: inverter max ÷ Voc(coldest) → math.floor.",
-      "offlineNote": "Python backend offline — datasheet validation skipped."
+      "limitingNote": "Safety rule: the inverter limit is divided by the cold-scenario panel Voc and rounded down to stay on the safe side.",
+      "localFallbackNote": "Browser pre-check active: calculated with the same temperature-coefficient formula even when the backend is offline.",
+      "backendNote": "Python backend validation completed.",
+      "offlineNote": "Python backend offline — browser pre-check was used."
     }
   },
   "step5": {

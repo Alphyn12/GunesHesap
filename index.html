@@ -1914,14 +1914,34 @@
       </table>
       <p class="datasheet-sizing-note" id="datasheet-sizing-note"></p>
       <form class="datasheet-sizing-form" id="datasheet-sizing-form" hidden>
+        <div class="datasheet-sizing-form-intro">
+          <strong>Bu bölüm neyi kontrol eder?</strong>
+          <span>Panel datasheet'indeki gerilim ve güç değerleri hava sıcaklığına göre değişir. Bu ön kontrol, soğuk havada inverterin aşırı DC gerilim görüp görmeyeceğini ve sıcak havada gerçekçi string tepe gücünü hesaplar.</span>
+        </div>
         <div class="datasheet-sizing-form-grid">
-          <label><span data-i18n="step4.datasheetSizing.formVoc">Voc STC (V)</span><input type="number" name="vocStcV" step="0.01" min="0.01" required></label>
-          <label><span data-i18n="step4.datasheetSizing.formVocCoeff">Voc katsayısı (%/°C)</span><input type="number" name="vocCoeffPctPerC" step="0.001" required></label>
-          <label><span data-i18n="step4.datasheetSizing.formVmp">Vmp STC (V)</span><input type="number" name="vmpStcV" step="0.01" min="0.01" required></label>
-          <label><span data-i18n="step4.datasheetSizing.formPmaxW">Pmax STC (W)</span><input type="number" name="pmaxStcW" step="1" min="1" required></label>
-          <label><span data-i18n="step4.datasheetSizing.formPmaxCoeff">Pmax katsayısı (%/°C)</span><input type="number" name="pmaxCoeffPctPerC" step="0.001" required></label>
-          <label><span data-i18n="step4.datasheetSizing.formInvMaxV">İnverter max DC giriş (V)</span><input type="number" name="inverterMaxInputV" step="1" min="1" required></label>
-          <label><span data-i18n="step4.datasheetSizing.formInvMpptV">İnverter MPPT optimal (V)</span><input type="number" name="inverterMpptOptimalV" step="1" min="1" required></label>
+          <section class="datasheet-sizing-fieldset">
+            <div class="datasheet-sizing-fieldset-head">
+              <strong>Panel datasheet değerleri</strong>
+              <span>Seçili panel tipinden otomatik gelir; elinizde datasheet varsa buradan netleştirin.</span>
+            </div>
+            <div class="datasheet-sizing-input-grid">
+              <label><span data-i18n="step4.datasheetSizing.formVoc">Voc STC (V)</span><input type="number" name="vocStcV" step="0.01" min="0.01" required></label>
+              <label><span data-i18n="step4.datasheetSizing.formVocCoeff">Voc katsayısı (%/°C)</span><input type="number" name="vocCoeffPctPerC" step="0.001" required></label>
+              <label><span data-i18n="step4.datasheetSizing.formVmp">Vmp STC (V)</span><input type="number" name="vmpStcV" step="0.01" min="0.01" required></label>
+              <label><span data-i18n="step4.datasheetSizing.formPmaxW">Pmax STC (W)</span><input type="number" name="pmaxStcW" step="1" min="1" required></label>
+              <label><span data-i18n="step4.datasheetSizing.formPmaxCoeff">Pmax katsayısı (%/°C)</span><input type="number" name="pmaxCoeffPctPerC" step="0.001" required></label>
+            </div>
+          </section>
+          <section class="datasheet-sizing-fieldset datasheet-sizing-fieldset--inverter">
+            <div class="datasheet-sizing-fieldset-head">
+              <strong>İnverter sınırları</strong>
+              <span>String uzunluğu, inverterin izin verdiği maksimum DC giriş gerilimine göre güvenli tarafa yuvarlanır.</span>
+            </div>
+            <div class="datasheet-sizing-input-grid datasheet-sizing-input-grid--compact">
+              <label><span data-i18n="step4.datasheetSizing.formInvMaxV">İnverter max DC giriş (V)</span><input type="number" name="inverterMaxInputV" step="1" min="1" required></label>
+              <label><span data-i18n="step4.datasheetSizing.formInvMpptV">İnverter MPPT optimal (V)</span><input type="number" name="inverterMpptOptimalV" step="1" min="1" required></label>
+            </div>
+          </section>
         </div>
         <p class="form-error datasheet-sizing-error" id="datasheet-sizing-error" hidden></p>
         <div class="datasheet-sizing-form-actions">

@@ -1,5 +1,5 @@
-// v44: Refresh step 4 panel selection mode assets.
-const CACHE_NAME = 'solarRota-v44';
+// v45: Refresh step 4 datasheet sizing fallback and form UI.
+const CACHE_NAME = 'solarRota-v45';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',

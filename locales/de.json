@@ -166,10 +166,10 @@
     "systemSummary": "Systemübersicht",
     "next": "Nächster Schritt →",
     "datasheetSizing": {
-      "title": "Datenblatt & Wechselrichter-Auslegung",
+      "title": "Panel- & Wechselrichter-Sicherheitsprüfung",
       "edit": "Bearbeiten",
       "lead": "Temperatur- & Wechselrichter-Sicherheitsprüfung",
-      "sub": "Voc / Vmp / Pmax-Korrektur bei −10 / +25 / +60 °C, sichere maximale Strangpanelanzahl per math.floor gegen die Wechselrichtergrenze und realistische Spitzenleistung beim heißesten Szenario.",
+      "sub": "Panelspannung und Leistung werden für kalte und heiße Wetterlagen neu berechnet; das System zeigt die wechselrichtersichere Serienanzahl und die realistische Strangspitzenleistung bei Hitze.",
       "coldVocLabel": "Voc bei −10 °C",
       "hotPmaxLabel": "Pmax bei +60 °C",
       "safeStringLabel": "Sicher in Reihe (max.)",
@@ -190,8 +190,10 @@
       "recalc": "Neu berechnen",
       "errorIncompatible": "Datenblattvalidierung abgelehnt.",
       "errorInvalidNumber": "Ungültige Zahl eingegeben.",
-      "limitingNote": "Sicherheitsregel: WR-Maximum ÷ Voc(kältester) → math.floor.",
-      "offlineNote": "Python-Backend offline — Datenblattvalidierung übersprungen."
+      "limitingNote": "Sicherheitsregel: Die Wechselrichtergrenze wird durch den Panel-Voc im kalten Szenario geteilt und zur sicheren Seite abgerundet.",
+      "localFallbackNote": "Browser-Vorprüfung aktiv: auch ohne Backend mit derselben Temperaturkoeffizienten-Formel berechnet.",
+      "backendNote": "Python-Backend-Validierung abgeschlossen.",
+      "offlineNote": "Python-Backend offline — Browser-Vorprüfung wurde verwendet."
     }
   },
   "step5": {
