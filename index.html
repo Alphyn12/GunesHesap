@@ -1725,19 +1725,25 @@
     <div class="equipment-main">
       <!-- Panel selection -->
       <div class="card mb-4">
-        <div class="card-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-          <span data-i18n="step4.panelType">Panel Tipi Seçin</span>
+        <div class="panel-selection-head">
+          <div class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span data-i18n="step4.panelType">Panel Tipi Seçin</span>
+          </div>
+          <div class="panel-mode-toggle" role="group" aria-label="Panel seçim seviyesi">
+            <button type="button" data-panel-mode-btn="basic" data-click-action="setPanelSelectionMode" data-arg="basic">Basit</button>
+            <button type="button" data-panel-mode-btn="advanced" data-click-action="setPanelSelectionMode" data-arg="advanced">İleri</button>
+          </div>
         </div>
         <div class="equipment-section-intro">
           <div class="equipment-section-copy">
-            <strong>Panel seçimi artık sadece teknoloji sınıfı değil, doğrulanmış ürün serileri üzerinden yapılır.</strong>
-            <span>Her kartta üretici datasheet kaynağı, doğrulama tarihi, örnek ölçü, garanti yapısı ve fiyat bandı birlikte gösterilir. Hesap motoru seçilen seriyi uygun teknoloji profiline bağlar.</span>
+            <strong id="panel-mode-lead">Basit modda yalnızca panel teknolojisini seçin.</strong>
+            <span id="panel-mode-sub">Hesaplama, seçilen panel tipinin ortalama güç, ölçü, verim ve sıcaklık değerleriyle yapılır. Marka ve datasheet ayrıntılarına gerek kalmaz.</span>
           </div>
           <div class="equipment-chip-row equipment-chip-row-tight">
-            <span class="equipment-chip">Resmi datasheet kaynağı</span>
-            <span class="equipment-chip">Örnek modül ölçüsü</span>
-            <span class="equipment-chip">Ürün / performans garantisi</span>
+            <span class="equipment-chip" id="panel-mode-chip-1">Ortalama güç</span>
+            <span class="equipment-chip" id="panel-mode-chip-2">Tipik ölçü</span>
+            <span class="equipment-chip" id="panel-mode-chip-3">Hızlı seçim</span>
           </div>
         </div>
         <div class="panel-catalog-toolbar">

@@ -6,7 +6,7 @@ import {
   TURKISH_CITIES, PANEL_TYPES, BATTERY_MODELS, COMPASS_DIRS,
   PSH_FALLBACK, CITY_SUMMER_TEMPS, MONTHS, MONTH_WEIGHTS,
   DEFAULT_TARIFFS, INVERTER_TYPES, HEAT_PUMP_DATA, EV_MODELS, TARIFF_META,
-  normalizePanelTypeKey
+  PANEL_TYPE_OPTIONS, normalizePanelTypeKey
 } from './data.js';
 import {
   PANEL_CATALOG,
@@ -345,7 +345,8 @@ window.state = {
   roofArea: null, tilt: 33, azimuth: 180, azimuthCoeff: 1.00,
   azimuthName: "Güney", shadingFactor: 10,
   panelType: 'mono_perc',
-  panelCatalogId: 'trina_vertex_s_plus_neg9r28',
+  panelSelectionMode: 'basic',
+  panelCatalogId: null,
   panelCatalogTechFilter: 'all',
   panelCatalogSegmentFilter: 'all',
   inverterType: 'string',
@@ -2805,7 +2806,60 @@ function openRoofToolLegend() {
 // ═══════════════════════════════════════════════════════════
 // PANEL CARDS
 // ═══════════════════════════════════════════════════════════
-function syncPanelCatalogSelection() {
+function getPanelSelectionMode() {
+  return window.state.panelSelectionMode === 'advanced' ? 'advanced' : 'basic';
+}
+
+function syncPanelSelectionModeUI() {
+  const mode = getPanelSelectionMode();
+  window.state.panelSelectionMode = mode;
+  document.querySelectorAll('[data-panel-mode-btn]').forEach(btn => {
+    const isActive = btn.dataset.panelModeBtn === mode;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+
+  const toolbar = document.querySelector('.panel-catalog-toolbar');
+  if (toolbar) toolbar.classList.toggle('is-hidden', mode !== 'advanced');
+
+  const lead = document.getElementById('panel-mode-lead');
+  const sub = document.getElementById('panel-mode-sub');
+  const chip1 = document.getElementById('panel-mode-chip-1');
+  const chip2 = document.getElementById('panel-mode-chip-2');
+  const chip3 = document.getElementById('panel-mode-chip-3');
+  if (mode === 'advanced') {
+    if (lead) lead.textContent = 'İleri modda doğrulanmış ürün serilerini marka ve datasheet detaylarıyla karşılaştırın.';
+    if (sub) sub.textContent = 'Her kartta üretici datasheet kaynağı, doğrulama tarihi, örnek ölçü, garanti yapısı ve fiyat bandı birlikte gösterilir. Hesap motoru seçilen seriyi uygun teknoloji profiline bağlar.';
+    if (chip1) chip1.textContent = 'Resmi datasheet kaynağı';
+    if (chip2) chip2.textContent = 'Örnek modül ölçüsü';
+    if (chip3) chip3.textContent = 'Ürün / performans garantisi';
+  } else {
+    if (lead) lead.textContent = 'Basit modda yalnızca panel teknolojisini seçin.';
+    if (sub) sub.textContent = 'Hesaplama, seçilen panel tipinin ortalama güç, ölçü, verim ve sıcaklık değerleriyle yapılır. Marka ve datasheet ayrıntılarına gerek kalmaz.';
+    if (chip1) chip1.textContent = 'Ortalama güç';
+    if (chip2) chip2.textContent = 'Tipik ölçü';
+    if (chip3) chip3.textContent = 'Hızlı seçim';
+  }
+}
+
+function setPanelSelectionMode(mode = 'basic') {
+  const nextMode = mode === 'advanced' ? 'advanced' : 'basic';
+  window.state.panelSelectionMode = nextMode;
+  if (nextMode === 'basic') {
+    window.state.panelCatalogId = null;
+  } else {
+    syncPanelCatalogSelection({ forceAdvanced: true });
+  }
+  buildPanelCards();
+  updatePanelPreview();
+  persistState();
+}
+
+function syncPanelCatalogSelection({ forceAdvanced = false } = {}) {
+  if (!forceAdvanced && getPanelSelectionMode() !== 'advanced') {
+    window.state.panelCatalogId = null;
+    return null;
+  }
   const desiredType = normalizePanelTypeKey(window.state.panelType);
   window.state.panelType = desiredType;
   const currentCatalog = getPanelCatalogById(window.state.panelCatalogId);
@@ -2848,8 +2902,10 @@ function buildPanelCatalogFilters() {
 function syncPanelSelectionUI() {
   const selectedType = normalizePanelTypeKey(window.state.panelType);
   const selectedCatalogId = window.state.panelCatalogId;
-  document.querySelectorAll('.panel-card[data-panel-id]').forEach(card => {
-    const isSelected = card.dataset.panelId === selectedCatalogId;
+  document.querySelectorAll('.panel-card[data-panel-tech]').forEach(card => {
+    const isSelected = card.dataset.panelId
+      ? card.dataset.panelId === selectedCatalogId
+      : normalizePanelTypeKey(card.dataset.panelTech) === selectedType;
     card.classList.toggle('selected', isSelected);
     card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
   });
@@ -2876,6 +2932,34 @@ function buildPreviewSizingState(overrides = {}) {
     roofSections,
     ...overrides
   };
+}
+
+function describePanelTypeScenario(panelType) {
+  const techKey = normalizePanelTypeKey(panelType);
+  const cardState = buildPreviewSizingState({
+    panelType: techKey,
+    panelCatalogId: null
+  });
+  const panel = resolvePanelSpec(cardState, techKey);
+  const layout = calculateSystemLayout(cardState, techKey);
+  const usesLoadTarget = (cardState.scenarioKey === 'on-grid' || cardState.scenarioKey === 'off-grid') && cardState.designTarget === 'bill-offset';
+  const roofCapacityLayout = usesLoadTarget
+    ? calculateSystemLayout({ ...cardState, designTarget: 'fill-roof' }, techKey)
+    : layout;
+  const placedArea = layout.panelCount * panel.areaM2;
+  const areaText = `${placedArea.toFixed(1)}/${roofCapacityLayout.usableArea.toFixed(1)} m²`;
+  const panelText = usesLoadTarget
+    ? `${layout.panelCount}/${roofCapacityLayout.panelCount} panel`
+    : `${layout.panelCount} panel`;
+  return `Bu çatıda: ${panelText} · ${layout.systemPower.toFixed(2)} kWp · ${areaText}`;
+}
+
+function updateSimplePanelCardScenarioSummaries() {
+  PANEL_TYPE_OPTIONS.forEach(panelType => {
+    const el = document.getElementById(`panel-type-card-scenario-${panelType}`);
+    if (!el) return;
+    el.textContent = describePanelTypeScenario(panelType);
+  });
 }
 
 function describePanelCardScenario(entry) {
@@ -2908,11 +2992,85 @@ function updatePanelCardScenarioSummaries(visibleCatalog = null) {
   });
 }
 
+function renderSimplePanelCards(wrap) {
+  window.state.panelCatalogId = null;
+  window.state.panelType = normalizePanelTypeKey(window.state.panelType);
+  wrap.innerHTML = '';
+
+  PANEL_TYPE_OPTIONS.forEach(panelType => {
+    const techKey = normalizePanelTypeKey(panelType);
+    const p = PANEL_TYPES[techKey] || PANEL_TYPES.mono_perc;
+    const isSelected = techKey === window.state.panelType;
+    const efficiencyText = Number.isFinite(Number(p.efficiency)) ? `${(Number(p.efficiency) * 100).toFixed(1)}%` : '—';
+    const tempCoeffText = Number.isFinite(Number(p.tempCoeff)) ? `${(Number(p.tempCoeff) * 100).toFixed(2)}%/°C` : '—';
+    const warrantyText = `${Number(p.warranty) || 0} yıl ürün / ${Number(p.powerWarranty) || 0} yıl performans`;
+    const card = document.createElement('div');
+    card.className = 'panel-card panel-type-card' + (isSelected ? ' selected' : '');
+    card.id = `panel-type-card-${techKey}`;
+    card.dataset.panelTech = techKey;
+    card.dataset.testid = `panel-type-card-${techKey}`;
+    card.setAttribute('data-testid', `panel-type-card-${techKey}`);
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    card.innerHTML = `
+      <div class="panel-check">✓</div>
+      <div class="panel-type-topline">
+        <span class="equipment-card-badge">${escapeHtml(p.badge || 'Panel tipi')}</span>
+        <span class="panel-type-mode">Ortalama profil</span>
+      </div>
+      <div class="panel-type-visual" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="panel-card-title">${escapeHtml(p.name)}</div>
+      <div class="equipment-card-copy">${escapeHtml(p.summary)}</div>
+      <div class="panel-card-eff">${Number(p.wattPeak) || 0} Wp</div>
+      <div class="equipment-card-metric-label">Bu panel tipine ait ortalama modül gücü</div>
+      <div class="equipment-chip-row">
+        <span class="equipment-chip">${escapeHtml(efficiencyText)} verim</span>
+        <span class="equipment-chip">${escapeHtml(p.powerRange || '')}</span>
+        <span class="equipment-chip">${escapeHtml(p.exampleSize || '')}</span>
+      </div>
+      <div class="panel-card-stats">
+        <div class="panel-stat"><span class="panel-stat-label">Tipik kullanım</span><span>${escapeHtml(p.bestFor)}</span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Sıcaklık katsayısı</span><span>${escapeHtml(tempCoeffText)}</span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Ortalama fiyat</span><span>${Number(p.pricePerWatt || 0).toFixed(1)} ₺/W</span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Garanti</span><span>${escapeHtml(warrantyText)}</span></div>
+      </div>
+      <div class="panel-card-scenario" id="panel-type-card-scenario-${techKey}"></div>
+      <div class="equipment-card-note equipment-card-note-muted"><strong>Dikkat:</strong> ${escapeHtml(p.watchFor)}</div>`;
+
+    const activateCard = () => {
+      window.state.panelType = techKey;
+      window.state.panelCatalogId = null;
+      syncPanelSelectionUI();
+      updatePanelPreview();
+      persistState();
+    };
+    card.addEventListener('click', activateCard);
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        activateCard();
+      }
+    });
+    wrap.appendChild(card);
+  });
+
+  updateSimplePanelCardScenarioSummaries();
+  updateEquipmentSelectionSummary();
+}
+
 function buildPanelCards() {
   const wrap = document.getElementById('panel-cards-wrap');
   if (!wrap) return;
+  syncPanelSelectionModeUI();
+  if (getPanelSelectionMode() !== 'advanced') {
+    renderSimplePanelCards(wrap);
+    return;
+  }
   buildPanelCatalogFilters();
-  const selectedCatalog = syncPanelCatalogSelection();
+  const selectedCatalog = syncPanelCatalogSelection({ forceAdvanced: true });
   syncPanelSelectionUI();
   wrap.innerHTML = '';
   const filteredCatalog = filterPanelCatalog({
@@ -2977,9 +3135,10 @@ function buildPanelCards() {
     const activateCard = () => {
       window.state.panelCatalogId = entry.id;
       window.state.panelType = techKey;
+      window.state.panelSelectionMode = 'advanced';
       syncPanelSelectionUI();
       updatePanelPreview();
-      updateEquipmentSelectionSummary();
+      persistState();
     };
     card.addEventListener('click', activateCard);
     card.addEventListener('keydown', event => {
@@ -3018,6 +3177,7 @@ function formatPreviewCurrency(tryAmount, withCurrency = true) {
 
 function computeEquipmentPreviewMetrics() {
   window.state.panelType = normalizePanelTypeKey(window.state.panelType);
+  if (getPanelSelectionMode() !== 'advanced') window.state.panelCatalogId = null;
   const previewState = buildPreviewSizingState();
   const panel = resolvePanelSpec(previewState);
   const panelArea = panel.areaM2;
@@ -3127,7 +3287,8 @@ function updatePanelPreview() {
     const target = isBillTarget ? `${loadTargetLabel} kadar boyutlandır` : 'Çatıyı teknik sınıra kadar kullan';
     roofMode.textContent = `${target} · ${Math.round(usableRatio * 100)}% kullanılabilir alan · ${totalPanelCount}/${roofCapacityPanelCount} panel · ${placedArea.toFixed(1)}/${usableArea.toFixed(1)} m²`;
   }
-  updatePanelCardScenarioSummaries();
+  if (getPanelSelectionMode() === 'advanced') updatePanelCardScenarioSummaries();
+  else updateSimplePanelCardScenarioSummaries();
   updateEquipmentSelectionSummary();
 }
 
@@ -3147,8 +3308,10 @@ function updateEquipmentSelectionSummary() {
   const inverterEl = document.getElementById('equip-summary-inverter');
   const batteryEl = document.getElementById('equip-summary-battery');
   window.state.panelType = normalizePanelTypeKey(window.state.panelType);
+  const panelMode = getPanelSelectionMode();
+  if (panelMode !== 'advanced') window.state.panelCatalogId = null;
   const panel = PANEL_TYPES[window.state.panelType] || PANEL_TYPES.mono_perc;
-  const panelCatalog = syncPanelCatalogSelection();
+  const panelCatalog = panelMode === 'advanced' ? syncPanelCatalogSelection({ forceAdvanced: true }) : null;
   const inverter = INVERTER_TYPES[window.state.inverterType];
   normalizeBatterySelection();
   const battery = window.state.battery || BATTERY_MODELS.custom;
@@ -3901,6 +4064,7 @@ window.selectDirection = selectDirection;
 window.syncRoofOrientationUI = syncRoofOrientationUI;
 window.closeRoofToolLegend = closeRoofToolLegend;
 window.openRoofToolLegend = openRoofToolLegend;
+window.setPanelSelectionMode = setPanelSelectionMode;
 window.buildPanelCards = buildPanelCards;
 window.updatePanelPreview = updatePanelPreview;
 window.updateEquipmentSelectionSummary = updateEquipmentSelectionSummary;
@@ -4029,6 +4193,7 @@ registerActions({
   updateSecDirFromSelect: (arg, el) => updateSecDir(arg, el),
   updateSecTiltFromInput: (arg, el) => updateSecTilt(arg, el?.value),
   updateSecShadeFromInput: (arg, el) => updateSecShade(arg, el?.value),
+  setPanelSelectionMode,
   onBatteryToggle,
   updateBatteryCustom,
   toggleNMBlock,

@@ -56,8 +56,9 @@ def main():
                     const data = window._appData;
                     window.state.annualConsumptionKwh = 9600;
                     window.state.usableRoofRatio = 0.72;
+                    window.state.panelSelectionMode = 'basic';
                     window.state.panelType = 'n_type_topcon';
-                    window.state.panelCatalogId = 'trina_vertex_s_plus_neg9r28';
+                    window.state.panelCatalogId = null;
                     window.state.inverterType = 'optimizer';
                     window.state.batteryEnabled = true;
                     window.state.battery = { ...data.BATTERY_MODELS.tesla_pw3, model: 'tesla_pw3' };
@@ -72,11 +73,12 @@ def main():
             page.wait_for_selector(".inverter-card")
             page.wait_for_selector(".bat-model-btn")
 
-            assert page.locator(".panel-card").count() == 6
+            assert page.locator('[data-panel-mode-btn="basic"]').get_attribute("class") and "active" in page.locator('[data-panel-mode-btn="basic"]').get_attribute("class")
+            assert page.locator(".panel-card").count() == 4
             assert page.locator(".inverter-card").count() == 3
             assert page.locator(".bat-model-btn").count() == 6
 
-            assert page.locator(".panel-card .panel-catalog-link").nth(0).is_visible()
+            assert "Ortalama profil" in page.locator("#panel-cards-wrap").inner_text()
             assert "SolarEdge Home Hub + S440" in page.locator(".inverter-card.selected").inner_text()
             assert page.locator("#battery-summary").is_visible()
             assert "Tesla Powerwall 3" in page.locator("#battery-summary").inner_text()
@@ -96,6 +98,12 @@ def main():
             page.click('[data-panel-tech="bifacial_topcon"]')
             page.wait_for_timeout(100)
             assert "Bifacial" in page.locator("#equip-summary-panel-type").inner_text()
+            assert page.evaluate("window.state.panelCatalogId") is None
+
+            page.click('[data-panel-mode-btn="advanced"]')
+            page.wait_for_timeout(100)
+            assert page.locator(".panel-card").count() == 6
+            assert page.locator(".panel-card .panel-catalog-link").nth(0).is_visible()
 
             page.click('#inv-card-micro')
             page.wait_for_timeout(100)

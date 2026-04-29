@@ -51,6 +51,7 @@ const STRING_LIMITS = {
   cityName: 80,
   azimuthName: 40,
   panelType: 40,
+  panelSelectionMode: 20,
   panelCatalogId: 80,
   panelCatalogTechFilter: 40,
   panelCatalogSegmentFilter: 40,
@@ -104,6 +105,7 @@ const ARRAY_KEYS = new Set([
 
 const ENUM_VALUES = {
   panelType: new Set(['mono', 'poly', 'bifacial', 'mono_perc', 'n_type_topcon', 'bifacial_topcon', 'hjt']),
+  panelSelectionMode: new Set(['basic', 'advanced']),
   tariffType: new Set(['residential', 'commercial', 'industrial', 'agriculture', 'custom']),
   tariffMode: new Set(['auto', 'custom', 'pst', 'sktt', 'contract']),
   tariffRegime: new Set(['auto', 'pst', 'sktt', 'contract']),

@@ -6,8 +6,8 @@
 //
 // Backend: POST /api/panel/thermal-check (panel_thermal_engine.py).
 // ═══════════════════════════════════════════════════════════
-import { INVERTER_TYPES } from './data.js';
-import { getPanelCatalogById, PANEL_CATALOG } from './panel-catalog.js';
+import { INVERTER_TYPES, PANEL_TYPES, normalizePanelTypeKey } from './data.js';
+import { getPanelCatalogById } from './panel-catalog.js';
 import { callPanelThermalCheck } from './pvlib-bridge.js';
 
 const FALLBACK_PANEL = {
@@ -21,6 +21,13 @@ const FALLBACK_PANEL = {
 const FALLBACK_INVERTER = {
   maxInputDcV: 600,
   mpptOptimalV: 360
+};
+
+const PANEL_TYPE_ELECTRICAL_DEFAULTS = {
+  mono_perc: { vocStcV: 49.5, vmpStcV: 41.8, vocCoeffPctPerC: -0.27 },
+  n_type_topcon: { vocStcV: 51.5, vmpStcV: 42.4, vocCoeffPctPerC: -0.25 },
+  bifacial_topcon: { vocStcV: 51.4, vmpStcV: 42.4, vocCoeffPctPerC: -0.24 },
+  hjt: { vocStcV: 47.7, vmpStcV: 39.4, vocCoeffPctPerC: -0.24 }
 };
 
 function t(key, fallback) {
@@ -47,8 +54,18 @@ function fmtPct(p) {
 
 export function getPanelDatasheetDefaults() {
   const state = window.state || {};
-  const fromCatalog = state.panelCatalogId ? getPanelCatalogById(state.panelCatalogId) : null;
-  const fallback = fromCatalog || PANEL_CATALOG[0] || FALLBACK_PANEL;
+  const useCatalog = state.panelSelectionMode === 'advanced' && state.panelCatalogId;
+  const fromCatalog = useCatalog ? getPanelCatalogById(state.panelCatalogId) : null;
+  const typeKey = normalizePanelTypeKey(state.panelType);
+  const typeProfile = PANEL_TYPES[typeKey] || PANEL_TYPES.mono_perc || {};
+  const typeElectrical = PANEL_TYPE_ELECTRICAL_DEFAULTS[typeKey] || FALLBACK_PANEL;
+  const fallback = fromCatalog || {
+    ...FALLBACK_PANEL,
+    ...typeElectrical,
+    modeledWattPeak: Number(typeProfile.wattPeak) || FALLBACK_PANEL.modeledWattPeak,
+    modeledTempCoeffPerC: Number(typeProfile.tempCoeff) || FALLBACK_PANEL.modeledTempCoeffPerC,
+    displayName: `${typeProfile.name || 'Panel tipi'} ortalama profil`
+  };
   return {
     vocStcV: Number.isFinite(fallback.vocStcV) ? fallback.vocStcV : FALLBACK_PANEL.vocStcV,
     vmpStcV: Number.isFinite(fallback.vmpStcV) ? fallback.vmpStcV : FALLBACK_PANEL.vmpStcV,

@@ -12,6 +12,7 @@ const STATE_KEYS = [
   'step', 'lat', 'lon', 'cityName', 'ghi', 'roofArea', 'tilt', 'azimuth',
   'scenarioKey', 'scenarioContext', 'scenarioSelectedAt', 'enginePreference', 'engineContext',
   'azimuthCoeff', 'azimuthName', 'shadingFactor', 'soilingFactor', 'panelType',
+  'panelSelectionMode', 'panelCatalogId', 'panelCatalogTechFilter', 'panelCatalogSegmentFilter',
   'inverterType', 'multiRoof', 'roofSections', 'roofGeometry', 'dailyConsumption', 'designTarget',
   'batteryEnabled', 'battery', 'netMeteringEnabled', 'usdToTry', 'displayCurrency',
   'exchangeRate', 'tariff', 'tariffType', 'tariffMode', 'tariffRegime',

@@ -67,6 +67,8 @@ assert.equal(sanitizeSharedState({ step: 7 }).step, 7);
 assert.equal(sanitizeSharedState({ multiRoof: true, tariffIncludesTax: false }).multiRoof, true);
 assert.equal(sanitizeSharedState({ multiRoof: true, tariffIncludesTax: false }).tariffIncludesTax, false);
 assert.equal(sanitizeSharedState({ panelType: 'poly' }).panelType, 'n_type_topcon');
+assert.equal(sanitizeSharedState({ panelSelectionMode: 'advanced' }).panelSelectionMode, 'advanced');
+assert.equal('panelSelectionMode' in sanitizeSharedState({ panelSelectionMode: 'expert' }), false);
 
 const snapshot = createShareStateSnapshot({
   cityName: 'Izmir',

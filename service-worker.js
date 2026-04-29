@@ -1,5 +1,5 @@
-// v43: Ensure direct step navigation reveals the app shell.
-const CACHE_NAME = 'solarRota-v43';
+// v44: Refresh step 4 panel selection mode assets.
+const CACHE_NAME = 'solarRota-v44';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
