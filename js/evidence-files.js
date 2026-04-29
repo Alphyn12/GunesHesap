@@ -25,6 +25,16 @@ function byteHex(buffer) {
   return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+function cleanProfileSummary(summary = null) {
+  if (!summary || typeof summary !== 'object') return null;
+  return {
+    annualKwh: Number(summary.annualKwh) || 0,
+    peakKwh: Number(summary.peakKwh) || 0,
+    positiveHours: Number(summary.positiveHours) || 0,
+    zeroHours: Number(summary.zeroHours) || 0
+  };
+}
+
 async function fingerprintFile(file) {
   const buffer = await file.arrayBuffer();
   if (globalThis.crypto?.subtle?.digest) {
@@ -51,7 +61,7 @@ export function validateEvidenceFile(file) {
   };
 }
 
-export async function attachEvidenceFile(state = {}, evidenceType, file, user = state.userIdentity || {}) {
+export async function attachEvidenceFile(state = {}, evidenceType, file, user = state.userIdentity || {}, context = {}) {
   const validation = validateEvidenceFile(file);
   const type = cleanString(evidenceType, 40);
   if (!validation.ok) {
@@ -61,6 +71,8 @@ export async function attachEvidenceFile(state = {}, evidenceType, file, user = 
 
   const sha256 = await fingerprintFile(file);
   const now = new Date().toISOString();
+  const profileFingerprint = cleanString(context.profileFingerprint, 80);
+  const profileSummary = cleanProfileSummary(context.profileSummary);
   const id = `${type}-${Date.now()}-${sha256.slice(0, 12)}`;
   const metadata = {
     id,
@@ -73,7 +85,9 @@ export async function attachEvidenceFile(state = {}, evidenceType, file, user = 
     sha256,
     attachedAt: now,
     storage: 'indexeddb',
-    validationStatus: 'validated'
+    validationStatus: 'validated',
+    ...(profileFingerprint ? { profileFingerprint } : {}),
+    ...(profileSummary ? { profileSummary } : {})
   };
 
   await saveEvidenceBlob(metadata, file);
@@ -87,6 +101,8 @@ export async function attachEvidenceFile(state = {}, evidenceType, file, user = 
     validationStatus: 'validated',
     ref: record.ref || metadata.name,
     checkedAt: now.slice(0, 10),
+    ...(profileFingerprint ? { profileFingerprint } : {}),
+    ...(profileSummary ? { profileSummary } : {}),
     files: [...files, metadata].slice(-10)
   };
   appendAuditEntry(state, 'evidence.file_attached', {
@@ -94,6 +110,7 @@ export async function attachEvidenceFile(state = {}, evidenceType, file, user = 
     fileName: metadata.name,
     size: metadata.size,
     sha256: metadata.sha256,
+    profileFingerprint: metadata.profileFingerprint || null,
     storage: metadata.storage
   }, user);
   return { ok: true, metadata };

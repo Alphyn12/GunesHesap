@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   hasCompleteHourlyProfile8760,
+  hashHourlyProfile8760,
   hasMeaningfulHourlyProfile8760,
   hasMeaningfulConsumptionEvidence,
   hasMeaningfulMonthlyConsumption,
@@ -20,6 +21,8 @@ assert.equal(hasMeaningfulConsumptionEvidence({ hourlyConsumption8760: new Array
 assert.equal(hasMeaningfulConsumptionEvidence({ hourlyConsumption8760: new Array(8760).fill(1) }), true);
 assert.equal(validateHourlyProfile8760(new Array(8760).fill(0), { label: 'test' }).ok, false);
 assert.equal(validateHourlyProfile8760(new Array(8760).fill(1), { label: 'test' }).ok, true);
+assert.equal(hashHourlyProfile8760(new Array(8760).fill(1)), hashHourlyProfile8760(new Array(8760).fill(1)));
+assert.notEqual(hashHourlyProfile8760(new Array(8760).fill(1)), hashHourlyProfile8760(new Array(8760).fill(2)));
 
 const imported = sanitizeDashboardRecord({
   id: '7',

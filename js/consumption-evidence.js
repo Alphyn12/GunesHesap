@@ -80,6 +80,30 @@ export function validateHourlyProfile8760(hourlyConsumption8760, {
   };
 }
 
+export function hashHourlyProfile8760(hourlyConsumption8760) {
+  if (!hasCompleteHourlyProfile8760(hourlyConsumption8760)) return '';
+  const normalized = hourlyConsumption8760
+    .slice(0, 8760)
+    .map(value => Math.max(0, Number(value) || 0).toFixed(6))
+    .join('|');
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < normalized.length; i += 1) {
+    hash ^= normalized.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `hp8760-${hash.toString(16).padStart(8, '0')}`;
+}
+
+export function buildHourlyProfileEvidence(hourlyConsumption8760) {
+  const summary = summarizeHourlyProfile8760(hourlyConsumption8760);
+  const profileFingerprint = hashHourlyProfile8760(hourlyConsumption8760);
+  if (!summary || !profileFingerprint) return null;
+  return {
+    profileFingerprint,
+    profileSummary: summary
+  };
+}
+
 export function hasMeaningfulConsumptionEvidence(state = {}) {
   return !!state.hasSignedCustomerBillData
     || hasMeaningfulMonthlyConsumption(state.monthlyConsumption)

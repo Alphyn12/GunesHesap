@@ -1,5 +1,5 @@
 // Evidence/source governance helpers for quote-ready proposal workflow.
-import { hasMeaningfulConsumptionEvidence, hasMeaningfulHourlyProfile8760 } from './consumption-evidence.js';
+import { buildHourlyProfileEvidence, hasMeaningfulConsumptionEvidence, hasMeaningfulHourlyProfile8760 } from './consumption-evidence.js';
 import { i18n } from './i18n.js';
 import { localizeMessageList, statusLabel } from './output-i18n.js';
 
@@ -17,6 +17,12 @@ export const OFFGRID_FIELD_EVIDENCE_REQUIREMENTS = [
   { key: 'offgridSiteShading', label: 'Off-grid site shading evidence', maxAgeDays: 365 },
   { key: 'offgridEquipmentDatasheets', label: 'Off-grid equipment datasheet evidence', maxAgeDays: 365 }
 ];
+
+const OFFGRID_PROFILE_EVIDENCE_KEYS = new Set([
+  'offgridPvProduction',
+  'offgridLoadProfile',
+  'offgridCriticalLoadProfile'
+]);
 
 export const OFFGRID_FIELD_ACCEPTANCE_REQUIREMENTS = [
   { key: 'offgridCommissioningReport', label: 'Off-grid commissioning report', maxAgeDays: 90 },
@@ -63,6 +69,20 @@ function todayDate(today = currentDateIso()) {
   return parseDate(today) || new Date();
 }
 
+function cleanProfileSummary(summary = null) {
+  if (!summary || typeof summary !== 'object') return null;
+  return {
+    annualKwh: Number(summary.annualKwh) || 0,
+    peakKwh: Number(summary.peakKwh) || 0,
+    positiveHours: Number(summary.positiveHours) || 0,
+    zeroHours: Number(summary.zeroHours) || 0
+  };
+}
+
+function profileEvidenceFromHourly(value) {
+  return buildHourlyProfileEvidence(value) || { profileFingerprint: '', profileSummary: null };
+}
+
 function daysBetween(a, b) {
   return Math.floor((b.getTime() - a.getTime()) / DAY_MS);
 }
@@ -70,7 +90,7 @@ function daysBetween(a, b) {
 function normalizeEvidenceRecord(record = {}, defaults = {}) {
   const status = record.status || defaults.status || 'missing';
   const files = Array.isArray(record.files) ? record.files : (Array.isArray(defaults.files) ? defaults.files : []);
-  return {
+  const normalized = {
     type: defaults.type || record.type || 'generic',
     status,
     ref: String(record.ref || defaults.ref || '').trim(),
@@ -89,13 +109,31 @@ function normalizeEvidenceRecord(record = {}, defaults = {}) {
       sha256: String(file.sha256 || '').trim(),
       storage: String(file.storage || '').trim(),
       attachedAt: file.attachedAt || null,
-      validationStatus: file.validationStatus || 'unvalidated'
+      validationStatus: file.validationStatus || 'unvalidated',
+      profileFingerprint: String(file.profileFingerprint || '').trim(),
+      profileSummary: cleanProfileSummary(file.profileSummary)
     })).filter(file => file.id && file.sha256)
   };
+  const latestProfileFile = [...normalized.files].reverse().find(file => file.profileFingerprint);
+  normalized.profileFingerprint = String(record.profileFingerprint || defaults.profileFingerprint || latestProfileFile?.profileFingerprint || '').trim();
+  normalized.profileSummary = cleanProfileSummary(record.profileSummary || defaults.profileSummary || latestProfileFile?.profileSummary);
+  normalized.runtimeProfileFingerprint = String(defaults.runtimeProfileFingerprint || '').trim();
+  normalized.runtimeProfileSummary = cleanProfileSummary(defaults.runtimeProfileSummary);
+  return normalized;
+}
+
+function isSha256Hex(value) {
+  return /^[a-f0-9]{64}$/i.test(String(value || '').trim());
+}
+
+function profileBindingStatus(record = {}) {
+  if (!record.runtimeProfileFingerprint) return 'runtime-profile-missing';
+  if (!record.profileFingerprint) return 'evidence-profile-missing';
+  return record.profileFingerprint === record.runtimeProfileFingerprint ? 'matched' : 'mismatch';
 }
 
 function hasValidatedFile(record = {}) {
-  return Array.isArray(record.files) && record.files.some(file => file.sha256 && file.validationStatus !== 'rejected');
+  return Array.isArray(record.files) && record.files.some(file => isSha256Hex(file.sha256) && file.validationStatus !== 'rejected');
 }
 
 function runtimeEvidenceStatus(existing, hasRuntimeData) {
@@ -172,6 +210,19 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
     const fieldImports = state.offgridFieldImports || {};
     const highResLoad = fieldImports.highResolutionLoad || {};
     const inverterEventLog = fieldImports.inverterEventLog || {};
+    const pvRuntimeProfile = profileEvidenceFromHourly(
+      hasMeaningfulHourlyProfile8760(state.offgridPvHourly8760, { minAnnualKwh: 1, minPositiveHours: 24 })
+        ? state.offgridPvHourly8760
+        : state.hourlyProduction8760
+    );
+    const directLoadRuntimeProfile = profileEvidenceFromHourly(state.hourlyConsumption8760);
+    const highResLoadRuntimeProfile = profileEvidenceFromHourly(highResLoad.derivedHourly8760);
+    const loadRuntimeProfile = directLoadRuntimeProfile.profileFingerprint ? directLoadRuntimeProfile : highResLoadRuntimeProfile;
+    const criticalRuntimeProfile = profileEvidenceFromHourly(
+      hasMeaningfulHourlyProfile8760(state.offgridCriticalLoad8760, { minAnnualKwh: 0.1, minPositiveHours: 1 })
+        ? state.offgridCriticalLoad8760
+        : state.criticalLoad8760
+    );
     const hasDerivedHighResLoad8760 = hasMeaningfulHourlyProfile8760(highResLoad.derivedHourly8760, { minAnnualKwh: 12, minPositiveHours: 24 });
     const hasRealPvFromResult = offgrid.productionDispatchMetadata?.hasRealHourlyProduction === true
       && Number(offgrid.productionDispatchMetadata?.annualKwh || 0) >= 1;
@@ -189,7 +240,9 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
       ref: evidence.offgridPvProduction?.ref || state.offgridPvHourlySource || (hasRealPvProduction ? 'runtime-offgrid-pv-8760' : ''),
       checkedAt: evidence.offgridPvProduction?.checkedAt || null,
       sourceLabel: 'Off-grid PV 8760 production evidence',
-      notes: hasRealPvProduction ? 'Runtime 8760 PV profile is present; Phase 2 still requires an auditable file hash.' : ''
+      notes: hasRealPvProduction ? 'Runtime 8760 PV profile is present; Phase 2 still requires an auditable file hash.' : '',
+      runtimeProfileFingerprint: pvRuntimeProfile.profileFingerprint,
+      runtimeProfileSummary: pvRuntimeProfile.profileSummary
     });
     registry.offgridLoadProfile = normalizeEvidenceRecord(evidence.offgridLoadProfile, {
       type: 'offgridLoadProfile',
@@ -206,7 +259,11 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
       notes: hasDerivedHighResLoad8760
         ? 'High-resolution field profile was aggregated into a dispatch-ready 8760 load series.'
         : hasRealLoad ? 'Runtime 8760 total load profile is present; Phase 2 still requires an auditable file hash.' : '',
-      files: evidence.offgridLoadProfile?.files?.length ? evidence.offgridLoadProfile.files : (evidence.offgridHighResLoadProfile?.files || [])
+      files: evidence.offgridLoadProfile?.files?.length ? evidence.offgridLoadProfile.files : (evidence.offgridHighResLoadProfile?.files || []),
+      profileFingerprint: evidence.offgridHighResLoadProfile?.profileFingerprint || '',
+      profileSummary: evidence.offgridHighResLoadProfile?.profileSummary || null,
+      runtimeProfileFingerprint: loadRuntimeProfile.profileFingerprint,
+      runtimeProfileSummary: loadRuntimeProfile.profileSummary
     });
     registry.offgridCriticalLoadProfile = normalizeEvidenceRecord(evidence.offgridCriticalLoadProfile, {
       type: 'offgridCriticalLoadProfile',
@@ -214,7 +271,9 @@ export function buildEvidenceRegistry(state = {}, results = {}, { today = curren
       ref: evidence.offgridCriticalLoadProfile?.ref || (hasRealCriticalLoad ? 'runtime-critical-load-8760' : ''),
       checkedAt: evidence.offgridCriticalLoadProfile?.checkedAt || null,
       sourceLabel: 'Off-grid critical load 8760 evidence',
-      notes: hasRealCriticalLoad ? 'Runtime 8760 critical load profile is present; Phase 2 still requires an auditable file hash.' : ''
+      notes: hasRealCriticalLoad ? 'Runtime 8760 critical load profile is present; Phase 2 still requires an auditable file hash.' : '',
+      runtimeProfileFingerprint: criticalRuntimeProfile.profileFingerprint,
+      runtimeProfileSummary: criticalRuntimeProfile.profileSummary
     });
     registry.offgridHighResLoadProfile = normalizeEvidenceRecord(evidence.offgridHighResLoadProfile, {
       type: 'offgridHighResLoadProfile',
@@ -357,6 +416,16 @@ export function buildOffgridFieldEvidenceGate(evidenceGovernance = {}, results =
     if (!hasValidatedFile(record)) {
       blockers.push(`${req.key}: doğrulanmış dosya eki ve SHA-256 parmak izi yok.`);
     }
+    if (OFFGRID_PROFILE_EVIDENCE_KEYS.has(req.key)) {
+      const binding = profileBindingStatus(record);
+      if (binding === 'runtime-profile-missing') {
+        blockers.push(`${req.key}: hesapta kullanılan anlamlı 8760 profil parmak izi yok.`);
+      } else if (binding === 'evidence-profile-missing') {
+        blockers.push(`${req.key}: kanıt dosyası hesapta kullanılan 8760 profil ile bağlanmamış.`);
+      } else if (binding === 'mismatch') {
+        blockers.push(`${req.key}: kanıt profili ile hesapta kullanılan 8760 seri eşleşmiyor.`);
+      }
+    }
     if (isEvidenceExpired(record, { today })) {
       blockers.push(`${req.key}: kanıt geçerlilik tarihi dolmuş.`);
     }
@@ -394,7 +463,10 @@ export function buildOffgridFieldEvidenceGate(evidenceGovernance = {}, results =
         ref: record.ref || '',
         checkedAt: record.checkedAt || record.issuedAt || null,
         fileCount: Array.isArray(record.files) ? record.files.length : 0,
-        hasValidatedFile: hasValidatedFile(record)
+        hasValidatedFile: hasValidatedFile(record),
+        profileFingerprint: record.profileFingerprint || '',
+        runtimeProfileFingerprint: record.runtimeProfileFingerprint || '',
+        profileBindingStatus: OFFGRID_PROFILE_EVIDENCE_KEYS.has(key) ? profileBindingStatus(record) : 'not-required'
       }];
     }))
   };

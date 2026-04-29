@@ -12,6 +12,7 @@ import {
   isEvidenceFresh,
   validateEvidenceRegistry
 } from '../js/evidence-governance.js';
+import { buildHourlyProfileEvidence } from '../js/consumption-evidence.js';
 
 assert.equal(isEvidenceFresh({ checkedAt: '2026-04-01' }, { today: '2026-04-13', maxAgeDays: 45 }), true);
 assert.equal(isEvidenceFresh({ checkedAt: '2026-01-01' }, { today: '2026-04-13', maxAgeDays: 45 }), false);
@@ -110,11 +111,18 @@ const offgridEvidenceBlocked = buildOffgridFieldEvidenceGate(
 assert.equal(offgridEvidenceBlocked.phase2Ready, false);
 assert.ok(offgridEvidenceBlocked.blockers.some(item => item.includes('offgridPvProduction')));
 
-const evidenceFile = (id, sha) => ({ id, name: `${id}.csv`, size: 100, sha256: sha.repeat(64).slice(0, 64), validationStatus: 'validated' });
+const evidenceFile = (id, sha) => {
+  const seed = String(sha || id).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const hex = seed.toString(16).padStart(2, '0').repeat(32).slice(0, 64);
+  return { id, name: `${id}.csv`, size: 100, sha256: hex, validationStatus: 'validated' };
+};
+const pvHourlyEvidence = buildHourlyProfileEvidence(new Array(8760).fill(0.5));
+const loadHourlyEvidence = buildHourlyProfileEvidence(new Array(8760).fill(1));
+const criticalHourlyEvidence = buildHourlyProfileEvidence(new Array(8760).fill(0.3));
 const verifiedOffgridEvidence = {
-  offgridPvProduction: { status: 'verified', ref: 'pv.csv', checkedAt: '2026-04-12', files: [evidenceFile('pv', 'a')] },
-  offgridLoadProfile: { status: 'verified', ref: 'load.csv', checkedAt: '2026-04-12', files: [evidenceFile('load', 'b')] },
-  offgridCriticalLoadProfile: { status: 'verified', ref: 'critical.csv', checkedAt: '2026-04-12', files: [evidenceFile('critical', 'c')] },
+  offgridPvProduction: { status: 'verified', ref: 'pv.csv', checkedAt: '2026-04-12', files: [evidenceFile('pv', 'a')], ...pvHourlyEvidence },
+  offgridLoadProfile: { status: 'verified', ref: 'load.csv', checkedAt: '2026-04-12', files: [evidenceFile('load', 'b')], ...loadHourlyEvidence },
+  offgridCriticalLoadProfile: { status: 'verified', ref: 'critical.csv', checkedAt: '2026-04-12', files: [evidenceFile('critical', 'c')], ...criticalHourlyEvidence },
   offgridSiteShading: { status: 'verified', ref: 'shade.pdf', checkedAt: '2026-04-12', files: [evidenceFile('shade', 'd')] },
   offgridEquipmentDatasheets: { status: 'verified', ref: 'datasheets.pdf', checkedAt: '2026-04-12', files: [evidenceFile('datasheets', 'e')] },
   offgridCommissioningReport: { status: 'verified', ref: 'commissioning.pdf', checkedAt: '2026-04-12', files: [evidenceFile('commissioning', 'f')] },
@@ -187,6 +195,43 @@ const offgridEvidenceReady = buildOffgridFieldEvidenceGate(
 );
 assert.equal(offgridEvidenceReady.phase2Ready, true);
 assert.equal(offgridEvidenceReady.fieldGuaranteeReady, false);
+assert.equal(offgridEvidenceReady.records.offgridPvProduction.profileBindingStatus, 'matched');
+assert.equal(offgridEvidenceReady.records.offgridLoadProfile.profileBindingStatus, 'matched');
+assert.equal(offgridEvidenceReady.records.offgridCriticalLoadProfile.profileBindingStatus, 'matched');
+
+const mismatchedEvidenceRegistry = buildEvidenceRegistry(
+  {
+    scenarioKey: 'off-grid',
+    hourlyConsumption8760: new Array(8760).fill(2),
+    offgridPvHourly8760: new Array(8760).fill(0.5),
+    offgridCriticalLoad8760: new Array(8760).fill(0.3),
+    evidence: verifiedOffgridEvidence
+  },
+  {
+    offgridL2Results: {
+      fieldGuaranteeReadiness: { status: 'phase1-ready', phase1Ready: true },
+      productionDispatchMetadata: { hasRealHourlyProduction: true },
+      loadMode: 'hourly-8760',
+      synthetic: false
+    }
+  },
+  { today: '2026-04-13' }
+);
+const mismatchedEvidenceGate = buildOffgridFieldEvidenceGate(
+  mismatchedEvidenceRegistry,
+  {
+    offgridL2Results: {
+      fieldGuaranteeReadiness: { status: 'phase1-ready', phase1Ready: true },
+      productionDispatchMetadata: { hasRealHourlyProduction: true },
+      loadMode: 'hourly-8760',
+      synthetic: false
+    }
+  },
+  { today: '2026-04-13' }
+);
+assert.equal(mismatchedEvidenceGate.phase2Ready, false);
+assert.equal(mismatchedEvidenceGate.records.offgridLoadProfile.profileBindingStatus, 'mismatch');
+assert.ok(mismatchedEvidenceGate.blockers.some(item => item.includes('offgridLoadProfile') && item.includes('eşleşmiyor')));
 
 const offgridFieldImportReady = buildOffgridFieldImportGate(
   offgridRegistry,

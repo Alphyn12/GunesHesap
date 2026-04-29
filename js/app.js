@@ -54,7 +54,7 @@ import { escapeHtml } from './security.js';
 import { buildBackendUrl } from './backend-config.js';
 import { isSpreadsheetFilename, parseHighResolutionLoadText, parseInverterEventLogText } from './offgrid-field-import.js';
 import { runDatasheetSizing, attachDatasheetSizingHandlers } from './datasheet-sizing.js';
-import { validateHourlyProfile8760 } from './consumption-evidence.js';
+import { buildHourlyProfileEvidence, validateHourlyProfile8760 } from './consumption-evidence.js';
 
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
@@ -1571,13 +1571,28 @@ function handleHourlyCsvUpload(event) {
         if (values.length < 8760) {
           throw new Error(`Yetersiz veri: 8760 satır gerekli, ${values.length} geçerli satır bulundu.${values.length === 0 ? ' Dosya formatını kontrol edin (tek kolon, virgül/noktalı virgül/tab ayrımlı).' : ''}`);
         }
-        window.state.hourlyConsumption8760 = values.slice(0, 8760);
+        const profile = values.slice(0, 8760);
+        if (window.state.scenarioKey === 'off-grid') {
+          const validation = validateHourlyProfile8760(profile, {
+            label: 'Toplam yük 8760 profili',
+            minAnnualKwh: 12,
+            minPositiveHours: 24
+          });
+          if (!validation.ok) throw new Error(validation.errors.join(' '));
+        }
+        window.state.hourlyConsumption8760 = profile;
         window.state.hourlyProfileSource = 'hourly-uploaded';
-        const annual = Math.round(values.slice(0, 8760).reduce((a, b) => a + b, 0));
-        const peak = Math.max(...values.slice(0, 8760)).toFixed(2);
+        const annual = Math.round(profile.reduce((a, b) => a + b, 0));
+        const peak = Math.max(...profile).toFixed(2);
         let evidenceNote = '';
         if (window.state.scenarioKey === 'off-grid') {
-          const evidenceResult = await attachEvidenceFile(window.state, 'offgridLoadProfile', file, currentUser());
+          const evidenceResult = await attachEvidenceFile(
+            window.state,
+            'offgridLoadProfile',
+            file,
+            currentUser(),
+            buildHourlyProfileEvidence(profile) || {}
+          );
           evidenceNote = evidenceResult.ok
             ? ` | Kanıt SHA: ${evidenceResult.metadata.sha256.slice(0, 12)}`
             : ` | Kanıt kaydedilemedi: ${evidenceResult.errors.join(' ')}`;
@@ -1751,7 +1766,13 @@ async function loadOffgridFieldImport(event, {
       }
     }
     const evidenceResult = evidenceType
-      ? await attachEvidenceFile(window.state, evidenceType, file, currentUser())
+      ? await attachEvidenceFile(
+          window.state,
+          evidenceType,
+          file,
+          currentUser(),
+          derivedApplied ? buildHourlyProfileEvidence(summary.derivedHourly8760) : {}
+        )
       : { ok: true, metadata: null };
     const evidenceNote = evidenceResult.ok && evidenceResult.metadata?.sha256
       ? ` | Kanıt SHA: ${evidenceResult.metadata.sha256.slice(0, 12)}`
@@ -1789,7 +1810,13 @@ function loadOffgrid8760Csv(event, { stateKey, sourceKey, evidenceType, inputId,
       const positiveHours = values.filter(value => value > 1e-9).length;
       let evidenceNote = '';
       if (evidenceType) {
-        const evidenceResult = await attachEvidenceFile(window.state, evidenceType, file, currentUser());
+        const evidenceResult = await attachEvidenceFile(
+          window.state,
+          evidenceType,
+          file,
+          currentUser(),
+          buildHourlyProfileEvidence(values) || {}
+        );
         evidenceNote = evidenceResult.ok
           ? ` | Kanıt SHA: ${evidenceResult.metadata.sha256.slice(0, 12)}`
           : ` | Kanıt kaydedilemedi: ${evidenceResult.errors.join(' ')}`;
@@ -2573,7 +2600,9 @@ function renderEvidenceFileStatus() {
     const latest = files[files.length - 1];
     const localizedLabel = i18n.t(`evidenceItems.${type}`);
     const label = localizedLabel !== `evidenceItems.${type}` ? localizedLabel : type;
-    return `${label}: ${latest ? `${latest.name} · ${Math.round((latest.size || 0) / 1024)} KB · ${String(latest.sha256 || '').slice(0, 12)}` : missingLabel}`;
+    const profileFingerprint = window.state.evidence?.[type]?.profileFingerprint || latest?.profileFingerprint || '';
+    const profileNote = profileFingerprint ? ` · Profil ${String(profileFingerprint).slice(0, 14)}` : '';
+    return `${label}: ${latest ? `${latest.name} · ${Math.round((latest.size || 0) / 1024)} KB · ${String(latest.sha256 || '').slice(0, 12)}${profileNote}` : missingLabel}`;
   });
   const el = document.getElementById('evidence-file-status');
   if (el) el.textContent = rows.join(' | ');
