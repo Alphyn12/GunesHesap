@@ -212,20 +212,26 @@ describe('fetchPVGISLive — proxy-first: proxy başarılı, direkt PVGIS denenm
     assert.equal(pvgisCallCount, 0, 'Direkt PVGIS çağrılmamalı — proxy yeterli');
   });
 
-  it('proxy başarılı + includeHourly=true ise sadece seriescalc saatlik profil için çağrılır', async () => {
+  it('proxy başarılı + includeHourly=true ise saatlik profil proxy yanıtından gelir', async () => {
     const calls = [];
     const fetchImpl = async (url) => {
       calls.push(String(url));
-      if (String(url).includes('seriescalc')) {
-        return { ok: true, status: 200, json: async () => VALID_SERIES_BODY };
-      }
       if (String(url).includes('re.jrc') && String(url).includes('PVcalc')) {
         throw new Error('Should not call direct PVcalc after proxy success');
+      }
+      if (String(url).includes('seriescalc')) {
+        throw new Error('Should not call direct seriescalc after proxy success');
       }
       return {
         ok: true,
         status: 200,
-        json: async () => ({ ok: true, rawEnergy: 1100, rawPoa: 1600, rawMonthly: null })
+        json: async () => ({
+          ok: true,
+          rawEnergy: 1100,
+          rawPoa: 1600,
+          rawMonthly: null,
+          rawHourly: new Array(8760).fill(0).map((_, i) => i % 24 >= 8 && i % 24 <= 16 ? 1 : 0)
+        })
       };
     };
     const result = await fetchPVGISLive(PARAMS, {
@@ -241,7 +247,8 @@ describe('fetchPVGISLive — proxy-first: proxy başarılı, direkt PVGIS denenm
     assert.equal(result.fetchStatus, PVGIS_FETCH_STATUS.PROXY_SUCCESS);
     assert.equal(result.rawEnergy, 1100);
     assert.equal(result.rawHourly.length, 8760);
-    assert.ok(calls.some(url => url.includes('seriescalc')));
+    assert.ok(calls[0].includes('includeHourly=1'));
+    assert.ok(!calls.some(url => url.includes('seriescalc')));
     assert.ok(!calls.some(url => url.includes('PVcalc') && url.includes('re.jrc')));
   });
 });
@@ -300,10 +307,42 @@ describe('fetchPVGISLive — proxy-first + direkt PVGIS her ikisi başarısız',
   });
 });
 
+describe('fetchPVGISLive — browser CORS guard', () => {
+  it('browser ortamında proxy başarısızsa direkt PVGIS çağrısını denemez', async () => {
+    const previousWindow = globalThis.window;
+    globalThis.window = {};
+    const calls = [];
+    const fetchImpl = async (url) => {
+      calls.push(String(url));
+      if (String(url).includes('localhost')) throw new Error('proxy unavailable');
+      throw new Error('Direct PVGIS should be blocked in browser mode');
+    };
+    try {
+      const result = await fetchPVGISLive(PARAMS, {
+        fetchImpl,
+        timeoutMs: 5000,
+        retries: 2,
+        retryDelaysMs: [0, 0],
+        backendProxyUrl: 'http://localhost:5000/api/pvgis-proxy',
+        proxyFirst: true,
+      });
+      assert.equal(result.fetchStatus, PVGIS_FETCH_STATUS.FALLBACK_USED);
+      assert.equal(result.errorType, 'proxy-unavailable');
+      assert.ok(calls.every(url => url.includes('localhost')));
+    } finally {
+      if (previousWindow === undefined) delete globalThis.window;
+      else globalThis.window = previousWindow;
+    }
+  });
+});
+
 // ── 7. getPvgisSourceLabel ────────────────────────────────────────────────────
 describe('getPvgisSourceLabel', () => {
   it('LIVE_SUCCESS → PVGIS Canlı (tr)', () => {
     assert.equal(getPvgisSourceLabel(PVGIS_FETCH_STATUS.LIVE_SUCCESS, 'tr'), 'PVGIS Canlı');
+  });
+  it('PROXY_SUCCESS → PVGIS Canlı (Proxy) (tr)', () => {
+    assert.equal(getPvgisSourceLabel(PVGIS_FETCH_STATUS.PROXY_SUCCESS, 'tr'), 'PVGIS Canlı (Proxy)');
   });
   it('FALLBACK_USED → PSH Tahmini (tr)', () => {
     assert.equal(getPvgisSourceLabel(PVGIS_FETCH_STATUS.FALLBACK_USED, 'tr'), 'PSH Tahmini');

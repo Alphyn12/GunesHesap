@@ -536,9 +536,7 @@ export async function runCalculation() {
 
     {
       const pvgisAzimut = sec.azimuth - 180;
-      const backendProxyUrl = (typeof window !== 'undefined' && window.state?.backendEngineAvailable)
-        ? buildBackendUrl(BACKEND_CONFIG.pvgisProxyPath)
-        : null;
+      const backendProxyUrl = buildBackendUrl(BACKEND_CONFIG.pvgisProxyPath);
       const fetchResult = await fetchPVGISLive(
         { lat: state.lat, lon: state.lon, peakpower: secPower, loss: PVGIS_LOSS_PARAM, angle: sec.tilt, aspect: pvgisAzimut },
         {

@@ -13,8 +13,8 @@ export const PVGIS_FETCH_STATUS = {
 };
 
 const PVGIS_ENDPOINTS = [
-  'https://re.jrc.ec.europa.eu/api/v5_2/PVcalc',
   'https://re.jrc.ec.europa.eu/api/v5_3/PVcalc',
+  'https://re.jrc.ec.europa.eu/api/v5_2/PVcalc',
   'https://re.jrc.ec.europa.eu/api/PVcalc',
 ];
 
@@ -24,9 +24,10 @@ const PVGIS_SERIES_ENDPOINTS = [
   'https://re.jrc.ec.europa.eu/api/seriescalc',
 ];
 
-const PROXY_TIMEOUT_MS             = 15000; // backend 22 s alır; 15 s proxy için makul üst sınır
-const DEFAULT_TIMEOUT_MS           = 20000; // direkt PVGIS başına (3 deneme × 20 s = max ~67 s)
-export const CALC_TOTAL_TIMEOUT_MS = 55000; // tüm hesaplama için hard upper limit
+const PROXY_TIMEOUT_MS             = 15000; // annual/monthly proxy path
+const PROXY_HOURLY_TIMEOUT_MS      = 75000; // PVGIS seriescalc can take ~50-60 s
+const DEFAULT_TIMEOUT_MS           = 20000; // direct PVGIS per attempt
+export const CALC_TOTAL_TIMEOUT_MS = 120000; // live PVGIS hourly proxy path can approach 75 s
 const DEFAULT_RETRY_DELAYS_MS = [0, 2500, 5000];
 const PVGIS_HTTP_OUTAGE_COOLDOWN_MS = 5 * 60 * 1000;
 const COMMON_YEAR_MONTH_DAYS = [31,28,31,30,31,30,31,31,30,31,30,31];
@@ -61,6 +62,10 @@ function buildUserMessage(errorType, lang) {
       if (isEN) return 'Browser security blocked live data access — estimated model used.';
       if (isDE) return 'Browsersicherheit blockierte Echtzeitdatenzugriff — Schätzmodell verwendet.';
       return 'Tarayıcı güvenliği canlı veri erişimini engelledi — tahmini model kullanıldı.';
+    case 'proxy-unavailable':
+      if (isEN) return 'PVGIS proxy is unavailable — estimated model used.';
+      if (isDE) return 'PVGIS-Proxy nicht verfügbar — Schätzmodell verwendet.';
+      return 'PVGIS proxy çalışmıyor — tahmini model kullanıldı.';
     case 'http-error':
       if (isEN) return 'PVGIS service temporarily unavailable — estimated model used.';
       if (isDE) return 'PVGIS-Dienst vorübergehend nicht verfügbar — Schätzmodell verwendet.';
@@ -76,12 +81,13 @@ function buildUserMessage(errorType, lang) {
  * Attempt to fetch from the backend PVGIS proxy endpoint.
  * Returns a result object or null if the proxy is unavailable/fails quickly.
  */
-async function _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, timeoutMs) {
+async function _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, timeoutMs, includeHourly = false) {
   let timer = null;
   try {
     const ctrl = new AbortController();
     timer = setTimeout(() => ctrl.abort(), timeoutMs);
-    const res = await fetchImpl(`${backendProxyUrl}?${baseParams}`, {
+    const proxyParams = includeHourly ? `${baseParams}&includeHourly=1` : baseParams;
+    const res = await fetchImpl(`${backendProxyUrl}?${proxyParams}`, {
       signal: ctrl.signal,
       headers: { accept: 'application/json' }
     });
@@ -190,6 +196,7 @@ async function fetchPVGISHourlySeries(baseParams, fetchImpl, timeoutMs) {
  *   proxyFirst?: boolean,
  *   fetchImpl?: Function,
  *   includeHourly?: boolean,
+ *   allowDirectPvgisFetch?: boolean,
  *   retryHttpErrors?: boolean,
  *   logFetchDiagnostics?: boolean,
  *   useOutageCooldown?: boolean,
@@ -205,6 +212,7 @@ export async function fetchPVGISLive(params, options = {}) {
     proxyFirst = true,
     fetchImpl = globalThis.fetch,
     includeHourly = false,
+    allowDirectPvgisFetch = typeof window === 'undefined',
     hourlyTimeoutMs = 25000,
     retryHttpErrors = false,
     logFetchDiagnostics = false,
@@ -216,14 +224,14 @@ export async function fetchPVGISLive(params, options = {}) {
   const baseParams = `lat=${lat}&lon=${lon}&peakpower=${peakpower}&loss=${loss}&angle=${angle}&aspect=${aspect}&outputformat=json&pvtechchoice=crystSi&mountingplace=building`;
 
   // ── Tier 1: Backend proxy (preferred, avoids CORS) ──────────────────────────
+  let proxyAttempted = false;
   if (backendProxyUrl && proxyFirst && typeof fetchImpl === 'function') {
-    const proxyResult = await _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, PROXY_TIMEOUT_MS);
+    proxyAttempted = true;
+    const proxyTimeoutMs = includeHourly ? PROXY_HOURLY_TIMEOUT_MS : PROXY_TIMEOUT_MS;
+    const proxyResult = await _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, proxyTimeoutMs, includeHourly);
     if (proxyResult) {
-      const rawHourly = proxyResult.rawHourly
-        || (includeHourly ? await fetchPVGISHourlySeries(baseParams, fetchImpl, hourlyTimeoutMs) : null);
       return {
         ...proxyResult,
-        rawHourly,
         attemptCount: 1,
         errorType: null,
         errorMessage: null,
@@ -232,6 +240,26 @@ export async function fetchPVGISLive(params, options = {}) {
     }
     // Proxy failed — fall through to direct PVGIS
     if (logFetchDiagnostics) console.info('[pvgis-fetch] Backend proxy unavailable — trying direct PVGIS');
+  }
+
+  if (!allowDirectPvgisFetch) {
+    const errorType = proxyAttempted ? 'proxy-unavailable' : 'cors';
+    const errorMessage = proxyAttempted
+      ? 'Backend PVGIS proxy unavailable; direct browser PVGIS calls are disabled because PVGIS does not allow AJAX/CORS.'
+      : 'Direct browser PVGIS calls are disabled because PVGIS does not allow AJAX/CORS.';
+    if (typeof window !== 'undefined') window._pvgisLastError = errorMessage;
+    return {
+      fetchStatus: PVGIS_FETCH_STATUS.FALLBACK_USED,
+      rawEnergy: null,
+      rawPoa: null,
+      rawMonthly: null,
+      rawHourly: null,
+      endpointUsed: null,
+      attemptCount: proxyAttempted ? 1 : 0,
+      errorType,
+      errorMessage,
+      userMessage: buildUserMessage(errorType, lang)
+    };
   }
 
   if (useOutageCooldown && Date.now() < pvgisHttpOutageUntil) {
@@ -319,7 +347,8 @@ export async function fetchPVGISLive(params, options = {}) {
 
   // ── Tier 3 (legacy): backend proxy as last resort if not proxyFirst ──────────
   if (backendProxyUrl && !proxyFirst && typeof fetchImpl === 'function') {
-    const proxyResult = await _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, PROXY_TIMEOUT_MS);
+    const proxyTimeoutMs = includeHourly ? PROXY_HOURLY_TIMEOUT_MS : PROXY_TIMEOUT_MS;
+    const proxyResult = await _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, proxyTimeoutMs, includeHourly);
     if (proxyResult) {
       const rawHourly = proxyResult.rawHourly
         || (includeHourly ? await fetchPVGISHourlySeries(baseParams, fetchImpl, hourlyTimeoutMs) : null);
@@ -343,6 +372,7 @@ export async function fetchPVGISLive(params, options = {}) {
     rawEnergy: null,
     rawPoa: null,
     rawMonthly: null,
+    rawHourly: null,
     endpointUsed: null,
     attemptCount,
     errorType: lastErrorType,
@@ -364,7 +394,7 @@ export function getPvgisSourceLabel(fetchStatus, lang = 'tr') {
     case PVGIS_FETCH_STATUS.LIVE_SUCCESS:
       return isEN ? 'PVGIS Live' : isDE ? 'PVGIS Live' : 'PVGIS Canlı';
     case PVGIS_FETCH_STATUS.PROXY_SUCCESS:
-      return isEN ? 'PVGIS (via Proxy)' : isDE ? 'PVGIS (Proxy)' : 'PVGIS (Proxy)';
+      return isEN ? 'PVGIS Live (Proxy)' : isDE ? 'PVGIS Live (Proxy)' : 'PVGIS Canlı (Proxy)';
     case PVGIS_FETCH_STATUS.FALLBACK_USED:
       return isEN ? 'PSH Estimate' : isDE ? 'PSH-Schätzung' : 'PSH Tahmini';
     case PVGIS_FETCH_STATUS.PARTIAL_DATA:

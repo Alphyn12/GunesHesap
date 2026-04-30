@@ -85,6 +85,7 @@ async def pvgis_proxy(
     loss: float = Query(default=0.0, ge=0, le=100, description="System loss in %"),
     angle: float = Query(default=30.0, ge=0, le=90, description="Panel tilt angle in degrees"),
     aspect: float = Query(default=0.0, ge=-180, le=180, description="Azimuth offset from south in degrees"),
+    includeHourly: bool = Query(default=False, description="Also fetch PVGIS seriescalc hourly PV profile"),
 ) -> Dict[str, Any]:
     """
     Backend proxy for PVGIS PVcalc API.
@@ -96,5 +97,5 @@ async def pvgis_proxy(
     if errors:
         raise HTTPException(status_code=422, detail={"errors": errors})
 
-    result = await fetch_pvgis_via_proxy(lat, lon, peakpower, loss, angle, aspect)
+    result = await fetch_pvgis_via_proxy(lat, lon, peakpower, loss, angle, aspect, include_hourly=includeHourly)
     return result

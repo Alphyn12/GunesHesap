@@ -36,6 +36,21 @@ function moneyRate(value, unit = 'kWh') {
   return converted.toLocaleString(ctx.locale, { maximumFractionDigits: ctx.currency === 'USD' ? 3 : 2 }) + ` ${ctx.suffix}/${unit}`;
 }
 
+export function formatPaybackYears(value, yearLabel = i18n.t('units.year')) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return `>25 ${yearLabel}`;
+  const display = Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1);
+  return `${display} ${yearLabel}`;
+}
+
+function setSignedFinancialClass(el, value) {
+  if (!el) return;
+  el.classList.remove('positive', 'negative');
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric === 0) return;
+  el.classList.add(numeric > 0 ? 'positive' : 'negative');
+}
+
 function setVisible(el, visible, display = '') {
   if (window.setElementVisible) return window.setElementVisible(el, visible, display);
   if (!el) return;
@@ -373,16 +388,28 @@ export function renderResults() {
       finCostEl.textContent = money(grossCost);
     }
   }
-  document.getElementById('fin-payback').textContent = r.grossSimplePaybackYear ? Number(r.grossSimplePaybackYear).toFixed(1) + ` ${i18n.t('units.year')}` : `>25 ${i18n.t('units.year')}`;
+  document.getElementById('fin-payback').textContent = formatPaybackYears(r.grossSimplePaybackYear);
   const discountedPaybackEl = document.getElementById('fin-discounted-payback');
-  if (discountedPaybackEl) discountedPaybackEl.textContent = r.discountedPaybackYear != null ? r.discountedPaybackYear + ` ${i18n.t('units.year')}` : `>25 ${i18n.t('units.year')}`;
-  document.getElementById('fin-total').textContent = money(r.npvTotal);
-  document.getElementById('fin-roi').textContent = r.roi + '%';
+  if (discountedPaybackEl) discountedPaybackEl.textContent = formatPaybackYears(r.discountedPaybackYear);
+  const finTotalEl = document.getElementById('fin-total');
+  if (finTotalEl) {
+    finTotalEl.textContent = money(r.npvTotal);
+    setSignedFinancialClass(finTotalEl, r.npvTotal);
+  }
+  const finRoiEl = document.getElementById('fin-roi');
+  if (finRoiEl) {
+    finRoiEl.textContent = r.roi + '%';
+    setSignedFinancialClass(finRoiEl, r.roi);
+  }
   const finRoiLabel = document.getElementById('fin-roi-label');
   if (finRoiLabel) finRoiLabel.childNodes[0].nodeValue = `${i18n.t('onGridResult.roiLabel')} `;
   const finRoiTooltip = document.querySelector('#fin-roi-label .tooltip-box');
   if (finRoiTooltip) finRoiTooltip.textContent = i18n.t('onGridResult.roiTooltip');
-  document.getElementById('fin-irr').textContent = r.irr === 'N/A' ? 'N/A' : r.irr + '%';
+  const finIrrEl = document.getElementById('fin-irr');
+  if (finIrrEl) {
+    finIrrEl.textContent = r.irr === 'N/A' ? 'N/A' : r.irr + '%';
+    setSignedFinancialClass(finIrrEl, r.irr === 'N/A' ? null : r.irr);
+  }
   document.getElementById('fin-lcoe').textContent = moneyRate(r.compensatedLcoe || r.lcoe, 'kWh');
 
   const omRow = document.getElementById('fin-om-row');
@@ -419,7 +446,7 @@ export function renderResults() {
     [tt('summaryOrientation'), `${state.azimuthName || '—'} · ${state.tilt}° eğim`],
     [tt('summarySavingsEffect'), money(r.annualSavings)],
     [i18n.t('settings.currency'), state.displayCurrency === 'USD' ? `USD · 1 USD = ${Number(state.usdToTry || 0).toLocaleString(activeLocale)} TL` : 'TRY'],
-    [tt('summaryPayback'), r.grossSimplePaybackYear ? `${Number(r.grossSimplePaybackYear).toFixed(1)} ${i18n.t('units.year')}` : `>25 ${i18n.t('units.year')}`],
+    [tt('summaryPayback'), formatPaybackYears(r.grossSimplePaybackYear)],
     [tt('summarySource'), engineSummaryText(r, state)],
     [tt('summaryNextStep'), state.scenarioContext?.nextAction || i18n.t('onGridResult.commercialNextAction')],
   ];
@@ -1246,7 +1273,7 @@ function renderOnGridResultLayers(state, r) {
         <div class="on-grid-result-metric"><strong>${money(r.financialCostBasis || r.totalCost)}</strong><span>${escapeHtml(i18n.t('onGridResult.financialBasis'))}</span></div>
         <div class="on-grid-result-metric"><strong>${money(r.annualSavings)}</strong><span>${escapeHtml(i18n.t('onGridResult.annualSavings'))}</span></div>
         <div class="on-grid-result-metric"><strong>${money(r.firstYearNetCashFlow ?? 0)}</strong><span>${escapeHtml(i18n.t('onGridResult.firstYearNetCashFlow'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${r.grossSimplePaybackYear ? Number(r.grossSimplePaybackYear).toFixed(1) : '>25'} ${escapeHtml(i18n.t('units.year'))}</strong><span>${escapeHtml(i18n.t('finance.grossSimplePayback'))}</span></div>
+        <div class="on-grid-result-metric"><strong>${escapeHtml(formatPaybackYears(r.grossSimplePaybackYear))}</strong><span>${escapeHtml(i18n.t('finance.grossSimplePayback'))}</span></div>
         <div class="on-grid-result-metric"><strong>${money(r.npvTotal)}</strong><span>${escapeHtml(i18n.t('onGridResult.netGainPotential'))}</span></div>
         <div class="on-grid-result-metric"><strong>${r.irr === 'N/A' ? 'N/A' : r.irr + '%'}</strong><span>${escapeHtml(i18n.t('onGridResult.averageAnnualReturn'))}</span></div>
         <div class="on-grid-result-metric"><strong>${moneyRate(r.compensatedLcoe || r.lcoe, 'kWh')}</strong><span>${escapeHtml(i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel'))}</span></div>
@@ -1833,8 +1860,8 @@ export function downloadPDF() {
     [pdfSafeText(i18n.t('onGridResult.firstYearNetCashFlow')), money(r.firstYearNetCashFlow ?? 0)],
     [pdfSafeText(i18n.t('report.systemPower')), r.systemPower.toFixed(2) + ' kWp'],
     [pdfSafeText(i18n.t('report.totalCost')), money(r.totalCost)],
-    [pdfSafeText(i18n.t('finance.grossSimplePayback')), (r.grossSimplePaybackYear ? Number(r.grossSimplePaybackYear).toFixed(1) : '>25') + ` ${yearUnit}`],
-    [pdfSafeText(i18n.t('report.discountedPayback')), (r.discountedPaybackYear || '>25') + ` ${yearUnit}`],
+    [pdfSafeText(i18n.t('finance.grossSimplePayback')), formatPaybackYears(r.grossSimplePaybackYear, yearUnit)],
+    [pdfSafeText(i18n.t('report.discountedPayback')), formatPaybackYears(r.discountedPaybackYear, yearUnit)],
     [pdfSafeText(`NPV (25 ${yearUnit})`), money(r.npvTotal)],
     ['IRR', r.irr + '%'],
     [pdfSafeText(i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel')), moneyRate(r.compensatedLcoe || r.lcoe, 'kWh')],

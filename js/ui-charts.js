@@ -69,22 +69,29 @@ export function renderPRGauge(prValue) {
   const unavailableShort = window.i18n?.t?.('onGridResult.prUnavailableShort') || 'N/A';
   const unavailableLong = window.i18n?.t?.('onGridResult.prUnavailableLong') || 'N/A (PR is not shown on the PSH fallback path)';
   if (!arc || !needle) return;
-  if (!Number.isFinite(Number(prValue))) {
+  const numericPr = (prValue === null || prValue === undefined || prValue === '') ? NaN : Number(prValue);
+  if (!Number.isFinite(numericPr)) {
     arc.style.strokeDashoffset = 251.3;
     needle.style.transform = 'rotate(-90deg)';
     if (valEl) valEl.textContent = unavailableShort;
     if (lblEl) lblEl.textContent = unavailableLong;
     return;
   }
-  const pct = Math.min(Math.max(prValue / 100, 0), 1);
+  const displayPr = Number.isInteger(numericPr) ? String(numericPr) : numericPr.toFixed(1);
+  const pct = Math.min(Math.max(numericPr / 100, 0), 1);
   arc.style.strokeDashoffset = 251.3 - (251.3 * pct);
   needle.style.transform = `rotate(${-90 + pct * 180}deg)`;
-  setTimeout(() => { if (valEl) valEl.textContent = prValue + '%'; }, 400);
+  setTimeout(() => { if (valEl) valEl.textContent = displayPr + '%'; }, 400);
   if (lblEl) {
-    const rating = prValue >= 80 ? 'Mükemmel' : prValue >= 70 ? 'İyi' : prValue >= 60 ? 'Orta' : 'Düşük';
-    const color  = prValue >= 80 ? '#10B981' : prValue >= 70 ? '#F59E0B' : prValue >= 60 ? '#F97316' : '#EF4444';
-    lblEl.innerHTML = `<span class="rating-badge">${rating}</span> — sistem kayıpları düşük görünüyor`;
-    lblEl.querySelector('.rating-badge')?.style.setProperty('--c', color);
+    const ratingMeta = numericPr >= 80
+      ? { rating: 'Mükemmel', color: '#10B981', note: 'sistem kayıpları düşük görünüyor' }
+      : numericPr >= 70
+        ? { rating: 'İyi', color: '#F59E0B', note: 'sistem kayıpları kabul edilebilir seviyede' }
+        : numericPr >= 60
+          ? { rating: 'Orta', color: '#F97316', note: 'kayıplar gözden geçirilmeli' }
+          : { rating: 'Düşük', color: '#EF4444', note: 'sistem kayıpları yüksek olabilir' };
+    lblEl.innerHTML = `<span class="rating-badge">${ratingMeta.rating}</span> - ${ratingMeta.note}`;
+    lblEl.querySelector('.rating-badge')?.style.setProperty('--c', ratingMeta.color);
   }
 }
 

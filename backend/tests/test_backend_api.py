@@ -496,6 +496,19 @@ VALID_PVGIS_UPSTREAM = {
     }
 }
 
+VALID_PVGIS_SERIES_UPSTREAM = {
+    "outputs": {
+        "hourly": [
+            {
+                "time": f"202501{day:02d}:{hour:02d}10",
+                "P": 1000 if 8 <= hour <= 16 else 0,
+            }
+            for day in range(1, 32)
+            for hour in range(24)
+        ] * 12
+    }
+}
+
 
 def _mock_httpx_client(status_code=200, body=None, exc=None):
     """Returns a mock async context manager standing in for httpx.AsyncClient(...)."""
@@ -508,6 +521,23 @@ def _mock_httpx_client(status_code=200, body=None, exc=None):
         inner.get = AsyncMock(side_effect=exc)
     else:
         inner.get = AsyncMock(return_value=mock_resp)
+
+    cm = AsyncMock()
+    cm.__aenter__ = AsyncMock(return_value=inner)
+    cm.__aexit__ = AsyncMock(return_value=None)
+    return cm
+
+
+def _mock_httpx_client_sequence(bodies):
+    responses = []
+    for body in bodies:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = body
+        responses.append(mock_resp)
+
+    inner = AsyncMock()
+    inner.get = AsyncMock(side_effect=responses)
 
     cm = AsyncMock()
     cm.__aenter__ = AsyncMock(return_value=inner)
@@ -545,7 +575,22 @@ def test_pvgis_proxy_success():
     assert data["rawEnergy"] == 1250.0
     assert data["rawPoa"] == 1680.0
     assert isinstance(data["rawMonthly"], list) and len(data["rawMonthly"]) == 12
+    assert data["rawHourly"] is None
     assert data["error_type"] is None
+
+
+def test_pvgis_proxy_include_hourly_success():
+    """includeHourly=True fetches seriescalc server-side and returns a typical 8760 profile."""
+    cm = _mock_httpx_client_sequence([VALID_PVGIS_UPSTREAM, VALID_PVGIS_SERIES_UPSTREAM])
+    with patch("httpx.AsyncClient", return_value=cm):
+        resp = client.get("/api/pvgis-proxy?lat=39&lon=32&peakpower=5&loss=14&angle=30&aspect=0&includeHourly=1")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["fetchStatus"] == "proxy-success"
+    assert isinstance(data["rawHourly"], list)
+    assert len(data["rawHourly"]) == 8760
+    assert any(value > 0 for value in data["rawHourly"])
 
 
 def test_pvgis_proxy_timeout():
