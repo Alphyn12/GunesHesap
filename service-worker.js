@@ -1,5 +1,5 @@
-// v45: Refresh step 4 datasheet sizing fallback and form UI.
-const CACHE_NAME = 'solarRota-v45';
+// v47: Fill April 2026 tariff defaults and settlement date.
+const CACHE_NAME = 'solarRota-v47';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',

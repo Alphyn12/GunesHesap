@@ -12,7 +12,7 @@ import {
   simulateBatteryOnHourlySummary,
   simulateHourlyEnergy
 } from '../js/calc-core.js';
-import { PANEL_TYPES } from '../js/data.js';
+import { DEFAULT_TARIFFS, PANEL_TYPES } from '../js/data.js';
 
 function nearly(actual, expected, tolerance = 1e-6) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
@@ -21,6 +21,7 @@ function nearly(actual, expected, tolerance = 1e-6) {
 const normalized = normalizeProfile([0, 2, 2]);
 nearly(normalized.reduce((a, b) => a + b, 0), 1);
 nearly(normalized[1], 0.5);
+nearly(DEFAULT_TARIFFS.residential * 230, 744.7, 0.01);
 
 const daytimeProfile = getLoadProfile('daytime-heavy');
 const eveningProfile = getLoadProfile('evening-heavy');

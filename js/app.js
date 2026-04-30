@@ -6,7 +6,8 @@ import {
   TURKISH_CITIES, PANEL_TYPES, BATTERY_MODELS, COMPASS_DIRS,
   PSH_FALLBACK, CITY_SUMMER_TEMPS, MONTHS, MONTH_WEIGHTS,
   DEFAULT_TARIFFS, INVERTER_TYPES, HEAT_PUMP_DATA, EV_MODELS, TARIFF_META,
-  PANEL_TYPE_OPTIONS, normalizePanelTypeKey
+  PANEL_TYPE_OPTIONS, normalizePanelTypeKey, APRIL_2026_TARIFF_PROFILES,
+  APRIL_2026_TARIFF_SOURCE
 } from './data.js';
 import {
   PANEL_CATALOG,
@@ -149,6 +150,15 @@ installThirdPartyConsoleNoiseGuard();
 const DEFAULT_TARIFF_SOURCE_DATE = TARIFF_META.residential?.sourceDate || null;
 const DEFAULT_TARIFF_SOURCE_CHECKED_AT = TARIFF_DATA_LIFECYCLE.sources?.[0]?.checkedDate || DEFAULT_TARIFF_SOURCE_DATE || null;
 const DEFAULT_REGULATION_SOURCE_CHECKED_AT = TARIFF_DATA_LIFECYCLE.sources?.[1]?.checkedDate || DEFAULT_TARIFF_SOURCE_CHECKED_AT || null;
+const DEFAULT_RESIDENTIAL_TARIFF = DEFAULT_TARIFFS.residential;
+
+function currentLocalDateIso() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // ── Para birimi seçici ───────────────────────────────────────────────────────
 const CURRENCY_STORAGE_KEY = 'guneshesap_display_currency_v1';
@@ -374,8 +384,8 @@ window.state = {
   displayCurrency: 'TRY',
   exchangeRate: null,
   // Tarife
-  tariff: 7.16,
-  importTariffBase: 7.16,
+  tariff: DEFAULT_RESIDENTIAL_TARIFF,
+  importTariffBase: DEFAULT_RESIDENTIAL_TARIFF,
   tariffType: 'residential',
   subscriberType: 'residential',
   connectionType: 'trifaze',
@@ -390,25 +400,26 @@ window.state = {
   shadingQuality: 'user-estimate',
   distributionFee: 0,
   tariffInputMode: 'net-plus-fee',
-  tariffSourceType: 'estimate',
+  tariffSourceType: 'official',
   costSourceType: 'catalog',
   hourlyProfileSource: 'synthetic',
   tariffMode: 'auto',
   tariffRegime: 'auto',
   exportSettlementMode: 'auto',
+  settlementDate: currentLocalDateIso(),
   previousYearConsumptionKwh: null,
   currentYearConsumptionKwh: null,
   sellableExportCapKwh: null,
   expenseEscalationRate: 0.10,
   contractedPowerKw: 10,
-  contractedTariff: 7.16,
-  skttTariff: 7.16,
+  contractedTariff: DEFAULT_RESIDENTIAL_TARIFF,
+  skttTariff: DEFAULT_RESIDENTIAL_TARIFF,
   exportTariff: 0,
   annualPriceIncrease: 0.12,
   discountRate: 0.18,
   tariffIncludesTax: true,
   tariffSourceDate: DEFAULT_TARIFF_SOURCE_DATE,
-  tariffSourceCheckedAt: null,
+  tariffSourceCheckedAt: currentLocalDateIso(),
   // Kirlenme
   soilingFactor: 3,
   // Bakım & İşletme
@@ -418,7 +429,7 @@ window.state = {
   evidence: {
     customerBill: { type: 'customerBill', status: 'missing', ref: '', checkedAt: null },
     supplierQuote: { type: 'supplierQuote', status: 'missing', ref: '', issuedAt: null, validUntil: null },
-    tariffSource: { type: 'tariffSource', status: 'missing', ref: '', checkedAt: null, sourceUrl: '' },
+    tariffSource: { type: 'tariffSource', status: 'verified', ref: APRIL_2026_TARIFF_SOURCE.evidenceRef, checkedAt: currentLocalDateIso(), sourceUrl: APRIL_2026_TARIFF_SOURCE.sourceUrl },
     regulationSource: { type: 'regulationSource', status: 'verified', ref: TURKEY_REGULATORY_VERSION, checkedAt: DEFAULT_REGULATION_SOURCE_CHECKED_AT, sourceUrl: 'https://www.epdk.gov.tr/detay/icerik/3-0-0-1160/elektrik-piyasasinda-lisanssiz-elektrik-uretimi-' },
     gridApplication: { type: 'gridApplication', status: 'missing', ref: '', checkedAt: null },
     offgridPvProduction: { type: 'offgridPvProduction', status: 'missing', ref: '', checkedAt: null },
@@ -539,6 +550,41 @@ window.state = {
   offgridInverterSurgeMultiplier: 1.25
 };
 
+function getApril2026TariffProfile(type = 'residential') {
+  return APRIL_2026_TARIFF_PROFILES[type] || APRIL_2026_TARIFF_PROFILES.residential;
+}
+
+function applyApril2026TariffProfile(targetState = window.state, type = targetState?.tariffType || 'residential') {
+  if (!targetState || type === 'custom') return null;
+  const profile = getApril2026TariffProfile(type);
+  const today = currentLocalDateIso();
+  targetState.tariffType = type;
+  targetState.tariff = profile.pst;
+  targetState.importTariffBase = profile.pst;
+  targetState.skttTariff = profile.sktt;
+  targetState.contractedTariff = profile.contracted;
+  targetState.exportTariff = profile.export;
+  targetState.distributionFee = profile.distributionFee;
+  targetState.tariffInputMode = 'net-plus-fee';
+  targetState.tariffSourceType = 'official';
+  targetState.tariffSourceDate = APRIL_2026_TARIFF_SOURCE.sourceDate;
+  targetState.tariffSourceCheckedAt = today;
+  targetState.tariffIncludesTax = true;
+  targetState.settlementDate = targetState.settlementDate || today;
+  targetState.evidence = {
+    ...(targetState.evidence || {}),
+    tariffSource: {
+      ...(targetState.evidence?.tariffSource || {}),
+      type: 'tariffSource',
+      status: 'verified',
+      ref: APRIL_2026_TARIFF_SOURCE.evidenceRef,
+      checkedAt: today,
+      sourceUrl: APRIL_2026_TARIFF_SOURCE.sourceUrl
+    }
+  };
+  return profile;
+}
+
 const persistedProposal = !window.location.hash ? loadProposalState() : null;
 if (persistedProposal?.state) {
   Object.assign(window.state, persistedProposal.state, { results: null, step: 1 });
@@ -546,6 +592,7 @@ if (persistedProposal?.state) {
     window.state.enginePreference = 'pvgis-hybrid-js';
   }
 }
+applyApril2026TariffProfile(window.state, window.state.tariffType || 'residential');
 
 function persistState() {
   saveProposalState(window.state);
@@ -1206,14 +1253,14 @@ function syncScenarioControls() {
   setVal('on-grid-usage-profile', s.usageProfile || 'balanced');
   setVal('on-grid-annual-consumption', Math.round(Number(s.annualConsumptionKwh) || Number(s.dailyConsumption || 0) * 365 || 3650));
   setVal('on-grid-monthly-consumption-input', s.onGridMonthlyConsumptionKwh ? Math.round(Number(s.onGridMonthlyConsumptionKwh)) : '');
-  setVal('on-grid-monthly-bill-estimate', s.onGridMonthlyBillEstimate ? Math.round(Number(s.onGridMonthlyBillEstimate)) : '');
+  setVal('on-grid-monthly-bill-estimate', s.onGridMonthlyBillEstimate ? formatMonthlyBillInputValue(Number(s.onGridMonthlyBillEstimate)) : '');
   setVal('on-grid-design-target', s.designTarget || 'fill-roof');
   setVal('on-grid-roof-type', s.roofType || 'flat-concrete');
   setVal('on-grid-usable-roof-ratio', Math.round((Number(s.usableRoofRatio) || 0.75) * 100));
   setVal('on-grid-shading-quality', s.shadingQuality || 'user-estimate');
   setVal('distribution-fee-input', s.distributionFee || 0);
   setVal('tariff-input-mode', s.tariffInputMode || 'net-plus-fee');
-  setVal('tariff-source-type', s.tariffSourceType || 'estimate');
+  setVal('tariff-source-type', s.tariffSourceType || 'official');
   setVal('cost-source-type', s.costSourceType || 'catalog');
   renderOnGridMonthlyInputs();
   setOnGridInputMode(s.onGridInputMode || 'basic');
@@ -1308,6 +1355,7 @@ function syncScenarioControls() {
 function selectScenario(key) {
   const next = applyScenarioDefaults(window.state, key);
   Object.assign(window.state, next);
+  applyApril2026TariffProfile(window.state, window.state.tariffType || 'residential');
   // Senaryo seçilmesi adım 1'in tamamlandığını gösterir; adım 2'yi unlock et.
   // (scenario değişimi sonrası downstream state'i sıfırlama; daha ileride
   //  kullanıcı varsa tekrar her stepte validation yapar.)
@@ -1473,16 +1521,30 @@ function updateTariffType(type) {
     custom: 'Kullanıcı tanımlı tarife'
   };
   if (type !== 'custom') {
-    window.state.tariff = DEFAULT_TARIFFS[type] || 7.16;
-    window.state.importTariffBase = window.state.tariff;
+    applyApril2026TariffProfile(window.state, type);
     document.getElementById('tariff-input').value = window.state.tariff;
-    window.state.skttTariff = window.state.tariff;
-    window.state.contractedTariff = window.state.tariff;
     const skttEl = document.getElementById('sktt-tariff-input');
     const contractEl = document.getElementById('contracted-tariff-input');
+    const distributionEl = document.getElementById('distribution-fee-input');
+    const tariffInputModeEl = document.getElementById('tariff-input-mode');
+    const tariffSourceTypeEl = document.getElementById('tariff-source-type');
+    const tariffSourceDateEl = document.getElementById('tariff-source-date');
+    const tariffSourceCheckedEl = document.getElementById('tariff-source-checked-at');
+    const tariffEvidenceStatusEl = document.getElementById('tariff-evidence-status');
+    const tariffEvidenceRefEl = document.getElementById('tariff-evidence-ref');
+    const tariffEvidenceUrlEl = document.getElementById('tariff-evidence-url');
+    const settlementDateEl = document.getElementById('settlement-date');
     if (skttEl) skttEl.value = window.state.skttTariff;
     if (contractEl) contractEl.value = window.state.contractedTariff;
-    window.state.exportTariff = 0;
+    if (distributionEl) distributionEl.value = window.state.distributionFee;
+    if (tariffInputModeEl) tariffInputModeEl.value = window.state.tariffInputMode;
+    if (tariffSourceTypeEl) tariffSourceTypeEl.value = window.state.tariffSourceType;
+    if (tariffSourceDateEl) tariffSourceDateEl.value = window.state.tariffSourceDate;
+    if (tariffSourceCheckedEl) tariffSourceCheckedEl.value = window.state.tariffSourceCheckedAt;
+    if (tariffEvidenceStatusEl) tariffEvidenceStatusEl.value = window.state.evidence?.tariffSource?.status || 'verified';
+    if (tariffEvidenceRefEl) tariffEvidenceRefEl.value = window.state.evidence?.tariffSource?.ref || APRIL_2026_TARIFF_SOURCE.evidenceRef;
+    if (tariffEvidenceUrlEl) tariffEvidenceUrlEl.value = window.state.evidence?.tariffSource?.sourceUrl || APRIL_2026_TARIFF_SOURCE.sourceUrl;
+    if (settlementDateEl) settlementDateEl.value = window.state.settlementDate;
     const exportEl = document.getElementById('export-tariff-input');
     if (exportEl) exportEl.value = window.state.exportTariff;
   }
@@ -2063,12 +2125,30 @@ function updateOnGridMonthlyConsumption() {
 
 function getOnGridEffectiveImportRate() {
   const s = window.state;
-  const baseRate = Math.max(0, Number(document.getElementById('tariff-input')?.value) || Number(s.importTariffBase) || Number(s.tariff) || 7.16);
+  const baseRate = Math.max(0, Number(document.getElementById('tariff-input')?.value) || Number(s.importTariffBase) || Number(s.tariff) || DEFAULT_RESIDENTIAL_TARIFF);
   const tariffInputMode = document.getElementById('tariff-input-mode')?.value || s.tariffInputMode || 'net-plus-fee';
   const distributionFee = tariffInputMode === 'gross'
     ? 0
     : Math.max(0, Number(document.getElementById('distribution-fee-input')?.value) || Number(s.distributionFee) || 0);
   return baseRate + distributionFee;
+}
+
+function roundMonthlyBillTry(value) {
+  return Math.round(Math.max(0, Number(value) || 0) * 10) / 10;
+}
+
+function formatMonthlyBillInputValue(value) {
+  const rounded = roundMonthlyBillTry(value);
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function formatMonthlyBillTry(value) {
+  const rounded = roundMonthlyBillTry(value);
+  const hasFraction = !Number.isInteger(rounded);
+  return rounded.toLocaleString('tr-TR', {
+    minimumFractionDigits: hasFraction ? 1 : 0,
+    maximumFractionDigits: 1
+  });
 }
 
 function syncOnGridDesignTargetCards() {
@@ -2138,8 +2218,8 @@ function syncOnGridMonthlyBillEstimate() {
     window.state.onGridMonthlyBillEstimate = null;
     return;
   }
-  const estimate = Math.round((explicitMonthlyKwh || (annual / 12)) * getOnGridEffectiveImportRate());
-  billInput.value = estimate;
+  const estimate = roundMonthlyBillTry((explicitMonthlyKwh || (annual / 12)) * getOnGridEffectiveImportRate());
+  billInput.value = formatMonthlyBillInputValue(estimate);
   window.state.onGridMonthlyBillEstimate = estimate;
 }
 
@@ -2194,7 +2274,7 @@ function updateOnGridFlowSummary() {
     ? (s.settlementDate ? `${i18n.t('onGridFlow.settlementAuto')} (${s.settlementDate})` : i18n.t('onGridFlow.settlementAutoMissing'))
     : s.exportSettlementMode === 'hourly' ? i18n.t('onGridFlow.settlementHourly') : i18n.t('onGridFlow.settlementMonthly');
   const monthlyKwh = Math.round(Number(s.onGridMonthlyConsumptionKwh) || (annual / 12) || 0);
-  const monthlyBill = Math.round(Number(s.onGridMonthlyBillEstimate) || (monthlyKwh * getOnGridEffectiveImportRate()) || 0);
+  const monthlyBill = roundMonthlyBillTry(Number(s.onGridMonthlyBillEstimate) || (monthlyKwh * getOnGridEffectiveImportRate()) || 0);
   const profileSource = s.hourlyProfileSource === 'hourly-uploaded'
     ? 'Gerçek 8760 veri'
     : s.hourlyProfileSource === 'monthly-derived'
@@ -2205,7 +2285,7 @@ function updateOnGridFlowSummary() {
     <div><strong>${targetLabel}</strong><span>${targetCopy}</span></div>
     <div><strong>${annual.toLocaleString('tr-TR')} kWh/yıl</strong><span>Hesapta kullanılan tüketim hedefi</span></div>
     <div><strong>${monthlyKwh > 0 ? `${monthlyKwh.toLocaleString('tr-TR')} kWh/${currentMonthLabel}` : 'Otomatik'}</strong><span>Girilen fatura ayı tüketimi; yıllık değer bu aydan ölçeklenir</span></div>
-    <div><strong>${monthlyBill > 0 ? `${monthlyBill.toLocaleString('tr-TR')} ₺/${currentMonthLabel}` : 'Otomatik'}</strong><span>Seçili tarife varsayımına göre aynı ay için yaklaşık fatura karşılığı</span></div>
+    <div><strong>${monthlyBill > 0 ? `${formatMonthlyBillTry(monthlyBill)} ₺/${currentMonthLabel}` : 'Otomatik'}</strong><span>Seçili tarife varsayımına göre aynı ay için yaklaşık fatura karşılığı</span></div>
     <div><strong>${defaultsSummary}</strong><span>Basit modun otomatik profili ve çatı kabulü</span></div>
     <div><strong>${settlement}</strong><span>${i18n.t('onGridFlow.summarySettlement')}</span></div>
     <div><strong>${profileSource}</strong><span>Tüketim eğrisinin hesapta üretildiği kaynak</span></div>
@@ -2221,7 +2301,7 @@ function updateOnGridFlowSummary() {
     quickBillNote.textContent = s.onGridMonthlyConsumptionKwh
       ? `${currentMonthLabel} faturası için ${Math.round(s.onGridMonthlyConsumptionKwh).toLocaleString('tr-TR')} kWh ana tüketim girdisi olarak kullanılıyor. Yıllık ihtiyaç, mevsimsel aylık dağılım varsayımıyla bu aydan türetilir; TL tutarı girerseniz yalnızca yaklaşık karşılık ve kontrol amacıyla değerlendirilir.`
       : monthlyBill > 0
-        ? `${currentMonthLabel} için yaklaşık fatura ${monthlyBill.toLocaleString('tr-TR')} ₺ olarak hesaplandı. Mümkünse faturadaki gerçek kWh tüketimini girin; TL tutarı girilirse önce bu ayın kWh değeri, ardından yıllık ihtiyaç mevsimsel dağılımla türetilir.`
+        ? `${currentMonthLabel} için yaklaşık fatura ${formatMonthlyBillTry(monthlyBill)} ₺ olarak hesaplandı. Mümkünse faturadaki gerçek kWh tüketimini girin; TL tutarı girilirse önce bu ayın kWh değeri, ardından yıllık ihtiyaç mevsimsel dağılımla türetilir.`
         : `Mümkünse ${currentMonthLabel} faturasındaki gerçek kWh tüketimini girin. TL tutarı sadece yaklaşık tahmin içindir; girilirse önce bu ayın kWh değeri, ardından yıllık ihtiyaç mevsimsel dağılımla türetilir.`;
   }
   syncOnGridDesignTargetCards();
@@ -2258,7 +2338,7 @@ function updateOnGridAssumptions(options = {}) {
     ? Math.round(monthlyConsumptionInput)
     : null;
   s.onGridMonthlyBillEstimate = Number.isFinite(monthlyBillEstimateInput) && monthlyBillEstimateInput > 0
-    ? Math.round(monthlyBillEstimateInput)
+    ? roundMonthlyBillTry(monthlyBillEstimateInput)
     : null;
   if (options.source === 'monthly-kwh' && s.onGridMonthlyConsumptionKwh) {
     const derivedAnnual = deriveAnnualFromCurrentMonthKwh(s.onGridMonthlyConsumptionKwh);
@@ -2301,14 +2381,14 @@ function updateTariffAssumptions() {
     const n = Number(raw);
     return Number.isFinite(n) ? n : fallback;
   };
-  let importTariffBase = readNumber('tariff-input', s.importTariffBase || s.tariff || 7.16);
+  let importTariffBase = readNumber('tariff-input', s.importTariffBase || s.tariff || DEFAULT_RESIDENTIAL_TARIFF);
   s.importTariffBase = importTariffBase;
   s.exportTariff = readNumber('export-tariff-input', s.exportTariff ?? 0);
   if (s.scenarioKey === 'on-grid') updateOnGridAssumptions();
   importTariffBase = readNumber('tariff-input', s.importTariffBase || importTariffBase);
   s.importTariffBase = importTariffBase;
   s.tariffInputMode = document.getElementById('tariff-input-mode')?.value || s.tariffInputMode || 'net-plus-fee';
-  s.tariffSourceType = document.getElementById('tariff-source-type')?.value || s.tariffSourceType || 'estimate';
+  s.tariffSourceType = document.getElementById('tariff-source-type')?.value || s.tariffSourceType || 'official';
   s.costSourceType = document.getElementById('cost-source-type')?.value || s.costSourceType || 'catalog';
   // Keep state.tariff as the import tariff entered by the user. buildTariffModel
   // combines it with distributionFee for net-plus-fee mode.
@@ -2327,7 +2407,9 @@ function updateTariffAssumptions() {
   s.tariffRegime = document.getElementById('tariff-regime')?.value || s.tariffRegime || 'auto';
   s.tariffMode = s.tariffRegime;
   s.exportSettlementMode = document.getElementById('export-settlement-mode')?.value || s.exportSettlementMode || 'auto';
-  s.settlementDate = document.getElementById('settlement-date')?.value || s.settlementDate || null;
+  s.settlementDate = document.getElementById('settlement-date')?.value || s.settlementDate || currentLocalDateIso();
+  const settlementDateInput = document.getElementById('settlement-date');
+  if (settlementDateInput && !settlementDateInput.value) settlementDateInput.value = s.settlementDate;
   s.offGridCostPerKwh = parseFloat(document.getElementById('off-grid-cost-per-kwh')?.value) || null;
   // Sync off-grid cost warning live as user types
   const offGridCostWarn = document.getElementById('off-grid-cost-warn');
@@ -2374,12 +2456,12 @@ function updateTariffAssumptions() {
   const tariffSourceDateInput = document.getElementById('tariff-source-date')?.value || '';
   const tariffSourceCheckedInput = document.getElementById('tariff-source-checked-at')?.value || '';
   s.tariffSourceDate = tariffSourceDateInput || (s.tariffSourceType === 'official' ? (s.tariffSourceDate || DEFAULT_TARIFF_SOURCE_DATE) : null);
-  s.tariffSourceCheckedAt = tariffSourceCheckedInput || s.tariffSourceCheckedAt || null;
+  s.tariffSourceCheckedAt = tariffSourceCheckedInput || s.tariffSourceCheckedAt || (s.tariffSourceType === 'official' ? currentLocalDateIso() : null);
   if (s.tariffSourceType !== 'official' && !tariffSourceCheckedInput) {
     s.tariffSourceCheckedAt = null;
   }
   const tariffEvidenceStatus = s.tariffSourceType === 'official'
-    ? (document.getElementById('tariff-evidence-status')?.value || s.evidence?.tariffSource?.status || 'missing')
+    ? (document.getElementById('tariff-evidence-status')?.value || s.evidence?.tariffSource?.status || 'verified')
     : 'missing';
   s.evidence = {
     ...(s.evidence || {}),
@@ -2392,10 +2474,10 @@ function updateTariffAssumptions() {
     tariffSource: {
       ...(s.evidence?.tariffSource || {}),
       status: tariffEvidenceStatus,
-      ref: document.getElementById('tariff-evidence-ref')?.value || (s.tariffSourceType === 'official' ? s.evidence?.tariffSource?.ref : '') || '',
+      ref: document.getElementById('tariff-evidence-ref')?.value || (s.tariffSourceType === 'official' ? (s.evidence?.tariffSource?.ref || APRIL_2026_TARIFF_SOURCE.evidenceRef) : '') || '',
       checkedAt: s.tariffSourceCheckedAt,
       sourceUrl: s.tariffSourceType === 'official'
-        ? (document.getElementById('tariff-evidence-url')?.value || s.evidence?.tariffSource?.sourceUrl || '')
+        ? (document.getElementById('tariff-evidence-url')?.value || s.evidence?.tariffSource?.sourceUrl || APRIL_2026_TARIFF_SOURCE.sourceUrl)
         : ''
     }
   };
@@ -2561,6 +2643,7 @@ function syncEnterpriseInputsFromState() {
   setVal('contracted-power-input', s.contractedPowerKw);
   setVal('export-tariff-input', s.exportTariff);
   setVal('export-settlement-mode', s.exportSettlementMode);
+  setVal('settlement-date', s.settlementDate || currentLocalDateIso());
   setVal('previous-year-consumption-input', s.previousYearConsumptionKwh ?? 0);
   setVal('current-year-consumption-input', s.currentYearConsumptionKwh ?? 0);
   setVal('sellable-export-cap-input', s.sellableExportCapKwh ?? 0);
@@ -3551,7 +3634,7 @@ function validateStep4() {
 // ADIM 5: Finansal doğrula → Adım 6 + hesaplama
 function validateStep5() {
   const tariffInput = document.getElementById('tariff-input');
-  if (tariffInput) window.state.tariff = parseFloat(tariffInput.value) || 7.16;
+  if (tariffInput) window.state.tariff = parseFloat(tariffInput.value) || DEFAULT_RESIDENTIAL_TARIFF;
   updateTariffAssumptions();
   unlockStep(6);
   goToStep(6);

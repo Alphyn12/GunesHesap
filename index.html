@@ -2071,7 +2071,7 @@
             <input type="number" id="on-grid-monthly-consumption-input" min="0" step="1" value="" data-input-action="updateOnGridAssumptions" data-arg-type="json" data-arg='{"source":"monthly-kwh","fillMonthly":true}'>
           </label>
           <label class="on-grid-field-card"><span class="on-grid-field-label">Yaklaşık aylık elektrik faturası (₺, isteğe bağlı)</span>
-            <input type="number" id="on-grid-monthly-bill-estimate" min="0" step="1" value="" data-input-action="updateOnGridAssumptions" data-arg-type="json" data-arg='{"source":"monthly-bill","fillMonthly":true}'>
+            <input type="number" id="on-grid-monthly-bill-estimate" min="0" step="0.1" value="" data-input-action="updateOnGridAssumptions" data-arg-type="json" data-arg='{"source":"monthly-bill","fillMonthly":true}'>
           </label>
         </div>
 
@@ -2324,7 +2324,7 @@
         </div>
         <div>
           <div class="text-caption-helper">PST / Baz Fiyat (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Perakende Satış Tarifesi — elektrik dağıtım şirketinden kWh başına ödediğiniz fiyat.</span></span></div>
-          <input class="input-form-row" type="number" id="tariff-input" value="7.16" min="0.5" step="0.01"
+          <input class="input-form-row" type="number" id="tariff-input" value="3.237826" min="0.5" step="0.01"
            
             data-input-action="updateTariffAssumptions"/>
         </div>
@@ -2353,9 +2353,9 @@
           <div class="text-caption-helper" data-i18n="onGridFlow.tariffSourceType">Tarife kaynak türü</div>
           <select class="input-form-row" id="tariff-source-type" data-change-action="updateTariffAssumptions"
            >
-            <option value="manual" selected data-i18n="onGridFlow.tariffSourceManual">Manuel giriş</option>
+            <option value="manual" data-i18n="onGridFlow.tariffSourceManual">Manuel giriş</option>
             <option value="estimate" data-i18n="onGridFlow.tariffSourceEstimate">Tahmini / varsayılan</option>
-            <option value="official" data-i18n="onGridFlow.tariffSourceOfficial">Resmi / güncel kaynak (EPDK, RG)</option>
+            <option value="official" selected data-i18n="onGridFlow.tariffSourceOfficial">Resmi / güncel kaynak (EPDK, RG)</option>
           </select>
         </div>
       </div>
@@ -2391,13 +2391,13 @@
           <div class="step5-tariff-quick-grid">
             <div>
               <div class="text-caption-helper">SKTT Fiyatı (TL/kWh)</div>
-              <input class="input-form-row" type="number" id="sktt-tariff-input" value="7.16" min="0" step="0.01"
+              <input class="input-form-row" type="number" id="sktt-tariff-input" value="4.857548" min="0" step="0.01"
                
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div class="text-caption-helper">Sözleşmeli Fiyat (TL/kWh)</div>
-              <input class="input-form-row" type="number" id="contracted-tariff-input" value="7.16" min="0" step="0.01"
+              <input class="input-form-row" type="number" id="contracted-tariff-input" value="3.237826" min="0" step="0.01"
                
                 data-input-action="updateTariffAssumptions"/>
             </div>
@@ -2459,7 +2459,7 @@
             </div>
             <div>
               <div class="text-caption-helper">Kaynak Tarihi</div>
-              <input class="input-form-row" type="date" id="tariff-source-date" value="2026-04-12"
+              <input class="input-form-row" type="date" id="tariff-source-date" value="2026-04-04"
                
                 data-input-action="updateTariffAssumptions"/>
             </div>
@@ -2481,13 +2481,13 @@
             </div>
             <div>
               <div class="text-caption-helper">Tarife Kanıt Ref</div>
-              <input class="input-form-row" type="text" id="tariff-evidence-ref" value="EPDK/SKTT-2026-local"
+              <input class="input-form-row" type="text" id="tariff-evidence-ref" value="EPDK-EMO-2026-04"
                
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div class="u-5">
               <div class="text-caption-helper">Tarife Kaynak URL</div>
-              <input class="input-form-row" type="url" id="tariff-evidence-url" value="https://www.epdk.gov.tr/Detay/Icerik/16-38/son-kaynak-tedarik-tarifesi-sktt-ile-ilgili-bil"
+              <input class="input-form-row" type="url" id="tariff-evidence-url" value="https://www.emo.org.tr/ekler/e551bd640f4d509_ek.pdf?sube=13&amp;tipi=2&amp;turu=X"
                
                 data-input-action="updateTariffAssumptions"/>
             </div>

@@ -4,7 +4,8 @@
 // ═══════════════════════════════════════════════════════════
 import {
   PANEL_TYPES, BATTERY_MODELS, PSH_FALLBACK, CITY_SUMMER_TEMPS,
-  MONTH_WEIGHTS, INVERTER_TYPES, HEAT_PUMP_DATA, HOURLY_SOLAR_PROFILE
+  MONTH_WEIGHTS, INVERTER_TYPES, HEAT_PUMP_DATA, HOURLY_SOLAR_PROFILE,
+  DEFAULT_TARIFFS
 } from './data.js';
 import {
   METHODOLOGY_VERSION, PVGIS_LOSS_PARAM, buildTariffModel,
@@ -884,7 +885,7 @@ export async function runCalculation() {
   let solarCost = costBreakdownBase.solarCost;
 
   let tariffModel = buildTariffModel(state);
-  let tariff = tariffModel.importRate || 7.16;
+  let tariff = tariffModel.importRate || DEFAULT_TARIFFS.residential;
 
   // ── EV / Isı pompası ek yükleri ana tüketim profiline bağlanır ──────────────
   let evMetrics = null;
@@ -926,7 +927,7 @@ export async function runCalculation() {
     annualConsumptionKwh: monthlyLoad.reduce((a, b) => a + b, 0),
     annualProductionKwh: adjustedEnergy
   });
-  tariff = tariffModel.importRate || tariffModel.pstRate || 7.16;
+  tariff = tariffModel.importRate || tariffModel.pstRate || DEFAULT_TARIFFS.residential;
   const annualPriceIncrease = tariffModel.annualPriceIncrease;
   const discountRate = tariffModel.discountRate;
   const effectiveSavingsTariff = (state.scenarioKey === 'off-grid')

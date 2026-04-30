@@ -54,6 +54,25 @@ def main():
             assert page.locator(".on-grid-choice-card").count() == 2
             assert page.locator("#on-grid-monthly-bill-estimate").is_visible()
             assert page.locator("#step5-advanced-card").evaluate("el => !el.open")
+            expected_today = page.evaluate(
+                """() => {
+                    const now = new Date();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    return `${now.getFullYear()}-${month}-${day}`;
+                }"""
+            )
+            assert page.locator("#settlement-date").input_value() == expected_today
+            assert page.locator("#tariff-source-type").input_value() == "official"
+            assert page.locator("#tariff-source-date").input_value() == "2026-04-04"
+            assert page.locator("#tariff-source-checked-at").input_value() == expected_today
+
+            page.fill("#on-grid-monthly-consumption-input", "230")
+            page.wait_for_function(
+                "() => Math.abs(Number(window.state.onGridMonthlyBillEstimate) - 744.7) < 0.05"
+            )
+            assert page.locator("#on-grid-monthly-bill-estimate").input_value() == "744.7"
+            assert "744,7 ₺/" in page.locator("#on-grid-flow-summary").inner_text()
 
             page.select_option("#on-grid-subscriber-type", "commercial")
             page.fill("#on-grid-monthly-bill-estimate", "12500")

@@ -1,3 +1,5 @@
+import { APRIL_2026_TARIFF_PROFILES, DEFAULT_TARIFFS } from './data.js';
+
 export const DEFAULT_SCENARIO_KEY = 'on-grid';
 
 export const SCENARIO_DEFINITIONS = {
@@ -18,9 +20,9 @@ export const SCENARIO_DEFINITIONS = {
       netMeteringEnabled: true,
       batteryEnabled: false,
       tariffType: 'commercial',
-      tariff: 8.44,
-      skttTariff: 8.44,
-      contractedTariff: 8.44,
+      tariff: DEFAULT_TARIFFS.commercial,
+      skttTariff: APRIL_2026_TARIFF_PROFILES.commercial.sktt,
+      contractedTariff: DEFAULT_TARIFFS.commercial,
       dailyConsumption: 30,
       exportSettlementMode: 'auto',
       quoteInputsVerified: false
@@ -50,7 +52,7 @@ export const SCENARIO_DEFINITIONS = {
       offgridCriticalFraction: 0.45,
       offgridAutonomyGoal: 'reliability',
       tariffType: 'residential',
-      tariff: 7.16,
+      tariff: DEFAULT_TARIFFS.residential,
       battery: { model: 'huawei_luna15', capacity: 15.0, dod: 1.00, efficiency: 0.95, chemistry: 'LFP', warranty: 10, cycles: 5000 },
       exportSettlementMode: 'monthly'
     },
@@ -75,9 +77,9 @@ export const SCENARIO_DEFINITIONS = {
       batteryEnabled: false,
       dailyConsumption: 45,
       tariffType: 'agriculture',
-      tariff: 5.80,
-      skttTariff: 5.80,
-      contractedTariff: 5.80,
+      tariff: DEFAULT_TARIFFS.agriculture,
+      skttTariff: APRIL_2026_TARIFF_PROFILES.agriculture.sktt,
+      contractedTariff: DEFAULT_TARIFFS.agriculture,
       tariffRegime: 'custom',
       exportSettlementMode: 'monthly'
     },
@@ -104,7 +106,7 @@ export const SCENARIO_DEFINITIONS = {
       netMeteringEnabled: true,
       batteryEnabled: false,
       tariffType: 'residential',
-      tariff: 7.16
+      tariff: DEFAULT_TARIFFS.residential
     },
     visibleBlocks: { netMetering: true, battery: true, heatPump: true, ev: false, tax: true, governance: true },
     proposalTone: 'electrification'
@@ -128,7 +130,7 @@ export const SCENARIO_DEFINITIONS = {
       dailyConsumption: 4,
       roofArea: 12,
       tariffType: 'residential',
-      tariff: 7.16,
+      tariff: DEFAULT_TARIFFS.residential,
       panelType: 'mono_perc',
       battery: { model: 'custom', name: 'Özel Batarya', capacity: 3.0, dod: 0.80, efficiency: 0.90, chemistry: 'LFP', warranty: 5, cycles: 3000, price_try: 0, brand: 'Özel' }
     },
@@ -153,9 +155,9 @@ export const SCENARIO_DEFINITIONS = {
       ev: { type: 'custom', dailyKm: 120, consumptionPer100km: 18, chargeTime: 'day', chargerPowerKw: 22, fuelPricePerLiter: 45, fuelConsumptionL100km: 8 },
       dailyConsumption: 55,
       tariffType: 'commercial',
-      tariff: 8.44,
-      skttTariff: 8.44,
-      contractedTariff: 8.44,
+      tariff: DEFAULT_TARIFFS.commercial,
+      skttTariff: APRIL_2026_TARIFF_PROFILES.commercial.sktt,
+      contractedTariff: DEFAULT_TARIFFS.commercial,
       netMeteringEnabled: true,
       batteryEnabled: false
     },

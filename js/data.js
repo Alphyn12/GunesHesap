@@ -381,36 +381,78 @@ export const CITY_SUMMER_TEMPS = {
 export const MONTHS = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
 export const MONTH_WEIGHTS = [0.055,0.062,0.085,0.095,0.105,0.115,0.112,0.108,0.090,0.075,0.055,0.043];
 
+export const APRIL_2026_TARIFF_SOURCE = {
+  sourceDate: '2026-04-04',
+  sourceLabel: 'EPDK/EMO Nisan 2026 elektrik tarife hesabı',
+  evidenceRef: 'EPDK-EMO-2026-04',
+  sourceUrl: 'https://www.emo.org.tr/ekler/e551bd640f4d509_ek.pdf?sube=13&tipi=2&turu=X'
+};
+
+export const APRIL_2026_TARIFF_PROFILES = {
+  residential: {
+    pst: 3.237826,
+    sktt: 4.857548,
+    contracted: 3.237826,
+    export: 0,
+    distributionFee: 0,
+    note: 'Mesken düşük kademe: EMO 230 kWh = 744,7 TL fatura hesabı.'
+  },
+  commercial: {
+    pst: 5.35,
+    sktt: 5.93,
+    contracted: 5.35,
+    export: 0,
+    distributionFee: 0,
+    note: 'Ticarethane AG tek zamanlı: EPDK 4 Nisan 2026 vergisiz aktif enerji + dağıtım toplamı.'
+  },
+  industrial: {
+    pst: 4.81,
+    sktt: 4.81,
+    contracted: 4.81,
+    export: 0,
+    distributionFee: 0,
+    note: 'Sanayi AG tek terim tek zamanlı: EPDK 4 Nisan 2026 vergisiz aktif enerji + dağıtım toplamı.'
+  },
+  agriculture: {
+    pst: 4.37,
+    sktt: 4.37,
+    contracted: 4.37,
+    export: 0,
+    distributionFee: 0,
+    note: 'Tarımsal sulama AG tek zamanlı: EPDK 4 Nisan 2026 vergisiz aktif enerji + dağıtım toplamı.'
+  }
+};
+
 export const DEFAULT_TARIFFS = {
-  residential: 7.16,
-  commercial: 8.44,
-  industrial: 6.80,
-  agriculture: 5.80
+  residential: APRIL_2026_TARIFF_PROFILES.residential.pst,
+  commercial: APRIL_2026_TARIFF_PROFILES.commercial.pst,
+  industrial: APRIL_2026_TARIFF_PROFILES.industrial.pst,
+  agriculture: APRIL_2026_TARIFF_PROFILES.agriculture.pst
 };
 
 export const TARIFF_META = {
   residential: {
     label: 'Konut',
-    sourceLabel: 'EPDK/SKTT 2026 kaynak notu',
-    sourceDate: '2026-04-12',
+    sourceLabel: APRIL_2026_TARIFF_SOURCE.sourceLabel,
+    sourceDate: APRIL_2026_TARIFF_SOURCE.sourceDate,
     skttLimitKwh: 4000
   },
   commercial: {
     label: 'Ticari',
-    sourceLabel: 'EPDK/SKTT 2026 kaynak notu',
-    sourceDate: '2026-04-12',
+    sourceLabel: APRIL_2026_TARIFF_SOURCE.sourceLabel,
+    sourceDate: APRIL_2026_TARIFF_SOURCE.sourceDate,
     skttLimitKwh: 15000
   },
   industrial: {
     label: 'Sanayi',
-    sourceLabel: 'EPDK/SKTT 2026 kaynak notu',
-    sourceDate: '2026-04-12',
+    sourceLabel: APRIL_2026_TARIFF_SOURCE.sourceLabel,
+    sourceDate: APRIL_2026_TARIFF_SOURCE.sourceDate,
     skttLimitKwh: 15000
   },
   agriculture: {
     label: 'Tarımsal Sulama',
-    sourceLabel: 'EPDK tarımsal sulama kaynak notu',
-    sourceDate: '2026-04-12',
+    sourceLabel: APRIL_2026_TARIFF_SOURCE.sourceLabel,
+    sourceDate: APRIL_2026_TARIFF_SOURCE.sourceDate,
     skttLimitKwh: 150000000
   },
   custom: {
@@ -532,7 +574,7 @@ export const HEAT_PUMP_DATA = {
   heat_load: { good: 40, avg: 70, poor: 110 },
   gas_price: 8.50,
   gas_kwh_per_m3: 10.64,
-  electric_price: 7.16,
+  electric_price: DEFAULT_TARIFFS.residential,
   fuel_oil_price: 35.0,
   fuel_oil_kwh_per_liter: 9.5,
   heating_season_months: 5,

@@ -158,10 +158,8 @@ def run_click_flow_to_results(
     page.fill("#distribution-fee-input", "0.50")
     page.select_option("#tariff-source-type", tariff_source_type)
     page.fill("#export-tariff-input", export_tariff)
-    if settlement_date:
+    if settlement_date is not None:
         page.fill("#settlement-date", settlement_date)
-    else:
-        page.fill("#settlement-date", "")
     page.wait_for_function(
         """([target, usablePct]) =>
             window.state.subscriberType === 'commercial'
@@ -341,7 +339,7 @@ def backend_unavailable_fallback_flow(browser, base_url):
     assert_on_grid_economics(
         page,
         expected_design_target="fill-roof",
-        settlement_expected={"provisional": True, "missing_blocker": True},
+        settlement_expected={"provisional": False, "missing_blocker": False},
     )
     fallback_text = page.locator("#result-engine-source").inner_text()
     assert len(fallback_text.strip()) > 10
