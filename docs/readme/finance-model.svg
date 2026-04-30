@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Solar Rota finansal model</title>
+  <desc id="desc">Solar Rota finansal modelinde maliyet, tasarruf, nakit akisi ve raporlama metrikleri.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FAFBFC"/>
+      <stop offset="1" stop-color="#ECFDF5"/>
+    </linearGradient>
+    <linearGradient id="cash" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#16A34A"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="cost" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#F43F5E"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .h1{font:800 38px Inter,Segoe UI,Arial,sans-serif;fill:#0F172A}
+      .sub{font:500 17px Inter,Segoe UI,Arial,sans-serif;fill:#475569}
+      .head{font:800 20px Inter,Segoe UI,Arial,sans-serif;fill:#0F172A}
+      .body{font:500 14px Inter,Segoe UI,Arial,sans-serif;fill:#475569}
+      .kpi{font:800 30px Inter,Segoe UI,Arial,sans-serif;fill:#0F172A}
+      .axis{font:600 12px Inter,Segoe UI,Arial,sans-serif;fill:#64748B}
+    </style>
+  </defs>
+  <rect width="1200" height="700" rx="30" fill="url(#bg)"/>
+  <text x="64" y="74" class="h1">Finansal model: enerji ciktisini nakit akisine cevirir</text>
+  <text x="64" y="108" class="sub">Yillik uretim, tuketim eslesmesi, tarife rejimi ve maliyet kirilimi 25 yillik tabloya baglanir.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="156" width="306" height="428" rx="24" fill="#FFFFFF"/>
+    <text x="94" y="198" class="head">CAPEX bilesenleri</text>
+    <rect x="94" y="230" width="44" height="242" rx="10" fill="url(#cost)" opacity="0.86"/>
+    <rect x="154" y="280" width="44" height="192" rx="10" fill="#F59E0B" opacity="0.9"/>
+    <rect x="214" y="330" width="44" height="142" rx="10" fill="#06B6D4" opacity="0.9"/>
+    <rect x="274" y="360" width="44" height="112" rx="10" fill="#22C55E" opacity="0.9"/>
+    <text x="96" y="502" class="axis">Panel</text>
+    <text x="152" y="502" class="axis">Inv.</text>
+    <text x="212" y="502" class="axis">BOS</text>
+    <text x="272" y="502" class="axis">Iscilik</text>
+    <text x="94" y="540" class="body">Panel KDV: %0</text>
+    <text x="94" y="564" class="body">Panel disi KDV: %20</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="424" y="156" width="712" height="286" rx="24" fill="#FFFFFF"/>
+    <text x="456" y="198" class="head">25 yillik nakit akisi</text>
+    <path d="M474 360C550 348 592 318 648 292C720 258 778 266 844 226C912 184 980 196 1096 178" fill="none" stroke="url(#cash)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M474 360H1096" stroke="#CBD5E1" stroke-width="2"/>
+    <path d="M474 228H1096" stroke="#E2E8F0" stroke-width="1"/>
+    <circle cx="474" cy="360" r="7" fill="#16A34A"/>
+    <circle cx="844" cy="226" r="7" fill="#06B6D4"/>
+    <circle cx="1096" cy="178" r="7" fill="#22C55E"/>
+    <text x="470" y="394" class="axis">Yil 1</text>
+    <text x="830" y="394" class="axis">Geri odeme</text>
+    <text x="1072" y="394" class="axis">Yil 25</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="424" y="480" width="214" height="104" rx="22" fill="#FFFFFF"/>
+    <text x="456" y="520" class="kpi">NPV</text>
+    <text x="456" y="552" class="body">iskontolu bugunku deger</text>
+    <rect x="664" y="480" width="214" height="104" rx="22" fill="#FFFFFF"/>
+    <text x="696" y="520" class="kpi">IRR</text>
+    <text x="696" y="552" class="body">yillik ic getiri orani</text>
+    <rect x="904" y="480" width="232" height="104" rx="22" fill="#FFFFFF"/>
+    <text x="936" y="520" class="kpi">LCOE</text>
+    <text x="936" y="552" class="body">indirgenmis enerji maliyeti</text>
+  </g>
+
+  <rect x="64" y="622" width="1072" height="44" rx="22" fill="#0F172A"/>
+  <text x="94" y="650" class="body" fill="#E2E8F0">Ticari teklif uyarisı: backend finansali estimate-only; musteriye donuk otorite frontend 8760 finansal model + kanit yonetimi + BOM girdileridir.</text>
+</svg>
