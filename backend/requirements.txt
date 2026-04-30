@@ -3,5 +3,6 @@ uvicorn[standard]
 pydantic
 pytest
 httpx
+python-multipart
 # Optional but required for the pvlib-backed engine path:
 pvlib
