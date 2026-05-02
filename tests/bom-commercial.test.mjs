@@ -38,4 +38,17 @@ const monitoringTotal = calculateBomTotal(monitoringSelected, { wp: 1000, kwp: 1
 assert.equal(monitoringTotal.rows.some(row => row.category === 'monitoring'), true);
 assert.equal(monitoringTotal.subtotal, 14730);
 
+// Audit Bug #29 — calculateBomTotal kontrat testi:
+// quantity = (sistem çarpanı) × (item.qty). Çağıran toplam çarpan girdiyse item.qty = 1 olmalı.
+const contractItems = [
+  { id: 'inv-2mppt', category: 'inverter', name: 'Inverter 2-MPPT', unit: 'kwp', unitCost: 1000, qty: 2 }
+];
+// 5 kwp × 2 mppt = 10 birim → 10 × 1000 = 10000
+assert.equal(calculateBomTotal(contractItems, { kwp: 5 }).subtotal, 10000);
+// quantities'de birim eksikse default 1 (multiplier=1, qty=2 → 2×1000 = 2000)
+assert.equal(calculateBomTotal(contractItems, {}).subtotal, 2000);
+// item.qty geçilmezse 1 kabul edilir → qty=1, multiplier=5 → 5×1000 = 5000
+const noQtyItems = [{ id: 'inv-1', category: 'inverter', name: 'Inv', unit: 'kwp', unitCost: 1000 }];
+assert.equal(calculateBomTotal(noQtyItems, { kwp: 5 }).subtotal, 5000);
+
 console.log('BOM commercial tests passed');

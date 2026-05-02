@@ -401,8 +401,9 @@ export function renderResults() {
     finRoiEl.textContent = r.roi + '%';
     setSignedFinancialClass(finRoiEl, r.roi);
   }
-  const finRoiLabel = document.getElementById('fin-roi-label');
-  if (finRoiLabel) finRoiLabel.childNodes[0].nodeValue = `${i18n.t('onGridResult.roiLabel')} `;
+  // ROI etiketi: childNodes[0].nodeValue yerine dedikli span (tooltip yapısı değişse bile sağlam).
+  const finRoiLabelText = document.querySelector('#fin-roi-label .fin-label-text');
+  if (finRoiLabelText) finRoiLabelText.textContent = `${i18n.t('onGridResult.roiLabel')} `;
   const finRoiTooltip = document.querySelector('#fin-roi-label .tooltip-box');
   if (finRoiTooltip) finRoiTooltip.textContent = i18n.t('onGridResult.roiTooltip');
   const finIrrEl = document.getElementById('fin-irr');

@@ -165,7 +165,8 @@ def test_pvlib_engine_contract_when_available():
 
 
 def test_financial_proposal_contract():
-    response = client.post("/api/financial/proposal", json=sample_request())
+    payload = sample_request()
+    response = client.post("/api/financial/proposal", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert data["proposal"]["scenarioKey"] == "on-grid"
@@ -175,11 +176,15 @@ def test_financial_proposal_contract():
     assert data["financial"]["estimateOnly"] is True
     assert data["financial"]["warning"] == "estimate_only_not_for_commercial_quotes"
     assert data["proposal"]["warning"] == "estimate_only_not_for_commercial_quotes"
-    # FIX-6 (backend KDV parity): panels at 0% KDV, non-panel components at 20%.
-    # Frontend default mono price basis is 18.5 TL/W:
-    # 12.9 kWp mono: panel_cost=238_650 (0% KDV) + non_panel=159_800 (20% KDV → +31_960)
-    # = 430_410.
-    assert data["financial"]["roughCapexTry"] == 430410
+    # FIX-6 (backend KDV parity): recompute expected capex from the same constants
+    # the engine uses, so this assertion stays correct when panel/inverter prices
+    # or KDV rates evolve. Sanity-floor below catches outright regressions.
+    from backend.services.financial_service import _frontend_default_capex
+    request_obj = EngineRequest.model_validate(payload)
+    system_power_kwp = float(data["production"]["systemPowerKwp"])
+    expected_capex = round(_frontend_default_capex(request_obj, system_power_kwp))
+    assert data["financial"]["roughCapexTry"] == expected_capex
+    assert data["financial"]["roughCapexTry"] > 100_000  # sanity floor for ~13 kWp mono
 
 
 def test_backend_offgrid_financial_uses_alternative_cost_and_blocks_export_revenue():

@@ -228,7 +228,9 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
     dni_extra = pvlib.irradiance.get_extra_radiation(times)
 
     target_annual_ghi = _annual_ghi_to_psh(request.site.ghi, request.site.cityName) * 365
-    clear_annual_ghi = max(float(clearsky["ghi"].sum()) / 1000, 1)
+    # Defensive floor against division-by-zero only — must be tiny so a degenerate
+    # clearsky sum does not silently distort ghi_scale (clamped downstream regardless).
+    clear_annual_ghi = max(float(clearsky["ghi"].sum()) / 1000, 1e-6)
     ghi_scale = _clamp(target_annual_ghi / clear_annual_ghi, 0.45, 1.00)
 
     scaled_ghi = clearsky["ghi"] * ghi_scale

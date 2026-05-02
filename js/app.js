@@ -21,7 +21,7 @@ import { showToast, animateCounter, launchConfetti, resetConfetti, renderPRGauge
 import { renderResults, renderMonthlyChart, downloadPDF, downloadTechnicalPDF, shareResults, loadFromHash, exportProposalHandoff, exportCrmLead } from './ui-render.js';
 import { toggleEngReport, renderEngReport } from './eng-report.js';
 import { runCalculation, isCalculationInProgress } from './calculation-service.js';
-import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta } from './calc-engine.js';
+import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta, getTiltCoeff } from './calc-engine.js';
 import { calculateSystemLayout, resolvePanelSpec } from './calc-core.js';
 import { renderHourlyProfile, setHourlySeason } from './hourly-profile.js';
 import { toggleBillBlock, onBillToggle, onBillInput, billQuickFill, billClear, import8760Csv } from './bill-analysis.js';
@@ -96,13 +96,21 @@ function dispatchAction(eventType, e) {
     : argProp === 'checked' ? el.checked
     : el.dataset.arg !== undefined ? el.dataset.arg
     : undefined;
-  const arg = argType === 'number' && rawArg !== undefined && rawArg !== null
-      ? Number(rawArg)
-    : argType === 'bool' && rawArg !== undefined && rawArg !== null
-      ? (rawArg === true || rawArg === 'true')
-    : argType === 'json' && typeof rawArg === 'string'
-      ? JSON.parse(rawArg)
-    : rawArg;
+  let arg;
+  if (argType === 'number' && rawArg !== undefined && rawArg !== null) {
+    arg = Number(rawArg);
+  } else if (argType === 'bool' && rawArg !== undefined && rawArg !== null) {
+    arg = (rawArg === true || rawArg === 'true');
+  } else if (argType === 'json' && typeof rawArg === 'string') {
+    try {
+      arg = JSON.parse(rawArg);
+    } catch (parseErr) {
+      console.warn('[data-action] data-arg JSON parse failed:', action, rawArg, parseErr);
+      return;
+    }
+  } else {
+    arg = rawArg;
+  }
   handler(arg, el, e);
 }
 
@@ -800,31 +808,34 @@ function setLocationBottomCard(cityName, lat, lon, ghi) {
 }
 
 function selectLocationFromLatLon(lat, lon, checkBounds) {
+  const warnEl = document.getElementById('location-warning');
   if (checkBounds && !isInTurkey(lat, lon)) {
-    document.getElementById('location-warning').style.display = 'block';
+    if (warnEl) warnEl.style.display = 'block';
     if (marker && window.state.lat && window.state.lon) {
       marker.setLatLng([window.state.lat, window.state.lon]);
     }
     return;
   }
-  document.getElementById('location-warning').style.display = 'none';
+  if (warnEl) warnEl.style.display = 'none';
   window.state.lat = lat; window.state.lon = lon;
-  marker.setLatLng([lat, lon]);
+  if (marker) marker.setLatLng([lat, lon]);
   let nearest = null, minDist = Infinity;
   TURKISH_CITIES.forEach(c => {
     const d = Math.hypot(c.lat - lat, c.lon - lon);
     if (d < minDist) { minDist = d; nearest = c; }
   });
+  const locText = document.getElementById('selected-loc-text');
   if (nearest) {
     window.state.cityName = nearest.name;
     window.state.ghi = nearest.ghi;
-    document.getElementById('city-search').value = nearest.name;
-    document.getElementById('selected-loc-text').textContent =
-      `${nearest.name} — ${lat.toFixed(4)}°K, ${lon.toFixed(4)}°D (GHI: ${nearest.ghi})`;
+    const cityInput = document.getElementById('city-search');
+    if (cityInput) cityInput.value = nearest.name;
+    if (locText) {
+      locText.textContent = `${nearest.name} — ${lat.toFixed(4)}°K, ${lon.toFixed(4)}°D (GHI: ${nearest.ghi})`;
+    }
     setLocationBottomCard(nearest.name, lat, lon, nearest.ghi);
-  } else {
-    document.getElementById('selected-loc-text').textContent =
-      `${lat.toFixed(4)}°K, ${lon.toFixed(4)}°D`;
+  } else if (locText) {
+    locText.textContent = `${lat.toFixed(4)}°K, ${lon.toFixed(4)}°D`;
   }
   if (window.state.osmShadowEnabled) refreshOSMShadowAnalysis();
 }
@@ -948,41 +959,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let _nominatimTimer = null;
 
-  input.addEventListener('input', () => {
-    const q = input.value.trim();
-    const qLow = q.toLowerCase();
-    list.innerHTML = '';
-    acIndex = -1;
-    if (q.length < 1) { setAutocompleteOpen(false); return; }
-    const matches = TURKISH_CITIES.filter(c => c.name.toLowerCase().includes(qLow)).slice(0, 5);
-    matches.forEach(c => {
-      const item = createAutocompleteItem({
-        title: c.name,
-        subtitle: i18n.t('step2.quickPickLabel'),
-        meta: `${c.ghi} kWh/m²`,
-        onSelect: () => selectCity(c)
+  if (input && list) {
+    input.addEventListener('input', () => {
+      const q = input.value.trim();
+      const qLow = q.toLowerCase();
+      list.innerHTML = '';
+      acIndex = -1;
+      if (q.length < 1) { setAutocompleteOpen(false); return; }
+      const matches = TURKISH_CITIES.filter(c => c.name.toLowerCase().includes(qLow)).slice(0, 5);
+      matches.forEach(c => {
+        const item = createAutocompleteItem({
+          title: c.name,
+          subtitle: i18n.t('step2.quickPickLabel'),
+          meta: `${c.ghi} kWh/m²`,
+          onSelect: () => selectCity(c)
+        });
+        list.appendChild(item);
       });
-      list.appendChild(item);
+      if (list.children.length) setAutocompleteOpen(true);
+      // Nominatim geocoding for street/neighborhood search
+      if (_nominatimTimer) clearTimeout(_nominatimTimer);
+      if (q.length >= 3) {
+        _nominatimTimer = setTimeout(() => _fetchNominatim(q, qLow, list), 320);
+      }
     });
-    if (list.children.length) setAutocompleteOpen(true);
-    // Nominatim geocoding for street/neighborhood search
-    if (_nominatimTimer) clearTimeout(_nominatimTimer);
-    if (q.length >= 3) {
-      _nominatimTimer = setTimeout(() => _fetchNominatim(q, qLow, list), 320);
-    }
-  });
 
-  input.addEventListener('keydown', e => {
-    const items = list.querySelectorAll('.autocomplete-item');
-    if (e.key === 'ArrowDown') { acIndex = Math.min(acIndex+1, items.length-1); highlightAC(items); e.preventDefault(); }
-    else if (e.key === 'ArrowUp') { acIndex = Math.max(acIndex-1, -1); highlightAC(items); e.preventDefault(); }
-    else if (e.key === 'Enter' && items.length) {
-      const targetIndex = acIndex >= 0 ? acIndex : 0;
-      items[targetIndex].dispatchEvent(new Event('mousedown'));
-      e.preventDefault();
-    }
-    else if (e.key === 'Escape') { setAutocompleteOpen(false); }
-  });
+    input.addEventListener('keydown', e => {
+      const items = list.querySelectorAll('.autocomplete-item');
+      if (e.key === 'ArrowDown') { acIndex = Math.min(acIndex+1, items.length-1); highlightAC(items); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { acIndex = Math.max(acIndex-1, -1); highlightAC(items); e.preventDefault(); }
+      else if (e.key === 'Enter' && items.length) {
+        const targetIndex = acIndex >= 0 ? acIndex : 0;
+        items[targetIndex].dispatchEvent(new Event('mousedown'));
+        e.preventDefault();
+      }
+      else if (e.key === 'Escape') { setAutocompleteOpen(false); }
+    });
+  }
   document.addEventListener('click', e => {
     if (!e.target.closest('.input-wrap')) {
       setAutocompleteOpen(false);
@@ -1039,13 +1052,17 @@ function selectCity(city) {
   window.state.lat = city.lat; window.state.lon = city.lon;
   window.state.cityName = city.name; window.state.ghi = city.ghi;
   clearStepInlineAlert(2);
-  document.getElementById('city-search').value = city.name;
+  const cityInput = document.getElementById('city-search');
+  if (cityInput) cityInput.value = city.name;
   setAutocompleteOpen(false);
-  document.getElementById('location-warning').style.display = 'none';
-  document.getElementById('selected-loc-text').textContent =
-    `${city.name} — ${city.lat.toFixed(4)}°K, ${city.lon.toFixed(4)}°D (GHI: ${city.ghi})`;
-  map.setView([city.lat, city.lon], 9, { animate: true });
-  marker.setLatLng([city.lat, city.lon]);
+  const warnEl = document.getElementById('location-warning');
+  if (warnEl) warnEl.style.display = 'none';
+  const locText = document.getElementById('selected-loc-text');
+  if (locText) {
+    locText.textContent = `${city.name} — ${city.lat.toFixed(4)}°K, ${city.lon.toFixed(4)}°D (GHI: ${city.ghi})`;
+  }
+  if (map) map.setView([city.lat, city.lon], 9, { animate: true });
+  if (marker) marker.setLatLng([city.lat, city.lon]);
   setLocationBottomCard(city.name, city.lat, city.lon, city.ghi);
 }
 
@@ -1394,18 +1411,7 @@ function useGeolocation() {
 // ═══════════════════════════════════════════════════════════
 // STEP 2 — TILT & SHADING & SOILING
 // ═══════════════════════════════════════════════════════════
-// Eğim katsayısı tablosu (optimum 33° = 1.00)
-const TILT_COEFFS = {0:0.78, 10:0.90, 15:0.94, 20:0.97, 25:0.99, 30:1.00, 33:1.00, 35:1.00, 40:0.99, 45:0.97, 50:0.94, 60:0.87, 75:0.75, 90:0.62};
-function getTiltCoeff(deg) {
-  const keys = Object.keys(TILT_COEFFS).map(Number).sort((a,b) => a-b);
-  let lo = keys[0], hi = keys[keys.length-1];
-  for (let i = 0; i < keys.length - 1; i++) {
-    if (deg >= keys[i] && deg <= keys[i+1]) { lo = keys[i]; hi = keys[i+1]; break; }
-  }
-  if (lo === hi) return TILT_COEFFS[lo];
-  const t = (deg - lo) / (hi - lo);
-  return TILT_COEFFS[lo] + t * (TILT_COEFFS[hi] - TILT_COEFFS[lo]);
-}
+// Eğim katsayısı tablosu/fonksiyonu calc-engine.js'den tek kaynak olarak import edilir.
 
 function updateTilt(val) {
   val = Math.max(0, Math.min(90, parseInt(val, 10) || 0));

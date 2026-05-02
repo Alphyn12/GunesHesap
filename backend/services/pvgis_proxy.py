@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,8 @@ _PVGIS_SERIES_ENDPOINTS = [
     "https://re.jrc.ec.europa.eu/api/seriescalc",
 ]
 _PROXY_TIMEOUT_S = 22.0
+_PROXY_CONNECT_TIMEOUT_S = 3.0  # fail-fast on unreachable endpoints
+_PROXY_TOTAL_BUDGET_S = 35.0  # cumulative wall-clock budget across all retries
 _COMMON_YEAR_MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 _MONTH_START_HOURS = []
 _offset = 0
@@ -80,8 +83,18 @@ async def fetch_pvgis_via_proxy(
     last_error_type = "unknown"
     last_error_msg = "All PVGIS endpoints failed"
 
-    async with httpx.AsyncClient(timeout=_PROXY_TIMEOUT_S) as client:
+    # Bound connect time separately so a dead endpoint fails fast (~3 s)
+    # instead of consuming the full 22 s read budget.
+    timeout = httpx.Timeout(_PROXY_TIMEOUT_S, connect=_PROXY_CONNECT_TIMEOUT_S)
+    deadline = time.monotonic() + _PROXY_TOTAL_BUDGET_S
+
+    async with httpx.AsyncClient(timeout=timeout) as client:
         for endpoint in _PVGIS_ENDPOINTS:
+            if time.monotonic() >= deadline:
+                logger.warning("[pvgis-proxy] total budget %.0fs exhausted before %s", _PROXY_TOTAL_BUDGET_S, endpoint)
+                last_error_type = "timeout"
+                last_error_msg = f"PVGIS proxy budget {_PROXY_TOTAL_BUDGET_S:.0f}s exhausted"
+                break
             try:
                 resp = await client.get(endpoint, params=params)
                 if resp.status_code != 200:

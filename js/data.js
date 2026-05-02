@@ -378,6 +378,25 @@ export const CITY_SUMMER_TEMPS = {
   'default':32
 };
 
+// CITY_SUMMER_TEMPS'te olmayan şehirlerde düz 32 yerine kabaca bölgesel default kullan.
+// Türkiye için lat eşikleri (Karadeniz > İç Anadolu > geçiş > Akdeniz/GD).
+// Tek consumer: calc-engine.js — sıcaklık derate'i (yaz aylık ortalama Tmax).
+export function resolveSummerTempDefault(lat) {
+  if (lat === null || lat === undefined || lat === '') return CITY_SUMMER_TEMPS.default;
+  const n = Number(lat);
+  if (!Number.isFinite(n)) return CITY_SUMMER_TEMPS.default;
+  if (n >= 40.5) return 26;   // Karadeniz kıyısı / Trakya kuzey
+  if (n >= 38.5) return 30;   // İç/Kuzey Anadolu
+  if (n >= 37.0) return 33;   // Ege / Akdeniz geçiş
+  return 36;                  // Akdeniz kıyısı / Güneydoğu Anadolu
+}
+
+export function resolveCitySummerTemp(cityName, lat) {
+  const known = CITY_SUMMER_TEMPS[cityName];
+  if (Number.isFinite(known)) return known;
+  return resolveSummerTempDefault(lat);
+}
+
 export const MONTHS = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
 export const MONTH_WEIGHTS = [0.055,0.062,0.085,0.095,0.105,0.115,0.112,0.108,0.090,0.075,0.055,0.043];
 

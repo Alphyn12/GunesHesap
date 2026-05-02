@@ -3,6 +3,13 @@
 // Solar Rota v2.0
 // ═══════════════════════════════════════════════════════════
 
+// Amortisman yılı: kullanıcı 0 girerse veya parseInt NaN dönerse default'a düş; aksi halde
+// pozitif tamsayıyı koru. `|| 10` (legitimate 0 → 10) ve `?? 10` (NaN → NaN) bug'ları yerine.
+export function resolveAmortYears(value, defaultYears = 10) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : defaultYears;
+}
+
 function setVisible(el, visible, display = '') {
   if (window.setElementVisible) return window.setElementVisible(el, visible, display);
   if (!el) return;
@@ -37,7 +44,7 @@ export function updateTaxInput() {
   if (!state.tax) state.tax = {};
 
   state.tax.corporateTaxRate = parseFloat(document.getElementById('tax-rate')?.value) || 25;
-  state.tax.amortizationYears = parseInt(document.getElementById('tax-amort')?.value) || 10;
+  state.tax.amortizationYears = resolveAmortYears(document.getElementById('tax-amort')?.value);
   state.tax.kdvRecovery = document.getElementById('tax-kdv')?.checked ?? true;
   state.tax.investmentContribution = parseFloat(document.getElementById('tax-invest-rate')?.value) || 0;
   state.tax.hasIncentiveCert = document.getElementById('tax-incentive-cert')?.checked ?? false;
@@ -53,7 +60,7 @@ function updateTaxPreview() {
   const totalCost = state.results.totalCost || 0;
   if (totalCost <= 0) return;
 
-  const amortYears = tax.amortizationYears || 10;
+  const amortYears = resolveAmortYears(tax.amortizationYears);
   const kvRate = (tax.corporateTaxRate || 25) / 100;
   const annual_dep = totalCost / amortYears;
   const annual_shield = annual_dep * kvRate;
@@ -117,6 +124,8 @@ function updateTaxPreview() {
 }
 
 // window'a expose et
-window.toggleTaxBlock = toggleTaxBlock;
-window.onTaxToggle = onTaxToggle;
-window.updateTaxInput = updateTaxInput;
+if (typeof window !== 'undefined') {
+  window.toggleTaxBlock = toggleTaxBlock;
+  window.onTaxToggle = onTaxToggle;
+  window.updateTaxInput = updateTaxInput;
+}

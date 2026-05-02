@@ -38,6 +38,7 @@ export function getLoadProfile(tariffType = 'residential') {
 export function getSeasonForMonth(monthIdx) {
   if (monthIdx === 11 || monthIdx <= 1) return 'winter';
   if (monthIdx >= 5 && monthIdx <= 7) return 'summer';
+  if (monthIdx >= 8 && monthIdx <= 10) return 'autumn';
   return 'spring';
 }
 

@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
@@ -18,6 +19,19 @@ from backend.services.pvgis_proxy import fetch_pvgis_via_proxy, validate_pvgis_p
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def _run_engine(handler, request: EngineRequest, label: str) -> EngineResponse:
+    try:
+        return handler(request)
+    except HTTPException:
+        raise
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception:
+        logger.exception("[%s] engine calculation failed", label)
+        raise HTTPException(status_code=500, detail=f"{label} engine calculation failed")
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -27,17 +41,20 @@ def health() -> HealthResponse:
 
 @router.post("/api/pv/calculate", response_model=EngineResponse)
 def pv_calculate(request: EngineRequest) -> EngineResponse:
-    return calculate_pv(request)
+    return _run_engine(calculate_pv, request, "pv-calculate")
 
 
 @router.post("/api/pvlib/calculate", response_model=EngineResponse)
 def pvlib_calculate(request: EngineRequest) -> EngineResponse:
-    return calculate_pv(request)
+    return _run_engine(calculate_pv, request, "pvlib-calculate")
 
 
 @router.post("/api/financial/proposal", response_model=EngineResponse)
 def financial_proposal(request: EngineRequest) -> EngineResponse:
-    return calculate_financial_proposal(request)
+    return _run_engine(calculate_financial_proposal, request, "financial-proposal")
+
+
+_MAX_FIELD_IMPORT_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
 @router.post("/api/offgrid/field-import")
@@ -46,7 +63,13 @@ async def offgrid_field_import(
     file: UploadFile = File(...),
 ) -> Dict[str, Any]:
     try:
-        content = await file.read()
+        # Read at most MAX+1 bytes; if we got more than MAX, the upload is too large.
+        content = await file.read(_MAX_FIELD_IMPORT_BYTES + 1)
+        if len(content) > _MAX_FIELD_IMPORT_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"file exceeds {_MAX_FIELD_IMPORT_BYTES // (1024 * 1024)} MB limit",
+            )
         result = analyze_field_import(file.filename or "field-import.csv", content, kind)
         return {
             "ok": True,

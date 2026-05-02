@@ -56,6 +56,22 @@ export function selectBomItems(items = [], selection = {}, { activeCategories = 
   return selected;
 }
 
+/**
+ * BOM toplamı: her satır için `(unit-multiplier) × (item.qty)` çarpılır.
+ *
+ * Sözleşme: `quantities[item.unit]` bir SİSTEM ÇARPANI (panel sayısı, kWp, m² gibi
+ * birim başına düşen miktar). `item.qty` ise ITEM içsel miktarıdır (örn. 1 inverter
+ * paketi içinde 2 mppt). Sonuç çarpımdır — `quantities[item.unit] = 5` ve
+ * `item.qty = 2` ise satır miktarı 10 olur.
+ *
+ * Eğer çağıran toplam miktarı önceden hesapladıysa `item.qty = 1` ile gönderilmeli;
+ * aksi halde çift sayım olur.
+ *
+ * @param {Array<object>} items — normalize edilmemiş ham BOM kalemleri
+ * @param {Record<string, number>} quantities — birim ('panel', 'kwp', 'm2', 'fixed' vs.)
+ *        bazında sistem çarpanı; eksik birim için varsayılan 1.
+ * @returns {{ rows: Array<object>, subtotal: number }}
+ */
 export function calculateBomTotal(items = [], quantities = {}) {
   const selected = normalizeBomItems(items);
   const rows = selected.map(item => {

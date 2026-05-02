@@ -69,7 +69,7 @@ class SystemInput(FlexibleModel):
     bifacialGain: Optional[float] = None
     inverterType: str = "string"
     inverterEfficiency: Optional[float] = None
-    cableLossPct: float = 0
+    cableLossPct: Optional[float] = None
     wiringMismatchPct: float = 0
     targetPowerKwp: Optional[float] = None
     batteryEnabled: bool = False

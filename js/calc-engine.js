@@ -3,7 +3,7 @@
 // Solar Rota v2.0
 // ═══════════════════════════════════════════════════════════
 import {
-  PANEL_TYPES, BATTERY_MODELS, PSH_FALLBACK, CITY_SUMMER_TEMPS,
+  PANEL_TYPES, BATTERY_MODELS, PSH_FALLBACK, resolveCitySummerTemp,
   MONTH_WEIGHTS, INVERTER_TYPES, HEAT_PUMP_DATA, HOURLY_SOLAR_PROFILE,
   DEFAULT_TARIFFS
 } from './data.js';
@@ -45,6 +45,10 @@ import {
 } from './offgrid-dispatch.js';
 import { fetchPVGISLive, PVGIS_FETCH_STATUS, getPvgisSourceLabel, CALC_TOTAL_TIMEOUT_MS } from './pvgis-fetch.js';
 import { buildBackendUrl, BACKEND_CONFIG } from './backend-config.js';
+
+// Open-meteo (anlık ortalama yaz sıcaklığı) en kötü durum cevap süresi.
+// Hesap zincirini bloklamasın diye agresif tut (pvgis çağrılarından çok daha kısa).
+const METEO_TIMEOUT_MS = 8000;
 
 const LOADING_MSGS = [
   "PVGIS'ten güneş ışınım verisi alınıyor...",
@@ -141,18 +145,19 @@ if (typeof window !== 'undefined') {
 }
 
 // FIX-2: Tilt factor lookup for PSH fallback path.
-// Matches the TILT_COEFFS table in app.js and the backend simple_engine.py _tilt_factor().
-// Optimum is 30–35° (coeff = 1.00); flat roof (0°) loses ~22%, vertical (90°) loses ~38%.
-const _TILT_COEFFS = {0:0.78,10:0.90,15:0.94,20:0.97,25:0.99,30:1.00,33:1.00,35:1.00,40:0.99,45:0.97,50:0.94,60:0.87,75:0.75,90:0.62};
-function _getTiltCoeff(deg) {
-  const keys = Object.keys(_TILT_COEFFS).map(Number).sort((a, b) => a - b);
+// Tek kaynak: app.js bu tabloyu/yardımcıyı bu modülden import eder; backend simple_engine.py
+// içindeki Python eşdeğeri ile bilinçli olarak senkron tutulmalı (manuel parite).
+// Optimum 30–35° (coeff = 1.00); düz çatı (0°) ~%22, dik (90°) ~%38 kayıp.
+export const TILT_COEFFS = {0:0.78,10:0.90,15:0.94,20:0.97,25:0.99,30:1.00,33:1.00,35:1.00,40:0.99,45:0.97,50:0.94,60:0.87,75:0.75,90:0.62};
+export function getTiltCoeff(deg) {
+  const keys = Object.keys(TILT_COEFFS).map(Number).sort((a, b) => a - b);
   let lo = keys[0], hi = keys[keys.length - 1];
   for (let i = 0; i < keys.length - 1; i++) {
     if (deg >= keys[i] && deg <= keys[i + 1]) { lo = keys[i]; hi = keys[i + 1]; break; }
   }
-  if (lo === hi) return _TILT_COEFFS[lo];
+  if (lo === hi) return TILT_COEFFS[lo];
   const t = (deg - lo) / (hi - lo);
-  return _TILT_COEFFS[lo] + t * (_TILT_COEFFS[hi] - _TILT_COEFFS[lo]);
+  return TILT_COEFFS[lo] + t * (TILT_COEFFS[hi] - TILT_COEFFS[lo]);
 }
 
 function spawnLoadingParticles() {
@@ -445,14 +450,14 @@ export async function runCalculation() {
     return;
   }
 
-  let avgSummerTemp = CITY_SUMMER_TEMPS[state.cityName] || CITY_SUMMER_TEMPS['default'];
+  let avgSummerTemp = resolveCitySummerTemp(state.cityName, state.lat);
   const currentMonth = new Date().getMonth();
   const isSummerSeason = currentMonth >= 4 && currentMonth <= 8;
   if (isSummerSeason) {
     try {
       const meteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&daily=temperature_2m_max&timezone=Europe%2FIstanbul&past_days=92`;
       const ctrl2 = new AbortController();
-      const t2 = setTimeout(() => ctrl2.abort(), 8000);
+      const t2 = setTimeout(() => ctrl2.abort(), METEO_TIMEOUT_MS);
       const res2 = await fetch(meteoUrl, { signal: ctrl2.signal });
       clearTimeout(t2);
       if (res2.ok) {
@@ -598,7 +603,7 @@ export async function runCalculation() {
     const adjustedE = rawEnergy
       * (usedFallback ? fallbackTempAdjustment.factor : pvgisTempAdjustment.factor)
       * (usedFallback ? sec.azimuthCoeff : 1.0)
-      * (usedFallback ? _getTiltCoeff(sec.tilt) : 1.0)   // FIX-2: tilt factor was missing from fallback path
+      * (usedFallback ? getTiltCoeff(sec.tilt) : 1.0)   // FIX-2: tilt factor was missing from fallback path
       * (1 - effectiveShadingFactor / 100)
       * (1 - state.soilingFactor / 100)
       * bifacialBonus

@@ -40,7 +40,8 @@ function updateHourlyChart(state, r) {
 
   // Tüketim profili
   const dailyConsumption = (r.hourlySummary?.annualLoad || state.dailyConsumption * 365) / 365;
-  const loadProfile = getLoadProfile(state.tariffType);
+  // calc-core.js ve calc-engine.js ile tutarlı: usageProfile öncelikli, yoksa tariffType.
+  const loadProfile = getLoadProfile(state.usageProfile || state.onGridUsageProfile || state.tariffType);
   const hourlyConsumption = loadProfile.map(l => parseFloat((dailyConsumption * l).toFixed(2)));
 
   // Self-consumption (overlap)

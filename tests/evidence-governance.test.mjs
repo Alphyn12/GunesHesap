@@ -77,7 +77,8 @@ const registry = buildEvidenceRegistry(
         sources: [{ label: 'EPDK', checkedDate: '2026-04-13', url: 'https://epdk.gov.tr' }]
       }
     }
-  }
+  },
+  { today: '2026-04-13' }
 );
 assert.equal(registry.validation.status, 'complete');
 

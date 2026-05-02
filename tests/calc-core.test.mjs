@@ -5,6 +5,7 @@ import {
   calculateSystemLayout,
   computeFinancialTable,
   getLoadProfile,
+  getSeasonForMonth,
   normalizeMonthlyProductionToAnnual,
   normalizeProfile,
   resolveProductionTemperatureAdjustment,
@@ -405,5 +406,18 @@ const fakeHourlyProduction8760 = new Array(8760).fill(0.5); // 4380 kWh/year
 const realPvResult = simulateHourlyEnergy(syntheticMonthly, syntheticLoad, { hourlyProduction8760: fakeHourlyProduction8760 });
 assert.ok(Math.abs(realPvResult.annualProduction - 4380) < 1, 'Real hourly PV profile annual production should equal sum of provided data');
 assert.equal(Math.round(realPvResult.monthly.reduce((sum, row) => sum + row.production, 0)), 4380);
+
+// getSeasonForMonth: 12 ay × beklenen sonuç. Eylül/Ekim/Kasım eskiden 'spring' dönüyordu
+// (autumn branch'i eksikti); Faz-1'de düzeltildi.
+const seasonExpectations = {
+  0: 'winter', 1: 'winter', 11: 'winter',
+  2: 'spring', 3: 'spring', 4: 'spring',
+  5: 'summer', 6: 'summer', 7: 'summer',
+  8: 'autumn', 9: 'autumn', 10: 'autumn'
+};
+for (const [monthIdx, expected] of Object.entries(seasonExpectations)) {
+  const actual = getSeasonForMonth(Number(monthIdx));
+  assert.equal(actual, expected, `month ${monthIdx} expected ${expected}, got ${actual}`);
+}
 
 console.log('calc-core tests passed');

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Dict, List
 
 from backend.models.engine_contracts import EngineRequest
+
+logger = logging.getLogger(__name__)
 
 
 MONTH_WEIGHTS = [0.055, 0.062, 0.085, 0.095, 0.105, 0.115, 0.112, 0.108, 0.090, 0.075, 0.055, 0.043]
@@ -69,6 +72,8 @@ def _annual_ghi_to_psh(ghi: float | None, city_name: str | None = None) -> float
         return ghi / 365
     if ghi and 0 < ghi <= 20:
         # Clamp to physical maximum of 10 h/day; values 10–20 indicate bad upstream data.
+        if ghi > 10:
+            logger.warning("PSH %.2f h/day clamped to 10 (city=%s) — likely bad upstream data", ghi, city_name)
         return min(ghi, 10.0)
     fallback = {
         # Marmara
@@ -116,7 +121,7 @@ def _tilt_factor(tilt: float) -> float:
                 return TILT_COEFFS[low]
             ratio = (tilt - low) / (high - low)
             return TILT_COEFFS[low] + ratio * (TILT_COEFFS[high] - TILT_COEFFS[low])
-    return TILT_COEFFS[33]
+    raise RuntimeError(f"_tilt_factor: no bracket matched for tilt={tilt} (keys={keys})")
 
 
 def _azimuth_factor(azimuth: float) -> float:
@@ -153,7 +158,9 @@ def bifacial_gain(request: EngineRequest) -> float:
 
 
 def cable_loss_factor(request: EngineRequest) -> float:
-    loss_pct = getattr(request.system, "cableLossPct", 0) or getattr(request.system, "wiringMismatchPct", 0) or 0
+    # Explicit None check: cableLossPct=0 must NOT fall through to wiringMismatchPct.
+    cab = getattr(request.system, "cableLossPct", None)
+    loss_pct = cab if cab is not None else (getattr(request.system, "wiringMismatchPct", 0) or 0)
     return 1 - _clamp(float(loss_pct), 0, 50) / 100
 
 

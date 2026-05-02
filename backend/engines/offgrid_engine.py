@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from math import ceil, isfinite, log2, pi, sin, sqrt
 from typing import Any
 
 from backend.models.engine_contracts import EngineRequest
 from backend.engines.pvlib_engine import CITY_SUMMER_TEMPS
+
+logger = logging.getLogger(__name__)
 
 
 HOURS_PER_YEAR = 8760
@@ -323,6 +326,13 @@ def build_clustered_pv_from_monthly(monthly_kwh: list[float], city_name: str | N
     peak_summer_cell_temp_c = float("-inf")
     peak_summer_noon_temp_factor = 1.0
 
+    if len(monthly_kwh) != 12:
+        logger.warning(
+            "build_clustered_pv_from_monthly: expected 12 monthly entries, got %d (city=%s) — extra entries ignored",
+            len(monthly_kwh),
+            city_name,
+        )
+
     for month_idx, monthly_total in enumerate(monthly_kwh[:12]):
         days_in_month = MONTH_DAYS[month_idx]
         season = get_load_season_for_month(month_idx)
@@ -419,16 +429,23 @@ def device_surge_multiplier(device: dict[str, Any], category: str) -> float:
     return CATEGORY_SURGE_MULTIPLIERS.get(category, 1.0)
 
 
-def synthetic_peak_envelope_factor(device: dict[str, Any], category: str, template_value: float, hours_per_day: float) -> float:
+def synthetic_peak_envelope_prefix(device: dict[str, Any], category: str, hours_per_day: float) -> float:
+    # Device-constant factors of synthetic_peak_envelope_factor — compute once per device,
+    # then multiply by hour-dependent concentration_boost in the inner loop.
     usage_type = device.get("usageType") or "manual"
     usage_factor = USAGE_TYPE_PEAK_FACTORS.get(usage_type, USAGE_TYPE_PEAK_FACTORS["manual"])
     category_factor = CATEGORY_PEAK_RISK_FACTORS.get(category, CATEGORY_PEAK_RISK_FACTORS["generic"])
     normalized_hours = clamp(hours_per_day / 24 if hours_per_day > 0 else 0, 0, 1)
     sparse_use_boost = 1 + ((1 - normalized_hours) * 0.22)
-    concentration_boost = 1 + max(0.0, (template_value - (1 / 24)) * 1.6)
     quantity = max(1, int(round(finite(device.get("quantity"), 1))))
     quantity_boost = 1 + min(0.18, log2(quantity) * 0.05) if quantity > 1 else 1.0
-    return clamp(usage_factor * category_factor * sparse_use_boost * concentration_boost * quantity_boost, 1.0, 1.9)
+    return usage_factor * category_factor * sparse_use_boost * quantity_boost
+
+
+def synthetic_peak_envelope_factor(device: dict[str, Any], category: str, template_value: float, hours_per_day: float) -> float:
+    prefix = synthetic_peak_envelope_prefix(device, category, hours_per_day)
+    concentration_boost = 1 + max(0.0, (template_value - (1 / 24)) * 1.6)
+    return clamp(prefix * concentration_boost, 1.0, 1.9)
 
 
 def battery_dynamic_efficiency_preset(chemistry: str | None = None) -> dict[str, float]:
@@ -542,15 +559,11 @@ def build_accuracy_assessment(
         add(4, "critical-fraction-synthetic", "Kritik yuk oran varsayimiyla turetildi.")
         blockers.append("Kritik yuk gercek cihaz/saha profili degil; oran varsayimi kullanildi.")
 
-    if finite(battery.get("maxChargePowerKw", battery.get("maxChargeKw")), float("nan")) == finite(
-        battery.get("maxChargePowerKw", battery.get("maxChargeKw")), float("nan")
-    ):
+    if isfinite(finite(battery.get("maxChargePowerKw", battery.get("maxChargeKw")), float("nan"))):
         add(3, "battery-charge-limit", "Batarya sarj kW limiti dispatch icine girdi.")
     else:
         blockers.append("Batarya sarj kW limiti eksik; sarj gucu sinirsiz varsayilabilir.")
-    if finite(battery.get("maxDischargePowerKw", battery.get("maxDischargeKw")), float("nan")) == finite(
-        battery.get("maxDischargePowerKw", battery.get("maxDischargeKw")), float("nan")
-    ):
+    if isfinite(finite(battery.get("maxDischargePowerKw", battery.get("maxDischargeKw")), float("nan"))):
         add(3, "battery-discharge-limit", "Batarya desarj kW limiti dispatch icine girdi.")
     else:
         blockers.append("Batarya desarj kW limiti eksik; pik yuk yeterliligi oldugundan iyi gorunebilir.")
@@ -1188,7 +1201,11 @@ def build_offgrid_load_profile(request: EngineRequest) -> dict[str, Any]:
         category = device.get("category") if device.get("category") in DEVICE_LOAD_TEMPLATES else "generic"
         template = blend_day_night_template(DEVICE_LOAD_TEMPLATES[category], day_hours, night_hours)
         surge_multiplier = device_surge_multiplier(device, category)
-        peak_envelope = [synthetic_peak_envelope_factor(device, category, weight, hours_per_day) for weight in template]
+        envelope_prefix = synthetic_peak_envelope_prefix(device, category, hours_per_day)
+        peak_envelope = [
+            clamp(envelope_prefix * (1 + max(0.0, (weight - (1 / 24)) * 1.6)), 1.0, 1.9)
+            for weight in template
+        ]
         norm_factor = SEASONAL_NORM_FACTORS.get(category, 1.0)
         season_factors = SEASONAL_LOAD_FACTORS.get(category, {})
         cursor = 0
@@ -1319,12 +1336,18 @@ def build_offgrid_pv_profile(request: EngineRequest, production: dict[str, Any])
     }
 
 
+def _normalize_pct_or_fraction(raw: Any, default_fraction: float) -> float:
+    # Accept either fraction (0..1) or percentage (>1) — divide-by-100 only when needed.
+    val = finite(raw, default_fraction)
+    return val / 100 if val > 1 else val
+
+
 def eol_battery_config(battery: dict[str, Any]) -> dict[str, Any]:
     usable = max(0.0, finite(battery.get("usableCapacityKwh"), 0.0))
     reserve = max(0.0, finite(battery.get("socReserveKwh"), 0.0))
     initial = max(reserve, finite(battery.get("initialSocKwh"), reserve))
-    eol_capacity_pct = clamp(finite(battery.get("eolCapacityPct"), 0.80 if usable > 0 else 0.80) / (100 if finite(battery.get("eolCapacityPct"), 0.0) > 1 else 1), 0.5, 1.0)
-    eol_eff_loss = clamp(finite(battery.get("eolEfficiencyLossPct"), 0.03 if usable > 0 else 0.03) / (100 if finite(battery.get("eolEfficiencyLossPct"), 0.0) > 1 else 1), 0, 0.3)
+    eol_capacity_pct = clamp(_normalize_pct_or_fraction(battery.get("eolCapacityPct"), 0.80), 0.5, 1.0)
+    eol_eff_loss = clamp(_normalize_pct_or_fraction(battery.get("eolEfficiencyLossPct"), 0.03), 0, 0.3)
     eol_usable = usable * eol_capacity_pct
     reserve_pct = reserve / usable if usable > 0 else 0.0
     initial_pct = initial / usable if usable > 0 else reserve_pct
@@ -1399,10 +1422,10 @@ def run_offgrid_dispatch(pv_hourly: list[float], load_hourly: list[float], criti
 
         critical_target = critical
         non_critical_target = non_critical
-        if inverter_ac_limit != float("inf"):
+        if isfinite(inverter_ac_limit):
             critical_target = min(critical_target, inverter_ac_limit)
             non_critical_target = min(non_critical_target, max(0.0, inverter_ac_limit - critical_target))
-        if inverter_surge_limit != float("inf"):
+        if isfinite(inverter_surge_limit):
             if critical_peak_kw > inverter_surge_limit + 1e-9:
                 critical_scale = clamp(inverter_surge_limit / critical_peak_kw if critical_peak_kw > 0 else 0.0, 0.0, 1.0)
                 critical_target *= critical_scale

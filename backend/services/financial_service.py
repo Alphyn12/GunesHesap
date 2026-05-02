@@ -10,7 +10,7 @@ def _npv(cashflows: list[float], discount_rate: float) -> float:
     return sum(cf / ((1 + discount_rate) ** idx) for idx, cf in enumerate(cashflows))
 
 
-def _irr(cashflows: list[float], guess_lo: float = -0.95, guess_hi: float = 5.0,
+def _irr(cashflows: list[float], guess_lo: float = -0.95, guess_hi: float = 10.0,
          tol: float = 1e-7, max_iter: int = 200) -> float | None:
     """Internal Rate of Return via bisection on NPV(rate)=0.
 
@@ -123,6 +123,13 @@ def build_financial_payload(request: EngineRequest, production: dict, offgrid_re
     # name that matches what it computes, and `irrPct` for the true IRR. The
     # `roiPct` key is kept for backwards compatibility with existing API
     # consumers but mirrors `totalReturnPct`; UIs should migrate to `irrPct`.
+    #
+    # Parity is intentional: js/calc-core.js:827 uses the identical formula
+    #   roi = (totalNetCashFlow - totalCost) / totalCost * 100
+    # so backend and frontend produce the same legacy number. Do NOT "fix"
+    # this to (sum(cashflows[1:]) / rough_capex) * 100 without also
+    # migrating the JS calculator and the dashboard/scenarios consumers
+    # (js/dashboard.js, js/scenarios.js, js/proposal-governance.js).
     total_return_pct = ((sum(cashflows[1:]) - rough_capex) / rough_capex) * 100
     irr_value = _irr(cashflows)
     irr_pct = round(irr_value * 100, 2) if irr_value is not None else None

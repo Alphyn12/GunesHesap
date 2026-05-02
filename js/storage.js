@@ -69,14 +69,33 @@ function openEvidenceDb() {
 
 async function withEvidenceStore(mode, callback) {
   const db = await openEvidenceDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(EVIDENCE_STORE_NAME, mode);
-    const store = tx.objectStore(EVIDENCE_STORE_NAME);
-    let result;
-    tx.oncomplete = () => resolve(result);
-    tx.onerror = () => reject(tx.error || new Error('IndexedDB transaction failed.'));
-    result = callback(store);
-  }).finally(() => db.close());
+  try {
+    const txPromise = new Promise((resolve, reject) => {
+      const tx = db.transaction(EVIDENCE_STORE_NAME, mode);
+      const store = tx.objectStore(EVIDENCE_STORE_NAME);
+      // Faz-3 (#17): callback senkron throw ederse Promise executor yakalamaz; manuel reject.
+      // Faz-3 (#18): callback Promise döndürse de bekle ve değeri tx.oncomplete sonrası dön —
+      // böylece tx commit edilmeden inner Promise'in sonucuna güvenmiyoruz.
+      let pending;
+      try {
+        pending = Promise.resolve(callback(store));
+      } catch (err) {
+        try { tx.abort(); } catch { /* zaten kapalı olabilir */ }
+        reject(err);
+        return;
+      }
+      // tx oncomplete olmadan pending reject ederse unhandled rejection oluşmasın.
+      pending.catch(() => {});
+      tx.oncomplete = () => {
+        pending.then(resolve, reject);
+      };
+      tx.onerror = () => reject(tx.error || new Error('IndexedDB transaction failed.'));
+      tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted.'));
+    });
+    return await txPromise;
+  } finally {
+    db.close();
+  }
 }
 
 export function saveProposalState(state = {}) {
