@@ -128,7 +128,9 @@
     lpTourCurrent = n;
     var tabs = document.querySelectorAll('.lp-tour-tab');
     tabs.forEach(function(t){
-      t.classList.toggle('active', parseInt(t.getAttribute('data-step'),10) === n);
+      var isActive = parseInt(t.getAttribute('data-step'),10) === n;
+      t.classList.toggle('active', isActive);
+      if (t.getAttribute('role') === 'tab') t.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
     var texts = document.querySelectorAll('.lp-tour-text');
     texts.forEach(function(t){

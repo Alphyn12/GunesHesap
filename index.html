@@ -258,31 +258,31 @@
 
       <!-- TAB NAV -->
       <div class="lp-tour-tabs" role="tablist">
-        <button type="button" class="lp-tour-tab active" data-step="1" role="tab" data-click-action="lpTourStep" data-arg="1" data-arg-type="number">
+        <button type="button" class="lp-tour-tab active" data-step="1" role="tab" aria-selected="true" data-click-action="lpTourStep" data-arg="1" data-arg-type="number">
           <span class="lp-tour-tab-num">01</span>
           <span class="lp-tour-tab-name">Senaryo</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="2" role="tab" data-click-action="lpTourStep" data-arg="2" data-arg-type="number">
+        <button type="button" class="lp-tour-tab" data-step="2" role="tab" aria-selected="false" data-click-action="lpTourStep" data-arg="2" data-arg-type="number">
           <span class="lp-tour-tab-num">02</span>
           <span class="lp-tour-tab-name">Konum</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="3" role="tab" data-click-action="lpTourStep" data-arg="3" data-arg-type="number">
+        <button type="button" class="lp-tour-tab" data-step="3" role="tab" aria-selected="false" data-click-action="lpTourStep" data-arg="3" data-arg-type="number">
           <span class="lp-tour-tab-num">03</span>
           <span class="lp-tour-tab-name">Çatı</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="4" role="tab" data-click-action="lpTourStep" data-arg="4" data-arg-type="number">
+        <button type="button" class="lp-tour-tab" data-step="4" role="tab" aria-selected="false" data-click-action="lpTourStep" data-arg="4" data-arg-type="number">
           <span class="lp-tour-tab-num">04</span>
           <span class="lp-tour-tab-name">Ekipman</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="5" role="tab" data-click-action="lpTourStep" data-arg="5" data-arg-type="number">
+        <button type="button" class="lp-tour-tab" data-step="5" role="tab" aria-selected="false" data-click-action="lpTourStep" data-arg="5" data-arg-type="number">
           <span class="lp-tour-tab-num">05</span>
           <span class="lp-tour-tab-name">Ayarlar</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="6" role="tab" data-click-action="lpTourStep" data-arg="6" data-arg-type="number">
+        <button type="button" class="lp-tour-tab" data-step="6" role="tab" aria-selected="false" data-click-action="lpTourStep" data-arg="6" data-arg-type="number">
           <span class="lp-tour-tab-num">06</span>
           <span class="lp-tour-tab-name">Hesapla</span>
         </button>
-        <button type="button" class="lp-tour-tab" data-step="7" role="tab" data-click-action="lpTourStep" data-arg="7" data-arg-type="number">
+        <button type="button" class="lp-tour-tab" data-step="7" role="tab" aria-selected="false" data-click-action="lpTourStep" data-arg="7" data-arg-type="number">
           <span class="lp-tour-tab-num">07</span>
           <span class="lp-tour-tab-name">Sonuçlar</span>
         </button>
@@ -1126,11 +1126,11 @@
         <span class="brand-assurance" data-i18n="app.headerAssurance">Türkiye odaklı mühendislik aracı</span>
       </div>
       <div class="header-actions">
-        <button class="app-home-btn" id="back-to-landing-btn" data-click-action="goToLanding" title="Anasayfa" aria-label="Anasayfa">
+        <button type="button" class="app-home-btn" id="back-to-landing-btn" data-click-action="goToLanding" title="Anasayfa" aria-label="Anasayfa">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Anasayfa</span>
         </button>
-        <button class="header-icon-btn icon-only position-anchor" id="settings-open-btn" data-testid="open-settings" data-click-action="openSettings" title="Ayarlar" aria-label="Ayarlar"
+        <button type="button" class="header-icon-btn icon-only position-anchor" id="settings-open-btn" data-testid="open-settings" data-click-action="openSettings" title="Ayarlar" aria-label="Ayarlar"
                 data-i18n-title="settings.title" data-i18n-aria-label="settings.title"
                >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
@@ -1191,40 +1191,40 @@
 <div id="settings-panel" class="settings-panel is-hidden" role="dialog" aria-modal="true" aria-labelledby="settings-panel-title">
   <div class="settings-panel-header">
     <span id="settings-panel-title" class="settings-panel-title" data-i18n="settings.title">Ayarlar</span>
-    <button id="settings-close-btn" class="settings-panel-close" data-click-action="closeSettings" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
+    <button type="button" id="settings-close-btn" class="settings-panel-close" data-click-action="closeSettings" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
   </div>
   <div class="settings-panel-section">
-    <button class="header-icon-btn settings-panel-dashboard-btn is-hidden" id="dashboard-btn" data-click-action="openDashboardFromSettings">
+    <button type="button" class="header-icon-btn settings-panel-dashboard-btn is-hidden" id="dashboard-btn" data-click-action="openDashboardFromSettings">
       Kayıtlı Hesaplar
     </button>
   </div>
   <div class="settings-panel-section">
     <div class="settings-panel-label" data-i18n="settings.theme">Tema</div>
     <div class="settings-panel-row">
-      <button class="settings-choice-btn" id="theme-dark-btn" data-click-action="setTheme" data-arg="dark" data-i18n="settings.dark">🌙 Koyu</button>
-      <button class="settings-choice-btn" id="theme-light-btn" data-click-action="setTheme" data-arg="light" data-i18n="settings.light">☀️ Açık</button>
+      <button type="button" class="settings-choice-btn" id="theme-dark-btn" data-click-action="setTheme" data-arg="dark" data-i18n="settings.dark">🌙 Koyu</button>
+      <button type="button" class="settings-choice-btn" id="theme-light-btn" data-click-action="setTheme" data-arg="light" data-i18n="settings.light">☀️ Açık</button>
     </div>
   </div>
   <div class="settings-panel-section">
     <div class="settings-panel-label" data-i18n="settings.language">Dil / Language</div>
     <div class="settings-panel-row">
-      <button class="settings-choice-btn lang-btn" data-lang="tr" data-testid="lang-tr" data-click-action="switchLanguage" data-arg="tr">TR</button>
-      <button class="settings-choice-btn lang-btn" data-lang="en" data-testid="lang-en" data-click-action="switchLanguage" data-arg="en">EN</button>
-      <button class="settings-choice-btn lang-btn" data-lang="de" data-testid="lang-de" data-click-action="switchLanguage" data-arg="de">DE</button>
+      <button type="button" class="settings-choice-btn lang-btn" data-lang="tr" data-testid="lang-tr" data-click-action="switchLanguage" data-arg="tr">TR</button>
+      <button type="button" class="settings-choice-btn lang-btn" data-lang="en" data-testid="lang-en" data-click-action="switchLanguage" data-arg="en">EN</button>
+      <button type="button" class="settings-choice-btn lang-btn" data-lang="de" data-testid="lang-de" data-click-action="switchLanguage" data-arg="de">DE</button>
     </div>
   </div>
   <div class="settings-panel-section">
     <div class="settings-panel-label" data-i18n="settings.currency">Para Birimi</div>
     <div class="settings-panel-row mb-3-5">
-      <button class="settings-choice-btn currency-btn" data-currency="TRY" data-click-action="switchCurrency" data-arg="TRY">₺ TL</button>
-      <button class="settings-choice-btn currency-btn" data-currency="USD" data-click-action="switchCurrency" data-arg="USD">$ USD</button>
+      <button type="button" class="settings-choice-btn currency-btn" data-currency="TRY" data-click-action="switchCurrency" data-arg="TRY">₺ TL</button>
+      <button type="button" class="settings-choice-btn currency-btn" data-currency="USD" data-click-action="switchCurrency" data-arg="USD">$ USD</button>
     </div>
     <div class="settings-panel-label btn-label-loose" data-i18n="settings.usdTryRate">USD / TRY Kuru</div>
     <div class="settings-panel-row settings-panel-row--rate">
       <input type="number" id="usd-try-settings" class="settings-panel-rate-input" min="1" step="0.5" value="38.5"
              data-input-action="setManualUsdTryRateAndSyncSlider"
              aria-label="USD / TRY Kuru" data-i18n-aria-label="settings.usdTryRate"/>
-      <button class="settings-panel-rate-refresh" data-click-action="refreshExchangeRate" title="Kuru güncelle" aria-label="Kuru güncelle"
+      <button type="button" class="settings-panel-rate-refresh" data-click-action="refreshExchangeRate" title="Kuru güncelle" aria-label="Kuru güncelle"
               data-i18n-title="settings.refreshRate" data-i18n-aria-label="settings.refreshRate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       </button>
@@ -1244,7 +1244,7 @@
     <div class="card fill-area" id="map-card">
       <div class="fill-area" id="map"></div>
       <div id="map-draw-hint">Çatı köşelerine tıklayın · Çift tıklayarak tamamlayın · ESC = iptal</div>
-      <button class="map-layer-btn" id="map-satellite-btn" data-click-action="toggleMapLayer" title="Harita görünümünü değiştir">
+      <button type="button" class="map-layer-btn" id="map-satellite-btn" data-click-action="toggleMapLayer" title="Harita görünümünü değiştir">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
         <span id="map-layer-label" data-i18n="step2.satelliteMapLabel">Uydu görünüm</span>
       </button>
@@ -1305,7 +1305,7 @@
 
   <!-- Continue button -->
   <div class="hero-cta-wrap">
-    <button class="btn btn-primary hero-cta-btn d-inline-flex" id="step1-continue-btn" data-testid="step1-continue" data-click-action="validateStep1">
+    <button type="button" class="btn btn-primary hero-cta-btn d-inline-flex" id="step1-continue-btn" data-testid="step1-continue" data-click-action="validateStep1">
       <span data-i18n-text>Sonraki Adım</span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
@@ -1316,7 +1316,7 @@
 <div class="step-pane" id="step-2">
   <!-- Top bar: search + geolocate -->
   <div class="step2-topbar">
-    <button class="btn btn-secondary btn-pad-thin-gap" data-click-action="goToStep" data-arg="1" data-arg-type="number">
+    <button type="button" class="btn btn-secondary btn-pad-thin-gap" data-click-action="goToStep" data-arg="1" data-arg-type="number">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       Geri
     </button>
@@ -1331,7 +1331,7 @@
         <div class="autocomplete-list" id="autocomplete-list" role="listbox"></div>
       </div>
     </div>
-    <button class="btn btn-secondary step2-geo-btn" id="geolocation-btn" data-click-action="useGeolocation">
+    <button type="button" class="btn btn-secondary step2-geo-btn" id="geolocation-btn" data-click-action="useGeolocation">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       <span class="step2-geo-label">Konumumu Kullan</span>
     </button>
@@ -1396,8 +1396,8 @@
       </div>
     </div>
     <div class="loc-bottom-right">
-      <button class="btn btn-secondary btn-pad-md" id="step2-back-btn" data-click-action="goToStep" data-arg="1" data-arg-type="number">← Geri</button>
-      <button class="btn btn-primary p-button-md" id="step2-continue-btn" data-click-action="validateStep2">
+      <button type="button" class="btn btn-secondary btn-pad-md" id="step2-back-btn" data-click-action="goToStep" data-arg="1" data-arg-type="number">← Geri</button>
+      <button type="button" class="btn btn-primary p-button-md" id="step2-continue-btn" data-click-action="validateStep2">
         <span class="step2-continue-label">Sonraki Adım</span> →
       </button>
     </div>
@@ -1467,7 +1467,7 @@
       </div>
       <!-- Sağ alt araç çubuğu (sadece temizle — uydu butonu harita kartında) -->
       <div class="roof-draw-toolbar">
-        <button class="roof-tool-btn danger is-hidden" data-click-action="clearRoofDrawing" id="clear-roof-btn" title="Tüm çizimleri sil">
+        <button type="button" class="roof-tool-btn danger is-hidden" data-click-action="clearRoofDrawing" id="clear-roof-btn" title="Tüm çizimleri sil">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
           Çizimleri Temizle
         </button>
@@ -1657,7 +1657,7 @@
           <input class="range-accent-primary" type="checkbox" id="osm-shadow-toggle" data-change-action="toggleOSMShadow" data-arg-prop="checked">
           <span>OSM bina yüksekliği gölge analizini etkinleştir</span>
         </label>
-        <button class="btn btn-secondary btn-pad-md-thin" data-click-action="refreshOSMShadowAnalysis">
+        <button type="button" class="btn btn-secondary btn-pad-md-thin" data-click-action="refreshOSMShadowAnalysis">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
           Analizi Yenile
         </button>
@@ -1696,7 +1696,7 @@
           <div id="roof-sections-list"></div>
           <div class="multi-roof-actions">
             <div class="multi-roof-actions-copy" id="multi-roof-actions-copy">En fazla 2 ek yüzey ekleyebilirsiniz.</div>
-            <button class="btn btn-outline input-meta-mt-1" data-click-action="addRoofSection" id="add-roof-btn">
+            <button type="button" class="btn btn-outline input-meta-mt-1" data-click-action="addRoofSection" id="add-roof-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Yeni Yüzey Ekle
             </button>
@@ -1706,8 +1706,8 @@
 
       <!-- Step 3 nav -->
       <div class="step3-nav-sticky">
-        <button class="btn btn-secondary" data-click-action="goToStep" data-arg="2" data-arg-type="number">← Geri</button>
-        <button class="btn btn-primary" data-click-action="validateStep3">Sonraki Adım →</button>
+        <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="2" data-arg-type="number">← Geri</button>
+        <button type="button" class="btn btn-primary" data-click-action="validateStep3">Sonraki Adım →</button>
       </div>
     </div>
   </div>
@@ -2005,8 +2005,8 @@
       </div>
       <div class="equipment-summary-note" id="equip-summary-cost-note">Toplam ekipman tahmini: panel + inverter</div>
       <div class="flex-col-mt-5-gap-2">
-        <button class="btn btn-secondary btn-full text-base-82" data-click-action="goToStep" data-arg="3" data-arg-type="number">← Geri</button>
-        <button class="btn btn-primary btn-full" data-click-action="validateStep4" data-i18n="step4.next">Sonraki Adım →</button>
+        <button type="button" class="btn btn-secondary btn-full text-base-82" data-click-action="goToStep" data-arg="3" data-arg-type="number">← Geri</button>
+        <button type="button" class="btn btn-primary btn-full" data-click-action="validateStep4" data-i18n="step4.next">Sonraki Adım →</button>
       </div>
     </div>
   </div>
@@ -2787,12 +2787,12 @@
                  />
               </div>
               <div>
-                <button class="u-n" data-click-action="addOffgridDeviceFromCatalog"
+                <button type="button" class="u-n" data-click-action="addOffgridDeviceFromCatalog"
                  
                   data-i18n="offgridL2.addFromCatalog">Katalogdan Ekle</button>
               </div>
               <div>
-                <button class="u-o" data-click-action="addOffgridDevice"
+                <button type="button" class="u-o" data-click-action="addOffgridDevice"
                  
                   data-i18n="offgridL2.addManual">Manuel Ekle</button>
               </div>
@@ -3166,19 +3166,19 @@
       </div>
       <div class="u-1a">Türkiye konut ortalaması: ~10–15 kWh/gün (~300–450 kWh/ay)</div>
       <div class="u-1b">
-        <button class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="5" data-arg-type="number"
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="5" data-arg-type="number"
          >
           Stüdyo ~5 kWh
         </button>
-        <button class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="10" data-arg-type="number"
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="10" data-arg-type="number"
          >
           3+1 Konut ~10 kWh
         </button>
-        <button class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="20" data-arg-type="number"
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="20" data-arg-type="number"
          >
           Villa ~20 kWh
         </button>
-        <button class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="30" data-arg-type="number"
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="30" data-arg-type="number"
          >
           Ticarethane ~30 kWh
         </button>
@@ -3485,8 +3485,8 @@
   </details>
 
   <div class="nav-btns mt-7">
-    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number">← Geri</button>
-    <button class="btn btn-primary" id="calc-btn" data-testid="calculate-results" data-click-action="validateStep5">Sonraki Adım →</button>
+    <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number">← Geri</button>
+    <button type="button" class="btn btn-primary" id="calc-btn" data-testid="calculate-results" data-click-action="validateStep5">Sonraki Adım →</button>
   </div>
 </div>
 
@@ -3985,15 +3985,15 @@
         <div class="action-group-copy" data-i18n="report.customerOutputsCopy">İlk görüşme, karar özeti ve teknik eki müşteriye veya karar vericiye göndermek için kullanın.</div>
       </div>
       <div class="action-btns">
-        <button class="btn btn-primary" data-testid="download-proposal-pdf" data-click-action="downloadPDF">
+        <button type="button" class="btn btn-primary" data-testid="download-proposal-pdf" data-click-action="downloadPDF">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
       <span data-i18n="report.downloadProposalPdf">Ön Fizibilite PDF İndir</span>
         </button>
-        <button class="btn btn-outline" data-testid="download-technical-pdf" data-click-action="downloadTechnicalPDF">
+        <button type="button" class="btn btn-outline" data-testid="download-technical-pdf" data-click-action="downloadTechnicalPDF">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h6"/><path d="M5 3h14v18H5z"/></svg>
       <span data-i18n="report.downloadTechnicalPdf">Teknik Ek PDF İndir</span>
         </button>
-        <button class="btn btn-secondary" data-testid="share-results" data-click-action="shareResults">
+        <button type="button" class="btn btn-secondary" data-testid="share-results" data-click-action="shareResults">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       <span data-i18n="report.shareResults">Sonuç Özetini Paylaş</span>
         </button>
@@ -4006,23 +4006,23 @@
         <div class="action-group-copy" data-i18n="report.opsOutputsCopy">CRM aktarımı, veri handoff, teklif karşılaştırması ve yeni varyasyon denemeleri için kullanın.</div>
       </div>
       <div class="action-btns">
-        <button class="btn btn-secondary" data-testid="export-proposal-json" data-click-action="exportProposalHandoff">
+        <button type="button" class="btn btn-secondary" data-testid="export-proposal-json" data-click-action="exportProposalHandoff">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span data-i18n="report.exportProposalJson">Proposal JSON</span>
         </button>
-        <button class="btn btn-secondary" data-testid="export-crm-json" data-click-action="exportCrmLead">
+        <button type="button" class="btn btn-secondary" data-testid="export-crm-json" data-click-action="exportCrmLead">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5M8 17h8"/></svg>
       <span data-i18n="report.exportCrmJson">CRM JSON</span>
         </button>
-        <button class="btn btn-success" data-testid="save-calculation" data-click-action="saveCurrentCalculation">
+        <button type="button" class="btn btn-success" data-testid="save-calculation" data-click-action="saveCurrentCalculation">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <span data-i18n="report.saveCalculation">Hesabı Kaydet</span>
         </button>
-        <button class="btn btn-outline" data-testid="open-comparison" data-click-action="openComparison">
+        <button type="button" class="btn btn-outline" data-testid="open-comparison" data-click-action="openComparison">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span data-i18n="report.compareQuotes">Teklif Karşılaştır</span>
         </button>
-        <button class="btn btn-outline" data-testid="recalculate" data-click-action="goToStep" data-arg="1" data-arg-type="number">
+        <button type="button" class="btn btn-outline" data-testid="recalculate" data-click-action="goToStep" data-arg="1" data-arg-type="number">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
       <span data-i18n="report.recalculate">Yeniden Hesapla</span>
         </button>
@@ -4037,10 +4037,10 @@
       Saatlik Üretim Profili
     </div>
     <div class="u-23">
-      <button class="season-btn active" data-season="summer" data-click-action="setHourlySeason" data-arg="summer">Yaz</button>
-      <button class="season-btn" data-season="spring" data-click-action="setHourlySeason" data-arg="spring">İlkbahar</button>
-      <button class="season-btn" data-season="autumn" data-click-action="setHourlySeason" data-arg="autumn">Sonbahar</button>
-      <button class="season-btn" data-season="winter" data-click-action="setHourlySeason" data-arg="winter">Kış</button>
+      <button type="button" class="season-btn active" data-season="summer" data-click-action="setHourlySeason" data-arg="summer">Yaz</button>
+      <button type="button" class="season-btn" data-season="spring" data-click-action="setHourlySeason" data-arg="spring">İlkbahar</button>
+      <button type="button" class="season-btn" data-season="autumn" data-click-action="setHourlySeason" data-arg="autumn">Sonbahar</button>
+      <button type="button" class="season-btn" data-season="winter" data-click-action="setHourlySeason" data-arg="winter">Kış</button>
     </div>
     <canvas class="max-h-300" id="hourly-chart-canvas"></canvas>
     <div class="u-24" id="hourly-stats"></div>
@@ -4068,12 +4068,12 @@
     <div class="u-28" id="heatmap-container"></div>
     <div class="u-29">
       <div class="u-2a">
-        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="0" data-arg-type="number">Oca</button>
-        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="3" data-arg-type="number">Nis</button>
-        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="6" data-arg-type="number">Tem</button>
-        <button class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="9" data-arg-type="number">Eki</button>
+        <button type="button" class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="0" data-arg-type="number">Oca</button>
+        <button type="button" class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="3" data-arg-type="number">Nis</button>
+        <button type="button" class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="6" data-arg-type="number">Tem</button>
+        <button type="button" class="btn btn-secondary chip-sm-pad" data-click-action="setHeatmapMonth" data-arg="9" data-arg-type="number">Eki</button>
       </div>
-      <button class="btn btn-primary u-2b" id="heatmap-play-btn" data-click-action="toggleHeatmapAnimation">▶ Oynat</button>
+      <button type="button" class="btn btn-primary u-2b" id="heatmap-play-btn" data-click-action="toggleHeatmapAnimation">▶ Oynat</button>
     </div>
     <div class="u-2c">
       <span><span class="text-blue">●</span> &lt;1.5 saat/gün</span>
@@ -4175,57 +4175,57 @@
 <!-- MOBILE STICKY BOTTOM CTA BAR (Etap 2) -->
 <nav class="mobile-bottom-bar" aria-label="Adım navigasyonu" data-testid="mobile-bottom-bar">
   <div class="mobile-bottom-bar__group" data-step="1">
-    <button class="btn btn-primary" data-testid="m-step1-continue" data-click-action="validateStep1">
+    <button type="button" class="btn btn-primary" data-testid="m-step1-continue" data-click-action="validateStep1">
       <span data-i18n="step1.continue">Devam</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="2">
-    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="1" data-arg-type="number" aria-label="Geri">
+    <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="1" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step2-continue" data-click-action="validateStep2">
+    <button type="button" class="btn btn-primary" data-testid="m-step2-continue" data-click-action="validateStep2">
       <span>Konumu Onayla</span>
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="3">
-    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="2" data-arg-type="number" aria-label="Geri">
+    <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="2" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step3-continue" data-click-action="validateStep3">
+    <button type="button" class="btn btn-primary" data-testid="m-step3-continue" data-click-action="validateStep3">
       <span>Devam</span>
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="4">
-    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="3" data-arg-type="number" aria-label="Geri">
+    <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="3" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step4-continue" data-click-action="validateStep4">
+    <button type="button" class="btn btn-primary" data-testid="m-step4-continue" data-click-action="validateStep4">
       <span>Devam</span>
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="5">
-    <button class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number" aria-label="Geri">
+    <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number" aria-label="Geri">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Geri</span>
     </button>
-    <button class="btn btn-primary" data-testid="m-step5-calculate" data-click-action="validateStep5">
+    <button type="button" class="btn btn-primary" data-testid="m-step5-calculate" data-click-action="validateStep5">
       <span data-i18n="report.calculate">Hesapla</span>
     </button>
   </div>
   <div class="mobile-bottom-bar__group" data-step="7">
-    <button class="btn btn-primary" data-testid="m-pdf" data-click-action="downloadPDF" aria-label="PDF indir">
+    <button type="button" class="btn btn-primary" data-testid="m-pdf" data-click-action="downloadPDF" aria-label="PDF indir">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span>PDF</span>
     </button>
-    <button class="btn btn-outline" data-testid="m-compare" data-click-action="openComparison" aria-label="Karşılaştır">
+    <button type="button" class="btn btn-outline" data-testid="m-compare" data-click-action="openComparison" aria-label="Karşılaştır">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span>Karşılaştır</span>
     </button>
-    <button class="btn btn-outline" data-testid="m-recalculate" data-click-action="goToStep" data-arg="1" data-arg-type="number" aria-label="Yeniden hesapla">
+    <button type="button" class="btn btn-outline" data-testid="m-recalculate" data-click-action="goToStep" data-arg="1" data-arg-type="number" aria-label="Yeniden hesapla">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
       <span>Yenile</span>
     </button>
@@ -4243,7 +4243,7 @@
         <svg class="icon-align-middle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span data-i18n="comparison.title">Teklif Karşılaştırma</span>
       </h2>
-      <button class="btn-icon-modal-close" data-click-action="closeComparison" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
+      <button type="button" class="btn-icon-modal-close" data-click-action="closeComparison" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
     </div>
     <div class="p-6">
       <div class="u-2s" id="comparison-scenarios"></div>
@@ -4261,9 +4261,9 @@
         <span data-i18n="dashboard.saved">Kayıtlı Hesaplar</span>
       </h2>
       <div class="u-2u">
-        <button data-click-action="compareDashboardSelected" class="btn btn-outline u-2v" data-i18n="dashboard.compareSelected">Seçilenleri Karşılaştır</button>
-        <button class="u-2w" data-click-action="clearAllSaved" data-i18n="dashboard.clearAll">Tümünü Sil</button>
-        <button class="btn-icon-modal-close" data-click-action="closeDashboard" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
+        <button type="button" data-click-action="compareDashboardSelected" class="btn btn-outline u-2v" data-i18n="dashboard.compareSelected">Seçilenleri Karşılaştır</button>
+        <button type="button" class="u-2w" data-click-action="clearAllSaved" data-i18n="dashboard.clearAll">Tümünü Sil</button>
+        <button type="button" class="btn-icon-modal-close" data-click-action="closeDashboard" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
       </div>
     </div>
     <div class="p-6" id="dashboard-body"></div>
