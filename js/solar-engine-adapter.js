@@ -34,6 +34,9 @@ export async function resolveExternalEngine(state = {}, options = {}) {
     return {
       failed: true,
       error: error?.message || String(error),
+      // PVGIS_HYBRID engine'i kendisi bir fallback (local-PSH) değil — workflow seviyesinde
+      // Python backend'den buna düştük. Bu yüzden engine metadata'da usedFallback=false kalır;
+      // workflow tarafı `failed: true` ve `attemptedEngine` ile gerçek fallback'i raporlar.
       fallbackEngineSource: buildEngineSourceMeta({ engine: ENGINE_KEYS.PVGIS_HYBRID, usedFallback: false }),
       attemptedEngine: state.enginePreference || ENGINE_KEYS.AUTO
     };

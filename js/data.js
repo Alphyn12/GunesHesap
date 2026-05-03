@@ -599,7 +599,10 @@ export const HEAT_PUMP_DATA = {
   heating_season_months: 5,
   cooling_season_months: 4,
   spf_heating: { good: 3.8, avg: 3.2, poor: 2.6 },
-  spf_cooling: { good: 4.2, avg: 3.5, poor: 2.8 }
+  spf_cooling: { good: 4.2, avg: 3.5, poor: 2.8 },
+  // CO₂ emisyon faktörleri (Türkiye şebeke ortalaması, doğalgaz yakma)
+  gridCo2KgPerKwh: 0.420,
+  gasCo2KgPerKwh: 0.202
 };
 
 // ─── EV Araç Modelleri ───────────────────────────────────────────────────────

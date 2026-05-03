@@ -142,10 +142,20 @@ function cleanOperationSnapshot(snapshot = null) {
   };
 }
 
+let _weakHashWarned = false;
+
 async function fingerprintFile(file) {
   const buffer = await file.arrayBuffer();
   if (globalThis.crypto?.subtle?.digest) {
     return byteHex(await crypto.subtle.digest('SHA-256', buffer));
+  }
+  // crypto.subtle yalnızca secure context (https://, localhost) altında erişilebilir.
+  // Bu fallback 32-bit non-cryptographic hash üretir; dosya bütünlüğü kanıtı için
+  // yetersizdir, sadece insecure bir context'te (file://, http://) görsel debug
+  // amaçlı kullanılır. Operasyon ekibine güvenli context kullanımını hatırlat.
+  if (!_weakHashWarned && typeof console !== 'undefined' && console.warn) {
+    _weakHashWarned = true;
+    console.warn('[evidence-files] crypto.subtle erişilemez (secure context değil); fingerprint zayıf 32-bit hash ile üretiliyor. Production için https kullanın.');
   }
   let hash = 0;
   const view = new Uint8Array(buffer);

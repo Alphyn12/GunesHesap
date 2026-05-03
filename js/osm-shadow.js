@@ -74,7 +74,7 @@ async function fetchBuildingsAround(center, radiusM = 160, retries = 2) {
     (._;>;);
     out body;
   `;
-  let lastErr;
+  let lastErr = new Error('OSM Overpass fetch failed');
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       if (attempt > 0) await new Promise(r => setTimeout(r, 1200 * attempt));
@@ -87,7 +87,7 @@ async function fetchBuildingsAround(center, radiusM = 160, retries = 2) {
       const data = await res.json();
       return osmElementsToBuildings(data.elements || []);
     } catch (err) {
-      lastErr = err;
+      lastErr = err instanceof Error ? err : new Error(String(err));
     }
   }
   throw lastErr;
@@ -190,7 +190,8 @@ export async function refreshOSMShadowAnalysis() {
     </div>`;
 
   // OSM analizi için OpenStreetMap katmanına geç (binalar daha net görünür)
-  if (window._activeTileLayer === 'dark' && window.map) {
+  const previousTileLayer = window._activeTileLayer;
+  if (previousTileLayer === 'dark' && window.map) {
     window._darkLayer?.remove();
     window._osmLayer?.addTo(window.map);
     window._activeTileLayer = 'osm';
@@ -208,6 +209,13 @@ export async function refreshOSMShadowAnalysis() {
     window.showToast?.(`OSM analizi tamamlandı: ${buildings.length} bina · Ek gölge varsayımı %${result.shadowFactorPct.toFixed(1)} · Risk ${result.riskLevel}`, result.riskLevel === 'high' ? 'error' : 'success');
     return result;
   } catch (err) {
+    // Fetch başarısız: önceki tile katmanını geri yükle ki kullanıcı manuel geçişe zorlanmasın.
+    if (previousTileLayer === 'dark' && window._activeTileLayer === 'osm' && window.map) {
+      window._osmLayer?.remove();
+      window._darkLayer?.addTo(window.map);
+      window._activeTileLayer = 'dark';
+      window.syncMapLayerButton?.();
+    }
     const result = computeShadowRisk(center, [], { panelAzimuth: state.azimuth || 180 });
     state.osmShadow = { ...result, buildings: [], source: 'OSM unavailable fallback', error: err.message };
     renderShadowSummary(result, `OSM Overpass erişilemedi (${err.message}) — bina verisi olmadan tahmin`);

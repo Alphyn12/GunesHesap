@@ -330,9 +330,10 @@ function renderScenarioChart(r, state, customRate) {
     }
   ];
 
-  // Kümülatif dönüştür
+  // Kümülatif dönüştür — baseline computeScenario ile aynı: financialCostBasis tercih.
+  const cumBaseline = -(Number(r.financialCostBasis) || Number(r.totalCost) || 0);
   const cumData = allScenarios.map(sc => {
-    let cum = -r.totalCost;
+    let cum = cumBaseline;
     return sc.data.map(v => { cum += v; return Math.round(cum); });
   });
 
@@ -381,6 +382,8 @@ function renderFXProjection(r, state) {
   const baseRate = state.usdToTry || 38.5;
   const growth = parseFloat(document.getElementById('fx-growth-rate')?.value) / 100 || 0.20;
 
+  // FX projeksiyonu kasıtlı olarak today + 10 yıl (toplam 11 etiket) gösterir; finansal
+  // kümülatif grafik (line 318) ayrı şekilde 25 yıl üzerinde çalışır.
   const labels = Array.from({length: 11}, (_, i) => i === 0 ? t('scenarioAnalysis.today') : t('scenarioAnalysis.yearLabel').replace('{n}', i));
   const centerData = labels.map((_, i) => Math.round(baseRate * Math.pow(1 + growth, i)));
   const upperData = labels.map((_, i) => Math.round(baseRate * Math.pow(1 + growth * 1.3, i)));

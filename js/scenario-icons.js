@@ -1,5 +1,9 @@
 // Senaryo kartları için animasyonlu inline SVG ikonları
-// Inline SVG kullanılır çünkü <img> tag'i ile CSS animasyonları Safari/Firefox'ta çalışmaz
+// Inline SVG kullanılır çünkü <img> tag'i ile CSS animasyonları Safari/Firefox'ta çalışmaz.
+// Not: viewBox iki farklı koordinat sistemi kullanır — on-grid/off-grid 0 0 200 200,
+// diğerleri 0 0 80 80. CSS sınıfı `scenario-svg-icon` her ikisini de aynı render boyutuna
+// ölçeklendirir; karşılaştırmalı şekilde kullanılırken iç koordinatlar bu farklılığa göre
+// hesaplanmalıdır (örn. ortak bir overlay layer planlanırsa önce viewBox'ları hizalayın).
 
 export const SCENARIO_ICONS = {
   'on-grid': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="scenario-svg-icon">

@@ -73,11 +73,12 @@ export function renderEngReport() {
   const authoritativeTitle = authoritativeSource.pvlibBacked ? 'Python pvlib-backed production engine' : authoritativeSource.source || r.calculationMode || 'Browser PVGIS/JS engine';
   const fallbackReason = r.authoritativeEngineFallbackReason ? localizeKnownMessage(r.authoritativeEngineFallbackReason) : null;
   const maxRef      = r.pvgisRawEnergy || netEnergy;
-  const shadingPct  = (r.shadingLoss / maxRef * 100).toFixed(1);
-  const tempPct     = (r.tempLossEnergy / maxRef * 100).toFixed(1);
-  const azimuthPct  = (r.azimuthLossEnergy / maxRef * 100).toFixed(1);
-  const bifacialPct = (r.bifacialGainEnergy / maxRef * 100).toFixed(1);
-  const soilingPct  = (r.soilingLoss / maxRef * 100).toFixed(1);
+  const safeRef     = Number(maxRef) > 0 ? Number(maxRef) : 1;
+  const shadingPct  = (r.shadingLoss / safeRef * 100).toFixed(1);
+  const tempPct     = (r.tempLossEnergy / safeRef * 100).toFixed(1);
+  const azimuthPct  = (r.azimuthLossEnergy / safeRef * 100).toFixed(1);
+  const bifacialPct = (r.bifacialGainEnergy / safeRef * 100).toFixed(1);
+  const soilingPct  = (r.soilingLoss / safeRef * 100).toFixed(1);
   const cb          = r.costBreakdown;
   const totalEnergy25y = r.yearlyTable.reduce((s, y) => s + y.energy, 0);
   const gov = r.proposalGovernance || {};

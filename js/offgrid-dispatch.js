@@ -595,6 +595,8 @@ export function buildOffgridPvDispatchProfile(options = {}) {
     };
   }
 
+  // fallbackHourlyRows hem ham sayı array'i (8760 kWh) hem de {production: number} objesi
+  // array'i kabul edebilir; iki form da geçerli, isComplete8760 sayısal kontrol yapar.
   const fallbackHourly = Array.isArray(options.fallbackHourlyRows)
     ? options.fallbackHourlyRows.map(row => typeof row === 'number' ? row : row?.production)
     : [];

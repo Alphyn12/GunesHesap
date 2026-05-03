@@ -45,6 +45,21 @@ export function buildBackendUrl(path = BACKEND_CONFIG.pvCalculatePath, baseUrl =
   return `${base}${suffix}`;
 }
 
+/**
+ * Backend (Python pvlib) modunun aktif olup olmadığını belirler.
+ *
+ * Karar tablosu:
+ *  - enginePreference === 'python-backend' veya 'pvlib-service' → her zaman true (kullanıcı açıkça istedi)
+ *  - enginePreference != 'auto' → false (klasik JS/PVGIS hibrit)
+ *  - 'auto' modunda backend yalnızca üç açık opt-in sinyalinden BİRİ varsa devreye girer:
+ *      1. state.backendAutoDiscoveryEnabled (ayarlardan kullanıcı işaretledi)
+ *      2. options.autoDiscover (test/SDK çağrıları için runtime override)
+ *      3. window.GUNESHESAP_ENABLE_BACKEND_AUTO === true (deployment-level global,
+ *         backend hazır olduğunda HTML/operasyon ekibi enable eder)
+ *
+ *  Hiçbir opt-in olmadan 'auto' tercihi backend'i denemez ve sessizce JS/PVGIS yoluna
+ *  düşer; gereksiz network çağrısı/timeout yaşatmaz.
+ */
 export function isBackendModeEnabled(state = {}, options = {}) {
   const preference = state.enginePreference || 'pvgis-hybrid-js';
   if (['python-backend', 'pvlib-service'].includes(preference)) return true;

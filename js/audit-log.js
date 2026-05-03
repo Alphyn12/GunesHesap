@@ -27,10 +27,15 @@ function cleanDetails(details = {}) {
 export function createAuditEntry(action, details = {}, user = {}, timestamp = nowIso()) {
   const name = cleanString(user.name || user.displayName || user.id || 'local-user', 80) || 'local-user';
   const role = cleanString(user.role || 'unknown', 40) || 'unknown';
+  // Geçersiz timestamp string'i Date.parse → NaN üretir; ID kuyruğunda NaN kalmasın
+  // diye Date.now() fallback'i kullanılır. timestamp alanını da güvenli ISO'ya çevirir.
+  const parsedTs = Date.parse(timestamp);
+  const safeTimestamp = Number.isFinite(parsedTs) ? timestamp : nowIso();
+  const idSeed = Number.isFinite(parsedTs) ? parsedTs : Date.now();
   return {
-    id: `audit-${Date.parse(timestamp) || Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `audit-${idSeed}-${Math.random().toString(36).slice(2, 8)}`,
     version: AUDIT_LOG_VERSION,
-    timestamp,
+    timestamp: safeTimestamp,
     action: cleanString(action, 120) || 'unknown',
     user: { id: cleanString(user.id || name, 80), name, role },
     details: cleanDetails(details)

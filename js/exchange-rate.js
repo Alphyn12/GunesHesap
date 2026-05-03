@@ -126,6 +126,7 @@ export async function initExchangeRateService() {
   const state = window.state || {};
   const meta = await resolveUsdTryRate();
   if (state.exchangeRate?.source === 'manual') {
+    syncRateInputs(state.exchangeRate.rate);
     renderExchangeRateStatus();
     return state.exchangeRate;
   }
@@ -143,7 +144,11 @@ export async function refreshExchangeRate() {
   syncRateInputs(meta.rate);
   renderExchangeRateStatus();
   window.updateTariffAssumptions?.();
-  if (window.state.results) window.renderResults?.();
+  // ui-render gibi tüketici modüller bu event'i dinler — exchange-rate doğrudan
+  // renderResults referansına bağlanmıyor (loose coupling, test edilebilirlik için).
+  if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
+    document.dispatchEvent(new CustomEvent('exchange-rate-refreshed', { detail: meta }));
+  }
   return meta;
 }
 

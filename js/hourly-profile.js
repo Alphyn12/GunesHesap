@@ -35,7 +35,7 @@ function updateHourlyChart(state, r) {
 
   // Günlük üretim
   const dailyProduction = r.annualEnergy / 365;
-  const profile = normalizeProfile(HOURLY_SOLAR_PROFILE[currentSeason]);
+  const profile = normalizeProfile(HOURLY_SOLAR_PROFILE[currentSeason] ?? HOURLY_SOLAR_PROFILE.spring);
   const hourlyProduction = profile.map(p => parseFloat((dailyProduction * p).toFixed(2)));
 
   // Tüketim profili

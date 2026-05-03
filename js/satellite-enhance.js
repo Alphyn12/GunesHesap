@@ -27,19 +27,19 @@ export function enhanceCanvasFallback(sourceCanvas, scale = 1.5, strength = 0.85
   const w = out.width;
   const h = out.height;
 
-  // 3×3 Gaussian blur kernel weights: center=4, edges=2, corners=1 (normalized /16)
+  // 5-tap cross-shaped box blur (center + 4 neighbors), normalized by 5.
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
       const i = (y * w + x) * 4;
       for (let c = 0; c < 3; c++) {
         const center = copy[i + c];
-        // 5-tap box blur
-        const blurSum =
+        const blurVal = (
+          center +
           copy[i - 4 + c] +
           copy[i + 4 + c] +
           copy[i - w * 4 + c] +
-          copy[i + w * 4 + c];
-        const blurVal = blurSum / 4;
+          copy[i + w * 4 + c]
+        ) / 5;
         // Unsharp mask: original + (original - blur) * strength
         data[i + c] = clamp(center + (center - blurVal) * strength);
       }

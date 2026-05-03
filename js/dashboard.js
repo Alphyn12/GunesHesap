@@ -9,6 +9,14 @@ const MAX_SAVED = 20;
 const STORAGE_KEY = 'guneshesap_saved';
 const MAX_IMPORT_RECORDS = 50;
 
+// Monotonic fallback ID generator — Date.now() * 1000 + counter ensures uniqueness
+// across rapid sanitization passes that fall within the same millisecond.
+let _fallbackIdCounter = 0;
+function nextFallbackId() {
+  _fallbackIdCounter = (_fallbackIdCounter + 1) % 1000;
+  return Date.now() * 1000 + _fallbackIdCounter;
+}
+
 function money(value) {
   const state = window.state || {};
   const currency = state.displayCurrency || 'TRY';
@@ -35,13 +43,13 @@ function setVisible(el, visible, display = '') {
 function getSaved() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed.map((record, index) => sanitizeDashboardRecord(record, Date.now() + index)).filter(Boolean).slice(0, MAX_SAVED) : [];
+    return Array.isArray(parsed) ? parsed.map(record => sanitizeDashboardRecord(record, nextFallbackId())).filter(Boolean).slice(0, MAX_SAVED) : [];
   } catch { return []; }
 }
 
 function setSaved(list) {
   const sanitized = Array.isArray(list)
-    ? list.map((record, index) => sanitizeDashboardRecord(record, Date.now() + index)).filter(Boolean).slice(0, MAX_SAVED)
+    ? list.map(record => sanitizeDashboardRecord(record, nextFallbackId())).filter(Boolean).slice(0, MAX_SAVED)
     : [];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
 }
@@ -54,7 +62,7 @@ function cleanNumber(value, min = 0, max = 1_000_000_000, fallback = 0) {
   return clampNumber(value, min, max, fallback);
 }
 
-export function sanitizeDashboardRecord(record, fallbackId = Date.now()) {
+export function sanitizeDashboardRecord(record, fallbackId = nextFallbackId()) {
   if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
   const id = Number.isSafeInteger(Number(record.id)) && Number(record.id) > 0
     ? Number(record.id)
@@ -111,10 +119,12 @@ export function saveCurrentCalculation() {
     panelType: state.panelType,
     annualEnergy: r.annualEnergy,
     totalCost: r.totalCost,
-    paybackYear: r.grossSimplePaybackYear ? Number(r.grossSimplePaybackYear).toFixed(1) : r.paybackYear,
+    paybackYear: Number.isFinite(Number(r.grossSimplePaybackYear))
+      ? Number(Number(r.grossSimplePaybackYear).toFixed(1))
+      : (Number.isFinite(Number(r.paybackYear)) ? Number(r.paybackYear) : 0),
     roi: r.roi,
     lcoe: r.lcoe,
-    npv: r.npvTotal,
+    npv: r.npvTotal ?? r.npv ?? 0,
     usdToTry: state.usdToTry,
     displayCurrency: state.displayCurrency,
     tilt: state.tilt,
@@ -145,7 +155,9 @@ export function openDashboard() {
 export function closeDashboard() {
   const modal = document.getElementById('dashboard-modal');
   if (modal) modal.style.display = 'none';
-  document.body.classList.remove('modal-open');
+  if (!document.querySelector('.modal-active, [data-modal-open="true"]')) {
+    document.body.classList.remove('modal-open');
+  }
 }
 
 export function updateDashboard() {

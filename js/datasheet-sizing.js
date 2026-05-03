@@ -149,6 +149,9 @@ function temperatureCorrected(stcValue, coeffPctPerC, targetTempC) {
 }
 
 function localThermalScenario(request, targetTempC) {
+  // Vmp sıcaklık katsayısı genelde Voc katsayısının ~%80–90'ı civarındadır; ayrı veri yoksa
+  // pre-feasibility için Voc katsayısını kullanmak makul yaklaşımdır. buildThermalRequest
+  // şu anda vmpCoeffPctPerC alanını doldurmuyor, bu yüzden bu yol her zaman fallback'e düşer.
   const vmpCoeff = Number.isFinite(Number(request.vmpCoeffPctPerC))
     ? Number(request.vmpCoeffPctPerC)
     : Number(request.vocCoeffPctPerC);

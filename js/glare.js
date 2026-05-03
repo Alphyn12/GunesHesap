@@ -26,7 +26,7 @@ function bearing(a, b) {
 export function estimateGlareRisk({ sunAzimuth, sunElevation, panelAzimuth, panelTilt, targetBearing, targetDistanceM }) {
   if (sunElevation <= 0 || targetDistanceM <= 0) return 0;
   const reflectedAzimuth = normDeg(2 * panelAzimuth - sunAzimuth);
-  const reflectedElevation = Math.max(0, sunElevation - Math.max(0, panelTilt - 10) * 0.25);
+  const reflectedElevation = Math.max(0, Math.min(90, sunElevation - Math.max(0, panelTilt - 10) * 0.25));
   const azScore = Math.max(0, 1 - angleDiff(reflectedAzimuth, targetBearing) / 35);
   const elevScore = Math.max(0, 1 - Math.abs(reflectedElevation - 8) / 28);
   const distanceScore = Math.max(0.15, Math.min(1, 600 / Math.max(80, targetDistanceM)));

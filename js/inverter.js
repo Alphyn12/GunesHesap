@@ -21,10 +21,14 @@ export function buildInverterCards() {
   const rate = state?.usdToTry || 40;
 
   wrap.innerHTML = Object.entries(INVERTER_TYPES).map(([key, inv]) => {
-    const price10 = convertTry(inv.pricePerKWp.lt10, cur, rate);
-    const priceStr = cur === 'USD'
-      ? `$${price10.toLocaleString('en-US', { maximumFractionDigits: 0 })}/kWp`
-      : `${Math.round(price10).toLocaleString('tr-TR')} ₺/kWp`;
+    const lt10Raw = inv.pricePerKWp?.lt10;
+    const hasLt10Price = Number.isFinite(Number(lt10Raw));
+    const price10 = hasLt10Price ? convertTry(lt10Raw, cur, rate) : null;
+    const priceStr = !hasLt10Price
+      ? '—'
+      : cur === 'USD'
+        ? `$${price10.toLocaleString('en-US', { maximumFractionDigits: 0 })}/kWp`
+        : `${Math.round(price10).toLocaleString('tr-TR')} ₺/kWp`;
     const shadeClass = inv.shadeTolerance >= 0.85 ? 'inverter-shade-good'
       : inv.shadeTolerance >= 0.70 ? 'inverter-shade-warn'
       : 'inverter-shade-bad';
@@ -73,6 +77,9 @@ export function buildInverterCards() {
     </div>
   `;
   }).join('');
+  // Wrap önceden DOM'da yoksa init listener'ı bağlanamamış olabilir; her render sonrası
+  // güvenli şekilde tekrar dene (idempotent guard `dataset.kbdBound`).
+  _bindInverterKeyboardOnce();
   window.updateEquipmentSelectionSummary?.();
 }
 
@@ -111,8 +118,14 @@ export function selectInverter(key) {
   window.updateEquipmentSelectionSummary?.();
 }
 
-if (typeof document !== 'undefined') {
-  document.addEventListener('keydown', event => {
+// Klavye seçimi (Enter/Space) için listener doğrudan inverter-cards-wrap container'ına
+// bağlanır; document seviyesinde her keydown'ı dinleyip filtrelemekten daha verimli ve
+// diğer modüllerle çakışma riski yok.
+function _bindInverterKeyboardOnce() {
+  const wrap = document.getElementById('inverter-cards-wrap');
+  if (!wrap || wrap.dataset.kbdBound === '1') return;
+  wrap.dataset.kbdBound = '1';
+  wrap.addEventListener('keydown', event => {
     const card = event.target?.closest?.('.inverter-card[role="button"]');
     if (!card) return;
     if (event.key === 'Enter' || event.key === ' ') {
@@ -121,6 +134,14 @@ if (typeof document !== 'undefined') {
       if (key) selectInverter(key);
     }
   });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _bindInverterKeyboardOnce, { once: true });
+  } else {
+    _bindInverterKeyboardOnce();
+  }
 }
 
 // window'a expose et

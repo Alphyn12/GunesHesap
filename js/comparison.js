@@ -119,7 +119,10 @@ export function runComparison() {
     const baseBifacialGain = PANEL_TYPES[normalizePanelTypeKey(state.panelType || 'mono_perc')]?.bifacialGain ?? 0;
     const scenarioBifacialGain = panel.bifacialGain ?? 0;
     const bifacialFactor = (1 + scenarioBifacialGain) / (1 + baseBifacialGain);
-    const annualEnergy = Math.round(r.annualEnergy * (systemPower / basePower) * inv.efficiency / (INVERTER_TYPES[state.inverterType || 'string']?.efficiency || 0.97) * bifacialFactor);
+    const baseInverterEff = Number(INVERTER_TYPES[state.inverterType || 'string']?.efficiency) || 0.97;
+    const scenarioInverterEff = Number(inv.efficiency) || baseInverterEff;
+    const inverterFactor = scenarioInverterEff / baseInverterEff;
+    const annualEnergy = Math.round(r.annualEnergy * (systemPower / basePower) * inverterFactor * bifacialFactor);
 
     const costBreakdown = estimateSolarCapex({
       systemPowerKwp: systemPower,
@@ -174,9 +177,10 @@ export function runComparison() {
     const financialTariffModel = isOffGridScenario && r.financialSavingsRate
       ? { ...tariffModel, importRate: r.financialSavingsRate, distributionFee: 0, exportRate: 0, financialBasis: r.financialSavingsBasis || 'off-grid-alternative-energy-cost' }
       : tariffModel;
-    const exportRate = state.netMeteringEnabled && !isOffGridScenario
-      ? tariffModel.exportRate
-      : 0;
+    // exportRateOverride evaluateProjectEconomics içinde tariffModel.exportRate'in önüne geçer
+    // (calc-core.js evaluateProjectEconomics → computeFinancialTable). Tek doğruluk kaynağı bu satır.
+    const netMeteringActive = state.netMeteringEnabled && !isOffGridScenario;
+    const exportRateOverride = netMeteringActive ? Number(tariffModel.exportRate) || 0 : 0;
     const economicSummary = evaluateProjectEconomics({
       annualEnergy,
       hourlySummary,
@@ -188,8 +192,8 @@ export function runComparison() {
       annualInsurance,
       inverterLifetime: inv.lifetime || 12,
       inverterReplaceCost,
-      netMeteringEnabled: state.netMeteringEnabled && !isOffGridScenario,
-      exportRateOverride: exportRate,
+      netMeteringEnabled: netMeteringActive,
+      exportRateOverride,
       annualGeneratorCost: isOffGridScenario ? (r.offgridL2Results?.generatorFuelCostAnnual || 0) : 0,
       scenarioKey: state.scenarioKey
     });
@@ -214,7 +218,11 @@ export function runComparison() {
   const tableEl = document.getElementById('comparison-result-table');
   if (!tableEl) return;
 
-  const bestPayback = Math.min(...results.filter(r => r.paybackYear !== '>25').map(r => parseFloat(r.paybackYear)));
+  const validPaybacks = results
+    .filter(r => r.paybackYear !== '>25')
+    .map(r => parseFloat(r.paybackYear))
+    .filter(Number.isFinite);
+  const bestPayback = validPaybacks.length ? Math.min(...validPaybacks) : null;
 
   tableEl.innerHTML = `
     <table class="comp-table">
@@ -230,7 +238,7 @@ export function runComparison() {
         <tr><td>${ct('comparison.systemKwp')}</td>${results.map(r => `<td>${r.systemPower} kWp</td>`).join('')}</tr>
         <tr><td>${ct('comparison.annualProduction')}</td>${results.map(r => `<td>${r.annualEnergy} kWh</td>`).join('')}</tr>
         <tr><td>${ct('comparison.totalCost')}</td>${results.map(r => `<td>${money(r.totalCost)}${r.isCustom ? ' *' : ''}</td>`).join('')}</tr>
-        <tr><td>${ct('comparison.payback')}</td>${results.map(r => { const isBest = parseFloat(r.paybackYear) === bestPayback; return `<td class="${isBest ? 'comparison-cell-best' : ''}">${ct('comparison.paybackYears').replace('{n}', r.paybackYear)}${isBest ? ' ✓' : ''}</td>`; }).join('')}</tr>
+        <tr><td>${ct('comparison.payback')}</td>${results.map(r => { const isBest = bestPayback != null && parseFloat(r.paybackYear) === bestPayback; return `<td class="${isBest ? 'comparison-cell-best' : ''}">${ct('comparison.paybackYears').replace('{n}', r.paybackYear)}${isBest ? ' ✓' : ''}</td>`; }).join('')}</tr>
         <tr><td>${ct('comparison.projectNpv')}</td>${results.map(r => `<td>${money(r.npv)}</td>`).join('')}</tr>
         <tr><td>${ct('comparison.lcoe')}</td>${results.map(r => `<td>${(r.compensatedLcoe != null || r.lcoe != null) ? moneyRate(r.compensatedLcoe ?? r.lcoe, 'kWh') : '—'}</td>`).join('')}</tr>
       </tbody>

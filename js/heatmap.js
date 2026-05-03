@@ -52,7 +52,7 @@ function renderHeatmapMonth(monthIdx) {
   const state = window.state;
 
   TURKISH_CITIES.forEach(city => {
-    const psh = PSH_FALLBACK[city.name] || PSH_FALLBACK['default'];
+    const psh = PSH_FALLBACK[city.name] ?? PSH_FALLBACK['default'] ?? 3.5;
     const color = getProductionColor(psh, factor);
     const monthlyPSH = (psh * factor).toFixed(2);
     const isSelected = state.cityName === city.name;
@@ -84,12 +84,17 @@ function renderHeatmapMonth(monthIdx) {
   }
 }
 
+function stopHeatmapAnimation() {
+  if (animInterval) clearInterval(animInterval);
+  animInterval = null;
+  isPlaying = false;
+  const btn = document.getElementById('heatmap-play-btn');
+  if (btn) btn.textContent = '▶ Oynat';
+}
+
 export function toggleHeatmapAnimation() {
   if (isPlaying) {
-    clearInterval(animInterval);
-    isPlaying = false;
-    const btn = document.getElementById('heatmap-play-btn');
-    if (btn) btn.textContent = '▶ Oynat';
+    stopHeatmapAnimation();
   } else {
     isPlaying = true;
     const btn = document.getElementById('heatmap-play-btn');
@@ -102,9 +107,7 @@ export function toggleHeatmapAnimation() {
 }
 
 export function setHeatmapMonth(month) {
-  if (animInterval) { clearInterval(animInterval); isPlaying = false; }
-  const btn = document.getElementById('heatmap-play-btn');
-  if (btn) btn.textContent = '▶ Oynat';
+  stopHeatmapAnimation();
   renderHeatmapMonth(parseInt(month));
 }
 

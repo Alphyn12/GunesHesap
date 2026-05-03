@@ -2153,6 +2153,14 @@ export function exportCrmLead() {
 // window'a expose et
 window.renderResults = renderResults;
 window.renderMonthlyChart = renderMonthlyChart;
+
+// Döviz kuru güncellendiğinde sonuçlar render'a hazırsa yeniden çiz.
+// (exchange-rate.js artık doğrudan window.renderResults referansına dokunmuyor.)
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+  document.addEventListener('exchange-rate-refreshed', () => {
+    if (window.state?.results) renderResults();
+  });
+}
 window.downloadPDF = downloadPDF;
 window.downloadTechnicalPDF = downloadTechnicalPDF;
 window.shareResults = shareResults;

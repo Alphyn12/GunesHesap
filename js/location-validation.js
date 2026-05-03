@@ -2,6 +2,16 @@
 // MVP limitation: this is an intentionally coarse polygon and excludes some
 // small islands/border edge cases. A production build should replace it with an
 // official administrative boundary dataset or a geocoder-backed point-in-polygon check.
+//
+// Bilinen sınırlılıklar:
+//  - Hatay/Suriye sınırı yakınında (36.0-36.2 lat, 36.0-37.0 lon) bazı geçerli noktalar
+//    poligon dışında kalabilir; tersine Kuzey Suriye'deki bazı noktalar yanlışlıkla
+//    Türkiye olarak işaretlenebilir.
+//  - Doğu Karadeniz adacıkları ve Datça/Marmaris kıyı uzantıları kaba kapsanır.
+//  - NEARSHORE_BOXES yalnızca Gokceada/Bozcaada ile Kaş/Kekova kıyılarını ekler;
+//    Kastellorizo (Yunan) bölgesi de Kaş kutusuna düşer ama o nokta zaten ana
+//    poligon dışıdır, dolayısıyla `inBox || pointInPolygon` ifadesi kabul edebilir.
+//    Production'da gerçek idari sınır verisetiyle değiştirilmelidir.
 
 const TURKEY_MAINLAND_POLYGON = [
   [41.55, 25.65], [41.95, 27.20], [42.05, 28.90], [41.60, 31.00],
@@ -15,7 +25,7 @@ const TURKEY_MAINLAND_POLYGON = [
 
 const TURKEY_NEARSHORE_BOXES = [
   { minLat: 39.75, maxLat: 40.55, minLon: 25.55, maxLon: 26.35 }, // Gokceada/Bozcaada/C. peninsula
-  { minLat: 36.00, maxLat: 36.65, minLon: 29.20, maxLon: 30.10 }  // Kas/Kekova coast
+  { minLat: 36.00, maxLat: 36.65, minLon: 29.20, maxLon: 30.10 }  // Kaş/Kekova kıyısı (Kastellorizo da kutuda)
 ];
 
 function pointInPolygon(lat, lon, polygon) {

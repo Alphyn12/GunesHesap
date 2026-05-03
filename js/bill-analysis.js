@@ -56,15 +56,18 @@ export function import8760Csv(file) {
   const reader = new FileReader();
   reader.onload = () => {
     const text = String(reader.result || '');
-    const values = text
+    const allValues = text
       .split(/[\s,;]+/)
       .map(v => Number(String(v).replace(',', '.')))
       .filter(v => Number.isFinite(v) && v >= 0);
-    if (values.length !== 8760) {
-      window.showToast?.(bt('billAnalysis.csv8760WrongCount').replace('{n}', values.length.toLocaleString('tr-TR')), 'error');
+    if (allValues.length !== 8760 && allValues.length !== 8784) {
+      window.showToast?.(bt('billAnalysis.csv8760WrongCount').replace('{n}', allValues.length.toLocaleString('tr-TR')), 'error');
       return;
     }
-    if (values.reduce((a, b) => a + b, 0) <= 0) {
+    // Artık yıl (8784 saat): ilk 8760'ı kullan, kalanı yok say.
+    const values = allValues.length === 8784 ? allValues.slice(0, 8760) : allValues;
+    const rawAnnualKwh = values.reduce((a, b) => a + b, 0);
+    if (rawAnnualKwh <= 0) {
       window.showToast?.(bt('billAnalysis.csv8760ZeroTotal'), 'error');
       return;
     }
@@ -77,7 +80,7 @@ export function import8760Csv(file) {
     });
     window.state.monthlyConsumption = monthly;
     window.state.hourlyConsumption8760 = values;
-    window.state.dailyConsumption = monthly.reduce((a, b) => a + b, 0) / 365;
+    window.state.dailyConsumption = rawAnnualKwh / 365;
     MONTHS.forEach((_, i) => {
       const el = document.getElementById(`bill-${i}`);
       if (el) el.value = monthly[i] || 0;

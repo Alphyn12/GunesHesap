@@ -3,6 +3,7 @@
 // Solar Rota v2.0
 // ═══════════════════════════════════════════════════════════
 import { HEAT_PUMP_DATA } from './data.js';
+import { localeTag } from './output-i18n.js';
 
 function setVisible(el, visible, display = '') {
   if (window.setElementVisible) return window.setElementVisible(el, visible, display);
@@ -77,43 +78,49 @@ function updateHeatPumpPreview() {
     const liters = annualHeatDemand / HEAT_PUMP_DATA.fuel_oil_kwh_per_liter;
     currentCost = liters * HEAT_PUMP_DATA.fuel_oil_price;
   } else if (hp.currentHeating === 'electric') {
-    currentCost = annualHeatDemand * elecPrice;
+    // Mevcut sistem doğrudan rezistans/klima ile elektrik tüketiyor (COP≈1).
+    // Isı pompası karşılaştırması için soğutma da aynı baz üzerinden dahil edilir.
+    const heatingElecBefore = doHeating ? annualHeatDemand : 0;
+    const coolingElecBefore = doCooling ? annualCoolDemand : 0;
+    currentCost = (heatingElecBefore + coolingElecBefore) * elecPrice;
   }
 
   const hpElecCost = totalElec * elecPrice;
   const annualSaving = Math.round(currentCost - hpElecCost);
 
-  // CO₂ azaltımı (doğalgaz: 0.202 kg CO₂/kWh termal, elektrik şebeke: 0.420 kg CO₂/kWh)
-  const co2Before = doHeating ? (annualHeatDemand * 0.202) / 1000 : 0; // ton
-  const co2After = (totalElec * 0.420) / 1000; // ton
+  const gridCo2 = Number(HEAT_PUMP_DATA.gridCo2KgPerKwh) || 0.420;
+  const gasCo2 = Number(HEAT_PUMP_DATA.gasCo2KgPerKwh) || 0.202;
+  const co2Before = doHeating ? (annualHeatDemand * gasCo2) / 1000 : 0; // ton
+  const co2After = (totalElec * gridCo2) / 1000; // ton
   const co2Saved = Math.max(0, co2Before - co2After).toFixed(1);
 
   const prevEl = document.getElementById('hp-preview');
   if (prevEl) {
     const savingClass = annualSaving >= 0 ? 'hp-stat-value--success' : 'hp-stat-value--danger';
+    const lc = localeTag();
     prevEl.innerHTML = `
       <div class="hp-stat-grid">
         <div class="hp-stat-card">
-          <div class="hp-stat-value hp-stat-value--accent">${totalElec.toLocaleString('tr-TR')} kWh</div>
-          <div class="text-muted-7">Yıllık elektrik ihtiyacı</div>
+          <div class="hp-stat-value hp-stat-value--accent">${totalElec.toLocaleString(lc)} kWh</div>
+          <div class="text-muted-72">Yıllık elektrik ihtiyacı</div>
         </div>
         <div class="hp-stat-card">
           <div class="hp-stat-value">SPF ${spfH.toFixed(1)} / ${spfC.toFixed(1)}</div>
-          <div class="text-muted-7">Isıtma / soğutma SPF</div>
+          <div class="text-muted-72">Isıtma / soğutma SPF</div>
         </div>
         <div class="hp-stat-card">
-          <div class="hp-stat-value ${savingClass}">${annualSaving >= 0 ? '+' : ''}${annualSaving.toLocaleString('tr-TR')} ₺</div>
-          <div class="text-muted-7">Yıllık yakıt tasarrufu</div>
+          <div class="hp-stat-value ${savingClass}">${annualSaving >= 0 ? '+' : ''}${annualSaving.toLocaleString(lc)} ₺</div>
+          <div class="text-muted-72">Yıllık yakıt tasarrufu</div>
         </div>
         <div class="hp-stat-card">
           <div class="hp-stat-value hp-stat-value--success">${co2Saved} t</div>
-          <div class="text-muted-7">CO₂ azaltımı (yıllık)</div>
+          <div class="text-muted-72">CO₂ azaltımı (yıllık)</div>
         </div>
       </div>
       <div class="hp-footnote">
-        Isıtma talebi: <strong>${Math.round(annualHeatDemand).toLocaleString('tr-TR')} kWh/yıl</strong>
-        ${doCooling ? ` | Soğutma: <strong>${Math.round(annualCoolDemand).toLocaleString('tr-TR')} kWh/yıl</strong>` : ''}
-        | Mevcut yakıt maliyeti: <strong>${Math.round(currentCost).toLocaleString('tr-TR')} ₺/yıl</strong>
+        Isıtma talebi: <strong>${Math.round(annualHeatDemand).toLocaleString(lc)} kWh/yıl</strong>
+        ${doCooling ? ` | Soğutma: <strong>${Math.round(annualCoolDemand).toLocaleString(lc)} kWh/yıl</strong>` : ''}
+        | Mevcut yakıt maliyeti: <strong>${Math.round(currentCost).toLocaleString(lc)} ₺/yıl</strong>
       </div>`;
   }
 }

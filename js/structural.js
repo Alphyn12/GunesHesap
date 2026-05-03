@@ -4,13 +4,18 @@
 // ═══════════════════════════════════════════════════════════
 import { SNOW_ZONES, WIND_ZONES } from './data.js';
 
+// NOT: Bu modül ön fizibilite kontrolüdür — `disclaimer` alanı return objesinde de
+// belirtildiği gibi, statik proje veya mühendis onayı yerine geçmez. Eurocode
+// formülleri sadeleştirilmiş varsayımlarla kullanılır (Arazi Kat. II, z=5 m vb.).
 export function calculateStructural(cityName, tiltDeg, systemPowerKWp, totalPanelAreaM2) {
   const snowData = SNOW_ZONES[cityName] || SNOW_ZONES['default'];
   const windData = WIND_ZONES[cityName] || WIND_ZONES['default'];
   const alpha = tiltDeg; // derece
 
   // ─── Kar Yükü (TS EN 1991-1-3) ───────────────────────────────────────────
-  let mu; // Şekil katsayısı
+  // mu: ön fizibilite şekil katsayısı. 30°-60° arası lineer interpolasyon (0.8 → 0)
+  // kullanır; gerçek Eurocode mono-pitch formülü ara açılarda farklılaşabilir.
+  let mu;
   if (alpha >= 60) {
     mu = 0;
   } else if (alpha < 30) {
@@ -23,6 +28,8 @@ export function calculateStructural(cityName, tiltDeg, systemPowerKWp, totalPane
   const snowLoad = mu * Ce * Ct * snowData.sk; // kN/m²
 
   // ─── Rüzgar Basıncı (TS EN 1991-1-4) ─────────────────────────────────────
+  // Saha-spesifik z, z0, co değerleri kullanılmıyor — projenin statik mühendisi
+  // gerçek arazi kategorisi ve orografi üzerinden yeniden hesaplamalıdır.
   const vb = windData.vb; // m/s referans hız
   const z = 5; // Panel yüksekliği (m) — tipik çatı
   const z0 = 0.05; // Pürüzlülük uzunluğu (Arazi Kat. II)

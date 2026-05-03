@@ -61,6 +61,14 @@ export function resetConfetti() {
   confettiLaunched = false;
 }
 
+let _prGaugeValTimeoutId = null;
+
+// PR gauge SVG yarım daire arc uzunluğu: π × 80 ≈ 251.3 (bkz. index.html
+// #pr-arc-fill, path d="M 20 100 A 80 80 0 0 1 180 100" — radius 80, half-circle).
+// Path attr'ında `stroke-dasharray="251.3"` olarak da işaretli; SVG'de radius/path
+// güncellenirse bu sabit ve markup birlikte değişmelidir.
+const PR_ARC_LENGTH = 251.3;
+
 export function renderPRGauge(prValue) {
   const arc    = document.getElementById('pr-arc-fill');
   const needle = document.getElementById('pr-needle');
@@ -69,9 +77,15 @@ export function renderPRGauge(prValue) {
   const unavailableShort = window.i18n?.t?.('onGridResult.prUnavailableShort') || 'N/A';
   const unavailableLong = window.i18n?.t?.('onGridResult.prUnavailableLong') || 'N/A (PR is not shown on the PSH fallback path)';
   if (!arc || !needle) return;
+  // Önceki render'ın bekleyen text güncellemesini iptal et — hızlı ardışık çağrılarda
+  // yeni değerin üstüne eski değer yazılmasını önler.
+  if (_prGaugeValTimeoutId !== null) {
+    clearTimeout(_prGaugeValTimeoutId);
+    _prGaugeValTimeoutId = null;
+  }
   const numericPr = (prValue === null || prValue === undefined || prValue === '') ? NaN : Number(prValue);
   if (!Number.isFinite(numericPr)) {
-    arc.style.strokeDashoffset = 251.3;
+    arc.style.strokeDashoffset = PR_ARC_LENGTH;
     needle.style.transform = 'rotate(-90deg)';
     if (valEl) valEl.textContent = unavailableShort;
     if (lblEl) lblEl.textContent = unavailableLong;
@@ -79,9 +93,12 @@ export function renderPRGauge(prValue) {
   }
   const displayPr = Number.isInteger(numericPr) ? String(numericPr) : numericPr.toFixed(1);
   const pct = Math.min(Math.max(numericPr / 100, 0), 1);
-  arc.style.strokeDashoffset = 251.3 - (251.3 * pct);
+  arc.style.strokeDashoffset = PR_ARC_LENGTH - (PR_ARC_LENGTH * pct);
   needle.style.transform = `rotate(${-90 + pct * 180}deg)`;
-  setTimeout(() => { if (valEl) valEl.textContent = displayPr + '%'; }, 400);
+  _prGaugeValTimeoutId = setTimeout(() => {
+    if (valEl) valEl.textContent = displayPr + '%';
+    _prGaugeValTimeoutId = null;
+  }, 400);
   if (lblEl) {
     const ratingMeta = numericPr >= 80
       ? { rating: 'Mükemmel', color: '#10B981', note: 'sistem kayıpları düşük görünüyor' }

@@ -66,11 +66,18 @@
       return false;
     };
     if (!tryApply()) {
-      // Motor henüz yüklenmediyse kısa aralıklarla tekrar dene
+      // Motor henüz yüklenmediyse kısa aralıklarla tekrar dene (max 60 × 100ms = 6 sn).
       var tries = 0;
       var iv = setInterval(function(){
         tries++;
-        if (tryApply() || tries > 60) clearInterval(iv);
+        if (tryApply()) { clearInterval(iv); return; }
+        if (tries > 60) {
+          clearInterval(iv);
+          if (typeof console !== 'undefined' && console.warn) {
+            console.warn('[landing] selectScenario 6 saniye içinde yüklenmedi; pending senaryo (' + key + ') uygulanamadı.');
+          }
+          pendingScenario = null;
+        }
       }, 100);
     }
   }

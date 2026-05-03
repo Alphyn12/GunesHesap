@@ -7,15 +7,15 @@ function toRad(deg) { return deg * Math.PI / 180; }
 function toDeg(rad) { return rad * 180 / Math.PI; }
 
 function getDayOfYear(date) {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date - start;
-  return Math.floor(diff / 86400000);
+  const start = new Date(date.getFullYear(), 0, 1);
+  return Math.floor((date - start) / 86400000) + 1;
 }
 
 export function solarPosition(lat, lon, dateTime) {
   const dayOfYear = getDayOfYear(dateTime);
   const declination = 23.45 * Math.sin(toRad(360 / 365 * (dayOfYear - 81)));
-  const solarNoon = 12 - (lon - 30) / 15; // UTC+3
+  // Türkiye sabit UTC+3 (DST yok); yaz saati uygulanan ülkeler için parametrelendirme gerekir.
+  const solarNoon = 12 - (lon - 30) / 15;
   const hourAngle = 15 * (dateTime.getHours() + dateTime.getMinutes() / 60 - solarNoon);
 
   const elevation = Math.asin(
@@ -168,7 +168,7 @@ export function renderSunPath() {
     }
   }
 
-  // ─── Yaz solstisi saat etiketleri (her 2 saatte bir) ───────────────��──────
+  // ─── Yaz solstisi saat etiketleri (her 2 saatte bir) ─────────────────────
   for (let hour = 6; hour <= 20; hour += 2) {
     const dt = new Date(year, 5, 21, hour, 0);
     const pos = solarPosition(lat, lon, dt);

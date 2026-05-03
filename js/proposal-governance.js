@@ -263,10 +263,14 @@ export function calculateProposalConfidence({ state = {}, results = {}, quoteRea
     factors.push({ points: -points, reason });
   };
 
+  // PVGIS fallback aynı zamanda buildApprovalWorkflow'da hard-blocker; ikisi tutarlı
+  // olarak fallback'i quote-ready'den engelliyor (confidence -25, approval blocked).
   if (results.usedFallback) add(25, 'PVGIS canlı veri yok.');
   if (!state.roofGeometry) add(15, 'Çatı geometrisi doğrulanmadı.');
   if (!hasMeaningfulConsumptionEvidence(state)) add(15, 'Fatura/tüketim kanıtı yok.');
-  if (results.evidenceGovernance?.validation?.blockers?.length) add(Math.min(25, results.evidenceGovernance.validation.blockers.length * 5), 'Kanıt yönetimi eksik.');
+  // Kanıt yönetimi blocker'ları için 5 puan/blocker × max 35 (önceki 25 cap, çok blocker
+  // varken yeterince agresif ceza vermiyordu — quote-ready eşiği 85'in altına itmek için).
+  if (results.evidenceGovernance?.validation?.blockers?.length) add(Math.min(35, results.evidenceGovernance.validation.blockers.length * 5), 'Kanıt yönetimi eksik.');
   if (results.tariffSourceGovernance?.stale) add(12, 'Tarife kaynağı eski veya doğrulanmamış.');
   if (!state.quoteInputsVerified) add(10, 'Teklif varsayımları onaylanmadı.');
   if (state.proposalApproval?.state !== 'approved' || !state.proposalApproval?.approvalRecord?.immutable) add(15, 'Proposal onayı tamamlanmadı veya immutable kayıt yok.');
