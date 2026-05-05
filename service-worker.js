@@ -1,5 +1,5 @@
-// v47: Fill April 2026 tariff defaults and settlement date.
-const CACHE_NAME = 'solarRota-v47';
+// v48: Add storage-crypto.js; remove deleted CRM modules (audit-log, crm-export, identity).
+const CACHE_NAME = 'solarRota-v48';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -21,7 +21,6 @@ const STATIC_ASSETS = [
   '/js/comparison.js',
   '/js/consumption-evidence.js',
   '/js/audit-log.js',
-  '/js/crm-export.js',
   '/js/dashboard.js',
   '/js/data.js',
   '/js/datasheet-sizing.js',
@@ -58,6 +57,7 @@ const STATIC_ASSETS = [
   '/js/structural.js',
   '/js/sun-path.js',
   '/js/storage.js',
+  '/js/storage-crypto.js',
   '/js/tax.js',
   '/js/turkey-regulation.js',
   '/js/ui-charts.js',
