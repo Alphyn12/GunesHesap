@@ -2042,9 +2042,9 @@ export function shareResults() {
 
 export function loadFromHash() {
   const state = window.state;
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
   try {
-    const hash = window.location.hash.slice(1);
-    if (!hash) return;
     if (hash.length > 200000) throw new Error('Shared state is too large');
     const params = JSON.parse(decodeURIComponent(atob(hash)));
     if (params.v >= 2 && params.state) {
@@ -2112,7 +2112,17 @@ export function loadFromHash() {
     if (legacy.panelType) { state.panelType = legacy.panelType; window.buildPanelCards(); }
     window.showToast(i18n.t('export.sharedLegacyLoaded'), 'info');
   } catch (e) {
-    window.showToast?.(i18n.t('export.sharedInvalid'), 'error');
+    // Geçersiz hash'i URL'den temizle → sayfa yenilense bile hata tekrarlanmaz
+    try {
+      if (typeof history !== 'undefined' && history.replaceState) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    } catch { /* replaceState desteklenmiyor */ }
+
+    // Kısa/rastgele fragment'lar için sessiz geç; uzun hash paylaşım girişimidir
+    if (hash.length > 20) {
+      window.showToast?.(i18n.t('export.sharedInvalid'), 'error');
+    }
   }
 }
 
