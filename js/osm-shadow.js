@@ -219,7 +219,7 @@ export async function refreshOSMShadowAnalysis() {
     const result = computeShadowRisk(center, [], { panelAzimuth: state.azimuth || 180 });
     state.osmShadow = { ...result, buildings: [], source: 'OSM unavailable fallback', error: err.message };
     renderShadowSummary(result, `OSM Overpass erişilemedi (${err.message}) — bina verisi olmadan tahmin`);
-    window.showToast?.(`OSM erişilemedi: ${err.message}`, 'error');
+    window.showToast?.(`OSM erişilemedi: ${String(err.message || '').replace(/<[^>]*>/g, '')}`, 'error');
     return result;
   }
 }

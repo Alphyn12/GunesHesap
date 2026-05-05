@@ -2788,7 +2788,7 @@ async function attachEvidenceFromInput(type, input) {
     persistState();
     window.showToast?.('Kanıt dosyası eklendi ve parmak izi kaydedildi.', 'success');
   } catch (error) {
-    window.showToast?.(`Kanıt dosyası kaydedilemedi: ${error.message}`, 'error');
+    window.showToast?.(`Kanıt dosyası kaydedilemedi: ${String(error.message || '').replace(/<[^>]*>/g, '')}`, 'error');
   } finally {
     if (input) input.value = '';
   }

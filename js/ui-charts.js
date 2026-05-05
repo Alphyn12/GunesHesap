@@ -6,9 +6,13 @@
 export function showToast(msg, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container) return;
+  // S-07 XSS guard: mesaj içindeki HTML tag'lerini şerit olarak kaldır.
+  // textContent zaten XSS-güvenli (innerHTML yorumlamaz), ancak explicit sanitizasyon
+  // defense-in-depth sağlar ve gelecekteki innerHTML refactoring'e karşı korur.
+  const safeMsg = String(msg ?? '').replace(/<[^>]*>/g, '').slice(0, 400);
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.textContent = msg;
+  toast.textContent = safeMsg;
   const assertive = type === 'error' || type === 'warning';
   toast.setAttribute('role', assertive ? 'alert' : 'status');
   toast.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
