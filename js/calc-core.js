@@ -7,6 +7,11 @@ import {
   INDUSTRIAL_LOAD, MONTH_WEIGHTS, TARIFF_META, normalizePanelTypeKey, INVERTER_TYPES
 } from './data.js';
 import {
+  HEATING_DEGREE_DAY_WEIGHTS, COOLING_DEGREE_DAY_WEIGHTS,
+  HEATING_DAILY_BASE_HOURS, COOLING_DAILY_BASE_HOURS,
+  HP_DAYS_PER_MONTH, COOLING_LOAD_RATIO,
+} from './heat-pump.js';
+import {
   applyExportCompensation, buildExportCompensationPolicy, determineSkttRegime, TARIFF_DATA_LIFECYCLE
 } from './turkey-regulation.js';
 import { hasMeaningfulMonthlyConsumption } from './consumption-evidence.js';
@@ -80,10 +85,13 @@ export function calculateHeatPumpLoad(hp, heatPumpData) {
   const cop = heatPumpData?.spf_heating?.[insulation] || heatPumpData?.cop_heating?.[insulation] || 3.5;
   const coolingCop = heatPumpData?.spf_cooling?.[insulation] || heatPumpData?.cop_cooling?.[insulation] || 4.0;
   const area = Math.max(0, Number(hp.area) || 0);
-  const heatingMonths = Math.max(1, Number(heatPumpData?.heating_season_months) || 5);
-  const coolingMonths = Math.max(1, Number(heatPumpData?.cooling_season_months) || 4);
-  const heatDemand = area * heatLoad * 8 * heatingMonths * 30 / 1000;
-  const coolDemand = area * heatLoad * 0.7 * 8 * coolingMonths * 30 / 1000;
+  // ALG-08: Derece-gün ağırlıklı talep — sabit ay×8h yerine mevsimsel dağılım.
+  const heatingDDSum = HEATING_DEGREE_DAY_WEIGHTS.reduce((s, v) => s + v, 0);
+  const coolingDDSum = COOLING_DEGREE_DAY_WEIGHTS.reduce((s, v) => s + v, 0);
+  const heatDemand = area * heatLoad
+    * HEATING_DAILY_BASE_HOURS * heatingDDSum * HP_DAYS_PER_MONTH / 1000;
+  const coolDemand = area * heatLoad * COOLING_LOAD_RATIO
+    * COOLING_DAILY_BASE_HOURS * coolingDDSum * HP_DAYS_PER_MONTH / 1000;
   const mode = hp.heatingType || 'both';
   const doHeating = mode === 'heat' || mode === 'heating' || mode === 'both';
   const doCooling = mode === 'cool' || mode === 'cooling' || mode === 'both';

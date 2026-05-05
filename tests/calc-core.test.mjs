@@ -420,4 +420,84 @@ for (const [monthIdx, expected] of Object.entries(seasonExpectations)) {
   assert.equal(actual, expected, `month ${monthIdx} expected ${expected}, got ${actual}`);
 }
 
+// ── ALG-08: Isı Pompası Derece-Gün Entegrasyon Testleri ─────────────────────
+import {
+  HEATING_DEGREE_DAY_WEIGHTS,
+  COOLING_DEGREE_DAY_WEIGHTS,
+} from '../js/heat-pump.js';
+import { calculateHeatPumpLoad } from '../js/calc-core.js';
+
+// Mock HEAT_PUMP_DATA — calc-core.js beklentisiyle uyumlu
+const mockHeatPumpData = {
+  heat_load:               { avg: 70, poor: 90, good: 55 },
+  spf_heating:             { avg: 3.2, poor: 2.8, good: 3.6 },
+  spf_cooling:             { avg: 3.5, poor: 3.0, good: 4.0 },
+  cop_heating:             { avg: 3.2, poor: 2.8, good: 3.6 },
+  cop_cooling:             { avg: 3.5, poor: 3.0, good: 4.0 },
+  heating_season_months:   5,
+  cooling_season_months:   4,
+  electric_price:          3.2,
+  gas_kwh_per_m3:          9.5,
+  gas_price:               35,
+  fuel_oil_kwh_per_liter:  9.8,
+  fuel_oil_price:          55,
+  gridCo2KgPerKwh:         0.420,
+  gasCo2KgPerKwh:          0.202,
+};
+
+// calculateHeatPumpLoad null girişi
+const nullHpResult = calculateHeatPumpLoad(null, mockHeatPumpData);
+assert.equal(nullHpResult.annualKwh, 0, 'ALG-08: null hp → annualKwh=0');
+assert.equal(nullHpResult.monthlyKwh.length, 12, 'ALG-08: null hp → 12 aylık dizi');
+
+// calculateHeatPumpLoad — ısıtma+soğutma mod (both)
+const hpResult = calculateHeatPumpLoad(
+  { area: 100, insulation: 'avg', heatingType: 'both' },
+  mockHeatPumpData
+);
+assert.ok(hpResult.annualKwh > 500 && hpResult.annualKwh < 10000,
+  `ALG-08: 100m² both → annualKwh=${Math.round(hpResult.annualKwh)} fiziksel aralıkta`);
+assert.equal(hpResult.monthlyKwh.length, 12, 'ALG-08: monthlyKwh 12 eleman');
+
+// Aylık toplamı yıllık ile eşleş
+const monthlyTotalHp = hpResult.monthlyKwh.reduce((s, v) => s + v, 0);
+nearly(monthlyTotalHp, hpResult.annualKwh, 1, 'ALG-08: aylık toplam ≈ yıllık');
+
+// Derece-gün ağırlıkları mevsimsel dağılımı doğru uygulayıp uygulamadığını kontrol et
+// Ocak (0) > Temmuz (6) ısıtma ağırlığı → sadece "both" modunda Ocak toplam yükü > Temmuz
+// (ısıtma Ocak'ta yüksek, soğutma Temmuz'da yüksek; ısıtma bileşeni daha büyük)
+assert.ok(
+  HEATING_DEGREE_DAY_WEIGHTS[0] > HEATING_DEGREE_DAY_WEIGHTS[6],
+  'ALG-08: Ocak ısıtma ağırlığı > Temmuz ısıtma ağırlığı'
+);
+assert.ok(
+  COOLING_DEGREE_DAY_WEIGHTS[6] > COOLING_DEGREE_DAY_WEIGHTS[0],
+  'ALG-08: Temmuz soğutma ağırlığı > Ocak soğutma ağırlığı'
+);
+
+// Sadece ısıtma modu
+const hpHeatingOnly = calculateHeatPumpLoad(
+  { area: 100, insulation: 'avg', heatingType: 'heat' },
+  mockHeatPumpData
+);
+assert.equal(hpHeatingOnly.coolingKwh, 0, 'ALG-08: heat-only → coolingKwh=0');
+assert.ok(hpHeatingOnly.annualKwh > 0, 'ALG-08: heat-only → annualKwh>0');
+
+// Sadece soğutma modu
+const hpCoolingOnly = calculateHeatPumpLoad(
+  { area: 100, insulation: 'avg', heatingType: 'cool' },
+  mockHeatPumpData
+);
+assert.equal(hpCoolingOnly.heatingKwh, 0, 'ALG-08: cool-only → heatingKwh=0');
+assert.ok(hpCoolingOnly.annualKwh > 0, 'ALG-08: cool-only → annualKwh>0');
+
+// Both > heating-only > 0 ve > cooling-only > 0
+assert.ok(hpResult.annualKwh > hpHeatingOnly.annualKwh, 'ALG-08: both > heating-only');
+assert.ok(hpResult.annualKwh > hpCoolingOnly.annualKwh, 'ALG-08: both > cooling-only');
+
+// Saatlik dizi 8760 eleman
+assert.equal(hpResult.hourly8760.length, 8760, 'ALG-08: hourly8760 = 8760 eleman');
+const hourlyTotalHp = hpResult.hourly8760.reduce((s, v) => s + v, 0);
+nearly(hourlyTotalHp, hpResult.annualKwh, 2, 'ALG-08: saatlik toplam ≈ yıllık');
+
 console.log('calc-core tests passed');

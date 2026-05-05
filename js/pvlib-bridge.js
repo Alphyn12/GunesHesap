@@ -1,5 +1,5 @@
 import { buildPvEngineRequest, getPvEngineRequestIssues, normalizePvEngineResponse } from './pv-engine-contracts.js';
-import { BACKEND_CONFIG, buildBackendUrl } from './backend-config.js';
+import { BACKEND_CONFIG, buildBackendUrl, buildAuthHeaders } from './backend-config.js';
 
 export const PVLIB_BRIDGE_STATUS = 'python-pvlib-mvp-ready';
 
@@ -21,6 +21,7 @@ function fetchWithTimeout(fetchImpl, endpoint, init, timeoutMs) {
 
 export async function checkBackendHealth({ endpoint = buildBackendUrl(BACKEND_CONFIG.healthPath), fetchImpl = globalThis.fetch, timeoutMs = BACKEND_CONFIG.connectTimeoutMs } = {}) {
   if (typeof fetchImpl !== 'function') throw new Error('fetch unavailable');
+  // /health endpoint'i auth gerektirmez — sadece accept header
   const res = await fetchWithTimeout(fetchImpl, endpoint, { method: 'GET', headers: { accept: 'application/json' } }, timeoutMs);
   if (!res.ok) throw new Error(`backend health HTTP ${res.status}`);
   return res.json();
@@ -42,7 +43,7 @@ export async function callPythonEngineeringBackend(state = {}, { endpoint = buil
   // - bankable uncertainty bands and source provenance
   const res = await fetchWithTimeout(fetchImpl, endpoint, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: buildAuthHeaders(),   // X-Api-Key + X-Timestamp (key tanımlıysa)
     body: JSON.stringify(request)
   }, timeoutMs);
   if (!res.ok) throw new Error(`python engineering backend HTTP ${res.status}`);
@@ -58,7 +59,7 @@ export async function callPanelThermalCheck(payload, { endpoint = buildBackendUr
   if (typeof fetchImpl !== 'function') throw new Error('fetch unavailable');
   const res = await fetchWithTimeout(fetchImpl, endpoint, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: buildAuthHeaders(),   // X-Api-Key + X-Timestamp (key tanımlıysa)
     body: JSON.stringify(payload)
   }, timeoutMs);
   if (res.status === 422) {

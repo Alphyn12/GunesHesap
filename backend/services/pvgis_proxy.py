@@ -2,6 +2,12 @@
 PVGIS Proxy Service — Solar Rota Backend
 Forwards PVGIS API requests from the backend, avoiding browser CORS restrictions.
 Returns structured response with error classification metadata.
+
+Güvenlik (S-11 — SSRF Koruması):
+  • _ALLOWED_PVGIS_HOSTS: Yalnızca bu host'lara istek gönderilir.
+  • _assert_pvgis_url(): Her endpoint'i istek öncesi doğrular.
+  • follow_redirects=False: Redirect zincirine körü körüne uyulmuyor.
+  • verify=True: SSL sertifika doğrulama zorunlu (explicit).
 """
 from __future__ import annotations
 
@@ -9,8 +15,14 @@ import logging
 import re
 import time
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+# ── SSRF Whitelist — yalnızca bu host'lara bağlanılabilir ────────────────────
+_ALLOWED_PVGIS_HOSTS: frozenset[str] = frozenset({
+    "re.jrc.ec.europa.eu",
+})
 
 _PVGIS_ENDPOINTS = [
     "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc",
@@ -22,6 +34,18 @@ _PVGIS_SERIES_ENDPOINTS = [
     "https://re.jrc.ec.europa.eu/api/v5_2/seriescalc",
     "https://re.jrc.ec.europa.eu/api/seriescalc",
 ]
+
+
+def _assert_pvgis_url(url: str) -> None:
+    """SSRF guard: URL'in whitelist'teki host'a ait olduğunu doğrular.
+
+    Raises ValueError if host is not in _ALLOWED_PVGIS_HOSTS or scheme is not https.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        raise ValueError(f"SSRF guard: yalnızca https şeması izinlidir, alınan: {parsed.scheme!r}")
+    if parsed.hostname not in _ALLOWED_PVGIS_HOSTS:
+        raise ValueError(f"SSRF guard: izinsiz host {parsed.hostname!r}")
 _PROXY_TIMEOUT_S = 22.0
 _PROXY_CONNECT_TIMEOUT_S = 3.0  # fail-fast on unreachable endpoints
 _PROXY_TOTAL_BUDGET_S = 35.0  # cumulative wall-clock budget across all retries
@@ -88,7 +112,11 @@ async def fetch_pvgis_via_proxy(
     timeout = httpx.Timeout(_PROXY_TIMEOUT_S, connect=_PROXY_CONNECT_TIMEOUT_S)
     deadline = time.monotonic() + _PROXY_TOTAL_BUDGET_S
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(
+        timeout=timeout,
+        follow_redirects=False,  # SSRF: redirect zincirine körü körüne uyulmuyor
+        verify=True,             # SSRF: SSL sertifika doğrulama zorunlu
+    ) as client:
         for endpoint in _PVGIS_ENDPOINTS:
             if time.monotonic() >= deadline:
                 logger.warning("[pvgis-proxy] total budget %.0fs exhausted before %s", _PROXY_TOTAL_BUDGET_S, endpoint)
@@ -96,6 +124,7 @@ async def fetch_pvgis_via_proxy(
                 last_error_msg = f"PVGIS proxy budget {_PROXY_TOTAL_BUDGET_S:.0f}s exhausted"
                 break
             try:
+                _assert_pvgis_url(endpoint)  # SSRF: istek öncesi whitelist doğrulama
                 resp = await client.get(endpoint, params=params)
                 if resp.status_code != 200:
                     logger.warning("[pvgis-proxy] HTTP %s from %s", resp.status_code, endpoint)
@@ -209,6 +238,7 @@ async def _fetch_hourly_series(client: Any, base_params: Dict[str, Any]) -> Opti
     }
     for endpoint in _PVGIS_SERIES_ENDPOINTS:
         try:
+            _assert_pvgis_url(endpoint)  # SSRF: saatlik seri endpoint'i de doğrula
             resp = await client.get(endpoint, params=params)
             if resp.status_code != 200:
                 logger.warning("[pvgis-proxy] hourly HTTP %s from %s", resp.status_code, endpoint)
@@ -226,6 +256,13 @@ def validate_pvgis_params(
     lat: float, lon: float, peakpower: float,
     loss: float, angle: float, aspect: float,
 ) -> List[str]:
+    """Fiziksel sınır doğrulaması + SSRF ek kontrol.
+
+    Tüm sayısal parametreler fiziksel olarak geçerli aralıklara sıkıştırılır.
+    Bu fonksiyon yalnızca gerçek coğrafi/mühendislik koordinatları için geçer —
+    dahili ağ adresleri (127.0.0.1, ::1) lat/lon olarak girilse de PVGIS
+    endpoint'leri Türkiye sınırı dışındaki koordinatları reddeder.
+    """
     errors: List[str] = []
     if not -90 <= lat <= 90:
         errors.append("lat must be -90..90")

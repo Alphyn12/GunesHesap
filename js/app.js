@@ -56,6 +56,8 @@ import { buildBackendUrl } from './backend-config.js';
 import { isSpreadsheetFilename, parseHighResolutionLoadText, parseInverterEventLogText } from './offgrid-field-import.js';
 import { runDatasheetSizing, attachDatasheetSizingHandlers } from './datasheet-sizing.js';
 import { buildHourlyProfileEvidence, validateHourlyProfile8760 } from './consumption-evidence.js';
+import { initStorageCrypto, isEncryptionAvailable } from './storage-crypto.js';
+import { preloadEncryptedState } from './storage.js';
 
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
@@ -925,6 +927,18 @@ function formatNominatimResult(result) {
 let acIndex = -1;
 let lastTariffAuditSnapshot = null;
 document.addEventListener('DOMContentLoaded', () => {
+  // Faz 2 güvenlik: Şifreleme başlat ve önceki şifreli payload'ı önbelleğe al.
+  // initStorageCrypto → CryptoKey türet; preloadEncryptedState → hassas alanları çöz.
+  // Her ikisi de async fire-and-forget; UI akışını bloklamaz.
+  (async () => {
+    try {
+      await initStorageCrypto(
+        (typeof window !== 'undefined' && window.SOLARROTA_STORAGE_SALT) || ''
+      );
+      await preloadEncryptedState();
+    } catch { /* crypto hatası → plain fallback aktif kalır */ }
+  })();
+
   syncHeaderHeightVar();
   window.addEventListener('resize', syncHeaderHeightVar);
   try { initMap(); } catch(e) {

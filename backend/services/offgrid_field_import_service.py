@@ -18,7 +18,20 @@ NS = {
 
 
 def clean_cell(value: Any) -> str:
-    return str(value or "").replace("\ufeff", "").strip()
+    """H\u00fccre de\u011ferini normalize et ve CSV/Excel formula injection'a kar\u015f\u0131 koru.
+
+    G\u00fcvenlik (S-03 / CSV Injection):
+    Excel ve LibreOffice Calc, h\u00fccre i\u00e7eri\u011fi '=', '+', '-', '@' gibi karakterlerle
+    ba\u015fl\u0131yorsa bunu form\u00fcl olarak yorumlar ve otomatik \u00e7al\u0131\u015ft\u0131r\u0131r.
+    Bu g\u00fcvenlik a\u00e7\u0131\u011f\u0131, d\u0131\u015fa aktar\u0131lan CSV/XLSX raporlar\u0131n\u0131n ba\u015fka bir kullan\u0131c\u0131
+    taraf\u0131ndan a\u00e7\u0131lmas\u0131nda k\u00f6t\u00fcye kullan\u0131labilir.
+    \u00c7\u00f6z\u00fcm: Tehlikeli ba\u015flang\u0131\u00e7 karakterleri tek t\u0131rnakla escape edilir (Excel safe).
+    """
+    cleaned = str(value or "").replace("\ufeff", "").strip()
+    # Formula injection karakterleri: '=' '+' '-' '@' '\t' '\r' '\n'
+    if cleaned and cleaned[0] in ("=", "+", "-", "@", "\t", "\r", "\n"):
+        cleaned = "'" + cleaned  # Excel safe escape \u2014 form\u00fcl olarak yorumlanmaz
+    return cleaned
 
 
 def finite(value: Any, fallback: float | None = 0.0) -> float | None:

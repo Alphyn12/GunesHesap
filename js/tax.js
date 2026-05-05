@@ -10,6 +10,24 @@ export function resolveAmortYears(value, defaultYears = 10) {
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : defaultYears;
 }
 
+// ALG-07: Vergi kalkanı NPV anüite faktörü.
+// Eski: annual_shield × N  — zaman değerini yok sayıyor.
+// Yeni: annual_shield × (1-(1+r)^-N)/r  — her yılın kalkanı bugüne indirgeniyor.
+// r→0 limitinde anüite faktörü = N (L'Hôpital), bu guard ile korunur.
+// Varsayılan iskonto oranı: TL bazlı WACC (2026 referans %18).
+export const TAX_SHIELD_DEFAULT_DISCOUNT_RATE = 0.18;
+
+export function taxShieldAnnuityFactor(years, discountRate) {
+  // Number.isFinite guard: 0 || default yanlış sonuç verir (0 falsy), bu yüzden
+  // discountRate=0 gerçek sıfır iskontosunu doğru işlemek için isFinite kullanılır.
+  const rRaw = Number(discountRate);
+  const r = Math.max(0, Number.isFinite(rRaw) ? rRaw : TAX_SHIELD_DEFAULT_DISCOUNT_RATE);
+  const n = Math.max(1, Math.floor(Number(years) || 1));
+  return r > 1e-9
+    ? (1 - Math.pow(1 + r, -n)) / r
+    : n;  // r≈0 → nominal toplam (L'Hôpital limiti)
+}
+
 function setVisible(el, visible, display = '') {
   if (window.setElementVisible) return window.setElementVisible(el, visible, display);
   if (!el) return;
@@ -60,13 +78,21 @@ function updateTaxPreview() {
   const totalCost = state.results.totalCost || 0;
   if (totalCost <= 0) return;
 
-  const amortYears = resolveAmortYears(tax.amortizationYears);
-  const kvRate = (tax.corporateTaxRate || 25) / 100;
-  const annual_dep = totalCost / amortYears;
+  const amortYears  = resolveAmortYears(tax.amortizationYears);
+  const kvRate      = (tax.corporateTaxRate || 25) / 100;
+  const discRate    = Math.max(0, (window.state?.discountRate || TAX_SHIELD_DEFAULT_DISCOUNT_RATE));
+  const annual_dep    = totalCost / amortYears;
   const annual_shield = annual_dep * kvRate;
-  const kdv = tax.kdvRecovery ? totalCost * 0.20 : 0;
+  const kdv           = tax.kdvRecovery ? totalCost * 0.20 : 0;
   const investContrib = tax.hasIncentiveCert ? totalCost * ((tax.investmentContribution || 0) / 100) : 0;
-  const cumulative10 = annual_shield * amortYears + kdv + investContrib;
+
+  // ALG-07: NPV anüite formülü — her yılın kalkanını bugüne indirgeyerek gerçek değeri hesapla.
+  const annuityFactor = taxShieldAnnuityFactor(amortYears, discRate);
+  const npvShield  = annual_shield * annuityFactor;
+  // Nominal toplam: UI tablo referansı için saklanır (karşılaştırma kolaylığı)
+  const nominalShield = annual_shield * amortYears;
+  // Kümülatif avantaj artık NPV bazlı
+  const cumulative10 = npvShield + kdv + investContrib;
 
   // Yıl bazlı tablo (10 yıl)
   const rows = Array.from({ length: amortYears }, (_, i) => {
@@ -104,7 +130,7 @@ function updateTaxPreview() {
         </div>
         <div class="hp-stat-card">
           <div class="tax-stat-value-1-1 tax-stat-value-1-1--success">${Math.round(cumulative10).toLocaleString('tr-TR')} ₺</div>
-          <div class="text-muted-7">${amortYears} yıl kümülatif avantaj</div>
+          <div class="text-muted-7">${amortYears} yıl kümülatif avantaj (NPV, %${Math.round(discRate*100)} iskonto)</div>
         </div>
       </div>
       <div class="tax-table-wrap">

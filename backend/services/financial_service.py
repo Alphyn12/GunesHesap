@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import logging
+
 from backend.engines.production_router import calculate_backend_production
+
+logger = logging.getLogger(__name__)
 from backend.engines.offgrid_engine import build_backend_offgrid_results
 from backend.engines.simple_engine import annual_load_kwh
 from backend.models.engine_contracts import EngineRequest, EngineResponse
@@ -90,10 +94,20 @@ def build_financial_payload(request: EngineRequest, production: dict, offgrid_re
     # but it avoids systematic over-estimation in the backend proposal estimate.
     self_consumed = min(annual_energy * self_consumption_target, annual_load)
     if is_off_grid and offgrid_results:
-        self_consumed = max(
-            0,
-            float(offgrid_results.get("directPvKwh") or 0) + float(offgrid_results.get("batteryKwh") or 0),
-        )
+        # ALG-04: Gerçek dispatch sonuçlarını kullan; heuristik yerine L2 dispatch çıktısı.
+        direct_pv = float(offgrid_results.get("directPvKwh") or 0)
+        battery_kwh = float(offgrid_results.get("batteryKwh") or 0)
+        dispatch_self_consumed = max(0.0, direct_pv + battery_kwh)
+        # Guard: fiziksel olarak yıllık yükü aşamaz
+        dispatch_self_consumed = min(dispatch_self_consumed, annual_load)
+        if dispatch_self_consumed < 1.0:
+            logger.warning(
+                "[financial] Off-grid dispatch returned near-zero self-consumption "
+                "(directPv=%.1f, battery=%.1f) — falling back to heuristic",
+                direct_pv, battery_kwh,
+            )
+        else:
+            self_consumed = dispatch_self_consumed
     export_kwh = max(0, annual_energy - self_consumed)
     paid_export = export_kwh if net_metering else 0
     annual_savings = self_consumed * financial_import_rate + paid_export * export_rate

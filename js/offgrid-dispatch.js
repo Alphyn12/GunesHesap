@@ -541,7 +541,10 @@ function resolveDynamicBatteryEfficiency({
   }
 
   const socPenalty = socStress * (mode === 'charge' ? preset.topSocPenalty : preset.lowSocPenalty);
-  return clamp(base * (1 - ratePenalty - socPenalty), 0.5, 1);
+  // ALG-05: Çarpımsal model — her kayıp mekanizması bağımsız olarak kalan kapasiteye uygulanır.
+  // Eski: base * (1 - ratePenalty - socPenalty)  — toplamsal, fiziksel olarak yanlış.
+  // Yeni: base * (1 - ratePenalty) * (1 - socPenalty) — çarpımsal, mekanizmalar bağımsız.
+  return clamp(base * (1 - ratePenalty) * (1 - socPenalty), 0.5, 1);
 }
 
 function dispatchSummaryForStress(key, scenario, dispatch, peakCriticalKw) {

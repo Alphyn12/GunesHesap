@@ -5,6 +5,43 @@
 import { HEAT_PUMP_DATA } from './data.js';
 import { localeTag } from './output-i18n.js';
 
+// ALG-08: Derece-gün ağırlıkları — Türkiye iklim bölgesi ortalaması (MGM 2023).
+// Sabit 8h/gün × ay sayısı yerine mevsimsel talep dağılımı kullanılır.
+export const HEATING_DEGREE_DAY_WEIGHTS = Object.freeze([
+  1.40,  // Ocak   — en yüksek ısıtma talebi
+  1.25,  // Şubat
+  0.90,  // Mart
+  0.35,  // Nisan
+  0.00,  // Mayıs
+  0.00,  // Haziran
+  0.00,  // Temmuz
+  0.00,  // Ağustos
+  0.05,  // Eylül
+  0.30,  // Ekim
+  0.75,  // Kasım
+  1.20,  // Aralık
+]);  // Toplam ≈ 6.20
+
+export const COOLING_DEGREE_DAY_WEIGHTS = Object.freeze([
+  0.00,  // Ocak
+  0.00,  // Şubat
+  0.00,  // Mart
+  0.05,  // Nisan
+  0.45,  // Mayıs
+  0.90,  // Haziran
+  1.20,  // Temmuz  — en yüksek soğutma talebi
+  1.10,  // Ağustos
+  0.55,  // Eylül
+  0.10,  // Ekim
+  0.00,  // Kasım
+  0.00,  // Aralık
+]);  // Toplam ≈ 4.35
+
+export const HEATING_DAILY_BASE_HOURS = 8.0;  // Referans günlük operasyon saati
+export const COOLING_DAILY_BASE_HOURS = 8.0;
+export const HP_DAYS_PER_MONTH = 30.0;        // Basitleştirme sabiti
+export const COOLING_LOAD_RATIO = 0.65;       // Soğutma ısı yükü = ısıtma × 0.65 (eski: 0.70)
+
 function setVisible(el, visible, display = '') {
   if (window.setElementVisible) return window.setElementVisible(el, visible, display);
   if (!el) return;
@@ -54,12 +91,16 @@ function updateHeatPumpPreview() {
   const heatLoad = HEAT_PUMP_DATA.heat_load[ins] || 70;          // W/m²
   const spfH = HEAT_PUMP_DATA.spf_heating[ins] || 3.2;           // Seasonal PF heating
   const spfC = HEAT_PUMP_DATA.spf_cooling[ins] || 3.5;           // Seasonal PF cooling
-  const heatingMonths = HEAT_PUMP_DATA.heating_season_months;
-  const coolingMonths = HEAT_PUMP_DATA.cooling_season_months;
+  // ALG-08: Derece-gün ağırlıklı talep hesabı.
+  // Eski: alan × yük × 8h × sabit_ay × 30 — mevsimsel değişim yok.
+  // Yeni: aylık ağırlıkların toplamı normalize referansı oluşturur.
+  const heatingDDSum = HEATING_DEGREE_DAY_WEIGHTS.reduce((s, v) => s + v, 0);
+  const coolingDDSum = COOLING_DEGREE_DAY_WEIGHTS.reduce((s, v) => s + v, 0);
 
-  // Yıllık ısıtma talebi (kWh) = alan × yük × günlük_saat × ay_sayısı × gün
-  const annualHeatDemand = hp.area * heatLoad * 8 * heatingMonths * 30 / 1000; // kWh
-  const annualCoolDemand = hp.area * (heatLoad * 0.7) * 8 * coolingMonths * 30 / 1000;
+  const annualHeatDemand = hp.area * heatLoad
+    * HEATING_DAILY_BASE_HOURS * heatingDDSum * HP_DAYS_PER_MONTH / 1000;
+  const annualCoolDemand = hp.area * heatLoad * COOLING_LOAD_RATIO
+    * COOLING_DAILY_BASE_HOURS * coolingDDSum * HP_DAYS_PER_MONTH / 1000;
 
   const doHeating = hp.heatingType === 'heat' || hp.heatingType === 'both';
   const doCooling = hp.heatingType === 'cool' || hp.heatingType === 'both';
@@ -125,7 +166,9 @@ function updateHeatPumpPreview() {
   }
 }
 
-// window'a expose et
-window.toggleHeatPumpBlock = toggleHeatPumpBlock;
-window.onHeatPumpToggle = onHeatPumpToggle;
-window.updateHeatPumpInput = updateHeatPumpInput;
+// window'a expose et (Node.js test ortamında window yoktur)
+if (typeof window !== 'undefined') {
+  window.toggleHeatPumpBlock = toggleHeatPumpBlock;
+  window.onHeatPumpToggle = onHeatPumpToggle;
+  window.updateHeatPumpInput = updateHeatPumpInput;
+}

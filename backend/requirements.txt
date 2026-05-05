@@ -4,5 +4,6 @@ pydantic
 pytest
 httpx
 python-multipart
+python-dotenv
 # Optional but required for the pvlib-backed engine path:
 pvlib

@@ -480,7 +480,8 @@ def resolve_dynamic_battery_efficiency(
         dischargeable_soc = clamp((soc_kwh - soc_reserve_kwh) / available_band, 0.0, 1.0)
         soc_stress = clamp((0.18 - dischargeable_soc) / 0.18, 0.0, 1.0)
         soc_penalty = soc_stress * preset["lowSocPenalty"]
-    return clamp(base * (1 - rate_penalty - soc_penalty), 0.5, 1.0)
+    # ALG-05: Çarpımsal model — toplamsal (1 - r - s) yerine (1-r)*(1-s).
+    return clamp(base * (1 - rate_penalty) * (1 - soc_penalty), 0.5, 1.0)
 
 
 def clamp_score(value: float) -> int:

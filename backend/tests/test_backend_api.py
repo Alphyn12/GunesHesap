@@ -725,19 +725,21 @@ def test_psh_fallback_coastal_vs_inner_provinces():
 
 
 def test_simple_engine_tilt_factor_matches_frontend_curve():
-    """Fallback tilt factor must match the shared frontend breakpoint curve."""
+    """ALG-06: Tilt katsayıları PVGIS kalibrasyonuyla güncellendi — yeni değerleri doğrula."""
     from backend.engines.simple_engine import _tilt_factor
 
+    # ALG-06: TILT_COEFFS tablosu güncellendi (eski değerler yorum olarak gösterildi)
     expected = {
-        0: 0.78,
-        15: 0.94,
-        30: 1.00,
-        45: 0.97,
-        60: 0.87,
-        90: 0.62,
+        0:  0.800,   # eski: 0.78
+        15: 0.960,   # eski: 0.94
+        30: 1.000,   # değişmedi
+        45: 0.963,   # eski: 0.97
+        60: 0.865,   # eski: 0.87
+        90: 0.580,   # eski: 0.62
     }
     for tilt_deg, coeff in expected.items():
-        assert abs(_tilt_factor(tilt_deg) - coeff) < 1e-9
+        result = _tilt_factor(tilt_deg)
+        assert abs(result - coeff) < 1e-9, f"tilt={tilt_deg}°: beklenen {coeff}, alınan {result}"
 
 
 def panel_thermal_sample_request():

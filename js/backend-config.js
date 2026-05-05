@@ -46,6 +46,34 @@ export function buildBackendUrl(path = BACKEND_CONFIG.pvCalculatePath, baseUrl =
 }
 
 /**
+ * Güvenlik (S-04 / S-08 düzeltmesi): Backend API çağrıları için auth header'ları üretir.
+ *
+ * Key kaynağı öncelik sırası:
+ *   1. window.SOLARROTA_API_KEY  — deployment'ta HTML'e inject edilir (en güvenli)
+ *   2. localStorage'da saklı key  — kullanıcı ayarlarından manuel ayar
+ *   3. Boş string               — dev-mode, key göndermez (backend auth'u atlar)
+ *
+ * Dev-mode (key boş): sadece content-type döner, X-Api-Key header eklenmez.
+ * Production: X-Api-Key + X-Timestamp header'ları eklenir.
+ * X-Timestamp: replay attack koruması için Unix ms cinsinden zaman damgası.
+ */
+export function buildAuthHeaders(extraHeaders = {}) {
+  const apiKey = (
+    (typeof window !== 'undefined' && window.SOLARROTA_API_KEY) ||
+    (() => { try { return localStorage.getItem('solarrota_api_key_v1') || ''; } catch { return ''; } })()
+  ).trim();
+
+  const base = { 'content-type': 'application/json', ...extraHeaders };
+  if (!apiKey) return base;   // dev-mode: auth header yok
+
+  return {
+    ...base,
+    'x-api-key': apiKey,
+    'x-timestamp': String(Date.now()),
+  };
+}
+
+/**
  * Backend (Python pvlib) modunun aktif olup olmadığını belirler.
  *
  * Karar tablosu:

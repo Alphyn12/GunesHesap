@@ -4,6 +4,8 @@
 // Typed status, source metadata, user-friendly error messages
 // ═══════════════════════════════════════════════════════════
 
+import { buildAuthHeaders } from './backend-config.js';
+
 export const PVGIS_FETCH_STATUS = {
   LIVE_SUCCESS:    'live-success',
   PROXY_SUCCESS:   'proxy-success',
@@ -89,7 +91,7 @@ async function _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, timeoutM
     const proxyParams = includeHourly ? `${baseParams}&includeHourly=1` : baseParams;
     const res = await fetchImpl(`${backendProxyUrl}?${proxyParams}`, {
       signal: ctrl.signal,
-      headers: { accept: 'application/json' }
+      headers: buildAuthHeaders({ accept: 'application/json' }),  // X-Api-Key ekle
     });
 
     if (!res.ok) return null;
