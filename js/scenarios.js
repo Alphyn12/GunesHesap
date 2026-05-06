@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { buildTariffModel, evaluateProjectEconomics } from './calc-core.js';
+import { PANEL_TYPES } from './data.js';
 
 let scenarioChart = null;
 let fxChart = null;
@@ -121,7 +122,7 @@ function computeSensitivityNpv(r, state, overrides = {}) {
   // uses a correctly scaled 25-year cash-flow model with proper degradation and
   // escalation — instead of the old heuristic (annualSavings × 0.10 × 8) which
   // was wrong and produced identical deltas for "Üretim -10%" and "Tarife -10%".
-  const panel = window._appData?.PANEL_TYPES?.[state.panelType] ||
+  const panel = PANEL_TYPES[state.panelType] ||
     { degradation: 0.0045, firstYearDeg: 0.02 };
   const tariffModel = buildTariffModel({
     ...state,
@@ -266,7 +267,7 @@ function computeMonteCarloBands(r, state, iterations = 500) {
 
 function computeScenario(r, inflationRate, state) {
   const totalCost = Number(r.financialCostBasis || r.totalCost) || 0;
-  const panel = window._appData?.PANEL_TYPES?.[state.panelType] ||
+  const panel = PANEL_TYPES[state.panelType] ||
     { degradation: 0.0045, firstYearDeg: 0.02 };
   const tariffModel = buildTariffModel({
     ...state,

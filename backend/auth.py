@@ -29,6 +29,11 @@ _API_KEY: str = os.getenv("SOLARROTA_API_KEY", "").strip()
 _REPLAY_WINDOW_MS: int = int(os.getenv("SOLARROTA_REPLAY_WINDOW_MS", "30000"))
 
 
+def is_dev_mode() -> bool:
+    """API key tanımlanmamışsa (dev-mode) True döndürür."""
+    return not _API_KEY
+
+
 def verify_api_key(
     x_api_key: str = Header(default="", alias="X-Api-Key"),
     x_timestamp: str = Header(default="", alias="X-Timestamp"),

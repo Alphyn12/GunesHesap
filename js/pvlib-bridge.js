@@ -35,12 +35,7 @@ export async function callPythonEngineeringBackend(state = {}, { endpoint = buil
     throw new Error(`backend request blocked: ${requestIssues.join(', ')}`);
   }
 
-  // TODO(pvlib): deepen the backend MVP model chain:
-  // - pvlib irradiance transposition and AOI losses
-  // - temperature model selection by mounting type
-  // - inverter clipping and part-load efficiency curves
-  // - hourly battery dispatch with critical-load reserve
-  // - bankable uncertainty bands and source provenance
+  // Model chain details and roadmap: backend/engines/pvlib_engine.py → pvlib_status()["futureWork"]
   const res = await fetchWithTimeout(fetchImpl, endpoint, {
     method: 'POST',
     headers: buildAuthHeaders(),   // X-Api-Key + X-Timestamp (key tanımlıysa)

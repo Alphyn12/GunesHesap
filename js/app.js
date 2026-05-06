@@ -21,7 +21,7 @@ import { showToast, animateCounter, launchConfetti, resetConfetti, renderPRGauge
 import { renderResults, renderMonthlyChart, downloadPDF, downloadTechnicalPDF, shareResults, loadFromHash, exportProposalHandoff, exportCrmLead } from './ui-render.js';
 import { toggleEngReport, renderEngReport } from './eng-report.js';
 import { runCalculation, isCalculationInProgress } from './calculation-service.js';
-import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta, getTiltCoeff } from './calc-engine.js';
+import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta, getTiltCoeff, finalizeCalculationUI } from './calc-engine.js';
 import { calculateSystemLayout, resolvePanelSpec } from './calc-core.js';
 import { renderHourlyProfile, setHourlySeason } from './hourly-profile.js';
 import { toggleBillBlock, onBillToggle, onBillInput, billQuickFill, billClear, import8760Csv } from './bill-analysis.js';
@@ -62,9 +62,6 @@ import { preloadEncryptedState } from './storage.js';
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
 
-// FIX-4: calculateStructural was imported but never exposed on window, making
-// the structural-check branch in calc-engine.js dead code. Wire it up here.
-window.calculateStructural = calculateStructural;
 
 // ── Faz 1 / data-action delegation framework ──────────────────────────────
 // Replaces inline onclick/onchange/oninput attributes so the CSP can drop
@@ -3664,7 +3661,7 @@ function validateStep5() {
   runCalculation()
     .catch(e => {
       window.state.calculationError = e?.message || String(e);
-      window.finalizeCalculationUI?.({
+      finalizeCalculationUI({
         targetStep: 5,
         errorMsg: 'Hesaplama sırasında bir hata oluştu. Lütfen tekrar deneyin.'
       });

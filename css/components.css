@@ -2,6 +2,77 @@
    COMPONENTS.CSS — Solar Rota v2.0 Modüler Bileşenler
    ═══════════════════════════════════════════════════════════ */
 
+/* ── Öz-barındırılan fontlar (P3 — Google Fonts bağımlılığı kaldırıldı)
+   Inter: 400/500/600/700  |  Space Grotesk: 400/500/600/700(+800 alias)
+   Kaynak: assets/fonts/*.woff2  — SRI hash'leri scripts/verify-sri.mjs ile doğrulanabilir.
+   Not: Space Grotesk max weight=700; CSS'teki 800 referansları bu alias'a düşer. ── */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/Inter-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/Inter-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/Inter-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/Inter-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/SpaceGrotesk-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/SpaceGrotesk-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/SpaceGrotesk-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/SpaceGrotesk-700.woff2') format('woff2');
+}
+/* weight:800 alias → Space Grotesk'in maksimum ağırlığı 700'dür; tarayıcı en yakın değeri seçer */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('../assets/fonts/SpaceGrotesk-700.woff2') format('woff2');
+}
+
 /* ── F1.F: index.html inline <style> bloğundan taşınan FOUC-kritik
    reset, :root vars, theme-light override, body, scrollbar, keyframes.
    Bu kurallar dış CSS olmadan tarayıcı flicker üretebileceği için

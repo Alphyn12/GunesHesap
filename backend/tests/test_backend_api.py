@@ -162,6 +162,157 @@ def test_pvlib_engine_contract_when_available():
     assert data["losses"]["ghiScaleFactor"] <= 1.0
     assert data["losses"]["temperatureProfileModel"] == "city-adjusted-seasonal-sine"
     assert data["losses"]["temperatureProfileCity"] == "Ankara"
+    # P7 Adım 3: temperatureModelMountingType loss_flags'te mevcut olmalı
+    assert "temperatureModelMountingType" in data["losses"]
+
+
+def test_pvlib_mounting_type_temperature_model():
+    """Montaj tipine göre doğru SAPM parametresi seçilmeli."""
+    if not PVLIB_AVAILABLE:
+        return
+
+    def _req_with_mounting(mounting_type):
+        req = sample_request()
+        req["roof"]["mountingType"] = mounting_type
+        return req
+
+    # rooftop (varsayılan) → close_mount_glass_glass
+    r = client.post("/api/pv/calculate", json=_req_with_mounting("rooftop"))
+    assert r.status_code == 200
+    losses = r.json()["losses"]
+    assert losses["temperatureModel"] == "pvlib.sapm_cell.close_mount_glass_glass"
+    assert losses["temperatureModelMountingType"] == "rooftop"
+
+    # ground-mount → open_rack_glass_glass
+    r = client.post("/api/pv/calculate", json=_req_with_mounting("ground-mount"))
+    assert r.status_code == 200
+    losses = r.json()["losses"]
+    assert losses["temperatureModel"] == "pvlib.sapm_cell.open_rack_glass_glass"
+    assert losses["temperatureModelMountingType"] == "ground-mount"
+
+    # bipv → insulated_back_glass_polymer
+    r = client.post("/api/pv/calculate", json=_req_with_mounting("bipv"))
+    assert r.status_code == 200
+    losses = r.json()["losses"]
+    assert losses["temperatureModel"] == "pvlib.sapm_cell.insulated_back_glass_polymer"
+    assert losses["temperatureModelMountingType"] == "bipv"
+
+    # mountingType yok → rooftop varsayılanı → close_mount_glass_glass
+    req_no_mount = sample_request()
+    req_no_mount["roof"].pop("mountingType", None)
+    r = client.post("/api/pv/calculate", json=req_no_mount)
+    assert r.status_code == 200
+    losses = r.json()["losses"]
+    assert losses["temperatureModel"] == "pvlib.sapm_cell.close_mount_glass_glass"
+
+
+def test_pvlib_mounting_type_contract_passthrough():
+    """mountingType JS kontratından backend'e doğru iletilmeli."""
+    if not PVLIB_AVAILABLE:
+        return
+    req = sample_request()
+    req["roof"]["mountingType"] = "ground-mount"
+    r = client.post("/api/pv/calculate", json=req)
+    assert r.status_code == 200
+    # Backend doğru modeli seçmişse bu değeri losses'a yazar
+    assert r.json()["losses"]["temperatureModelMountingType"] == "ground-mount"
+
+
+def test_pvlib_aoi_correction_flags_reported():
+    """AOI-1: loss_flags aoiModel, aoiB0, aoiCorrectionApplied içermeli."""
+    if not PVLIB_AVAILABLE:
+        return
+    r = client.post("/api/pv/calculate", json=sample_request())
+    assert r.status_code == 200
+    losses = r.json()["losses"]
+    assert losses.get("aoiModel") == "pvlib.iam.ashrae"
+    assert losses.get("aoiB0") == 0.05
+    assert losses.get("aoiCorrectionApplied") is True
+
+
+def test_pvlib_aoi_reduces_production_within_expected_range():
+    """AOI düzeltmesi uygulandığında üretim fiziksel sınırlar içinde olmalı."""
+    if not PVLIB_AVAILABLE:
+        return
+    r = client.post("/api/pv/calculate", json=sample_request())
+    assert r.status_code == 200
+    prod = r.json()["production"]
+    annual_kwh = prod["annualEnergyKwh"]
+    # 13 kWp Ankara sistemi için fiziksel aralık: 15,000–22,000 kWh/yıl
+    assert 15_000 < annual_kwh < 22_000, f"AOI sonrası üretim aralık dışı: {annual_kwh}"
+
+
+def test_pvlib_inverter_model_reported_as_pvwatts():
+    """INV-1: inverterApproximation pvwatts modelini bildirmeli."""
+    if not PVLIB_AVAILABLE:
+        return
+    r = client.post("/api/pv/calculate", json=sample_request())
+    assert r.status_code == 200
+    losses = r.json()["losses"]
+    assert "pvwatts" in losses.get("inverterApproximation", "").lower()
+    assert losses.get("inverterEtaRef") == 0.9637
+
+
+def test_pvlib_assumption_flags_updated():
+    """INV-1: usesSimplifiedInverterModel=False, usesAoiCorrection=True."""
+    if not PVLIB_AVAILABLE:
+        return
+    r = client.post("/api/pv/calculate", json=sample_request())
+    assert r.status_code == 200
+    flags = r.json()["production"]["assumption_flags"]
+    assert flags.get("usesSimplifiedInverterModel") is False
+    assert flags.get("usesAoiCorrection") is True
+    assert flags.get("usesPartLoadInverterCurve") is True
+
+
+def test_pvlib_uncertainty_bands_present():
+    """UNC-1: P50/P90 alanları her pvlib çalışmasında üretim ve losses'ta mevcut olmalı."""
+    if not PVLIB_AVAILABLE:
+        return
+    r = client.post("/api/pv/calculate", json=sample_request())
+    assert r.status_code == 200
+    prod = r.json()["production"]
+    losses = r.json()["losses"]
+
+    for key in ("p50Kwh", "p75Kwh", "p90Kwh", "uncertaintyPct"):
+        assert key in prod, f"{key} production'da eksik"
+
+    assert "uncertaintyBands" in losses
+    bands = losses["uncertaintyBands"]
+    assert "uncertaintyComponents" in bands
+    assert bands["methodology"] == "parametric-rss"
+
+
+def test_pvlib_p90_lower_than_p50():
+    """UNC-1: P90 < P75 < P50 hiyerarşisi korunmalı."""
+    if not PVLIB_AVAILABLE:
+        return
+    r = client.post("/api/pv/calculate", json=sample_request())
+    assert r.status_code == 200
+    prod = r.json()["production"]
+    assert prod["p90Kwh"] < prod["p75Kwh"] < prod["p50Kwh"]
+
+
+def test_pvlib_p90_ratio_within_expected_range():
+    """UNC-1: clearsky-synthetic σ≈6.75% → P90/P50 ≈ 0.913 (tolerans 0.85–0.98)."""
+    if not PVLIB_AVAILABLE:
+        return
+    r = client.post("/api/pv/calculate", json=sample_request())
+    assert r.status_code == 200
+    prod = r.json()["production"]
+    ratio = prod["p90Kwh"] / max(prod["p50Kwh"], 1)
+    assert 0.85 < ratio < 0.98, f"P90/P50 oranı beklenen aralık dışı: {ratio:.4f}"
+
+
+def test_pvlib_pvlib_status_completedwork_updated():
+    """pvlib_status completedWork AOI ve PVWatts inverter içermeli."""
+    from backend.engines.pvlib_engine import pvlib_status
+    status = pvlib_status()
+    completed = " ".join(status.get("completedWork", []))
+    assert "AOI" in completed or "ashrae" in completed.lower()
+    assert "PVWatts" in completed or "pvwatts" in completed.lower()
+    future = " ".join(status.get("futureWork", []))
+    assert "AOI" not in future
 
 
 def test_financial_proposal_contract():

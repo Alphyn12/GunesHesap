@@ -62,7 +62,10 @@
       "Bash(sort -t: -k2 -rn)",
       "Bash(awk -F: '{s+=$2} END {print s}')",
       "Bash(ls -la .github)",
-      "Bash(mkdir -p .github/workflows)"
+      "Bash(mkdir -p .github/workflows)",
+      "Bash(pip install *)",
+      "Bash(ls tests/fixtures/)",
+      "Bash(ls backend/tests/fixtures/)"
     ]
   }
 }

@@ -18,6 +18,13 @@ function currentTargetPowerKwp(state = {}) {
   return explicit !== null && explicit > 0 ? explicit : null;
 }
 
+function _resolveMountingType(roofType) {
+  if (!roofType) return 'rooftop';
+  if (roofType === 'ground-mount' || roofType === 'carport') return 'ground-mount';
+  if (roofType === 'bipv' || roofType === 'building-integrated') return 'bipv';
+  return 'rooftop';  // flat-concrete, metal-trapez, kiremit ve diğer çatı tipleri
+}
+
 function buildLayoutSnapshot(state = {}) {
   if (!state || !Number.isFinite(Number(state.roofArea)) || Number(state.roofArea) <= 0) return null;
   try {
@@ -115,7 +122,8 @@ export function buildPvEngineRequest(state = {}) {
       shadingPct: finite(state.shadingFactor, 0),
       soilingPct: finite(state.soilingFactor, 0),
       geometry: state.roofGeometry || null,
-      sections: Array.isArray(state.roofSections) ? state.roofSections : []
+      sections: Array.isArray(state.roofSections) ? state.roofSections : [],
+      mountingType: _resolveMountingType(state.roofType)
     },
     system: {
       panelType: state.panelType || 'mono_perc',

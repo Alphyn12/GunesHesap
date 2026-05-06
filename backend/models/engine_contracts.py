@@ -57,6 +57,7 @@ class RoofInput(FlexibleModel):
     usableRoofRatio: float = 0.75
     geometry: Optional[Dict[str, Any]] = None
     sections: List[Dict[str, Any]] = Field(default_factory=list)
+    mountingType: Optional[str] = None  # "rooftop" | "ground-mount" | "bipv" | None→rooftop
 
 
 class SystemInput(FlexibleModel):
@@ -205,6 +206,8 @@ class HealthResponse(BaseModel):
     pvlibBackedEngineAvailable: bool = False
     activeEngineWhenAvailable: str = "pvlib-backed"
     fallbackEngine: str = "python-deterministic-fallback"
+    authMode: str = "dev-mode"       # "key-required" | "dev-mode"
+    startupWarnings: List[str] = []  # Operatöre görünür startup uyarıları
 
 
 class PanelThermalRequest(FlexibleModel):

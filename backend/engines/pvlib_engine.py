@@ -173,21 +173,21 @@ def pvlib_status() -> dict[str, Any]:
         "pvlibBackedEngineAvailable": PVLIB_AVAILABLE,
         "activeWhenAvailable": "pvlib-backed",
         "fallbackEngine": "python-deterministic-fallback",
-        "readyFor": [
-            "solar position",
-            "clear-sky irradiance",
-            "POA transposition",
-            "cell temperature",
-            "PVWatts DC production",
-            "basic AC/inverter approximation",
+        "completedWork": [
+            "pvlib solar position (hourly, location-aware)",
+            "Haydavies POA transposition",
+            "ASHRAE AOI/IAM beam component correction (b=0.05)",
+            "mounting-type SAPM cell temperature model (rooftop / ground-mount / bipv)",
+            "PVWatts DC model with gamma_pdc from panel contract",
+            "PVWatts part-load inverter efficiency curves (eta_ref=0.9637)",
+            "multi-section layout geometry from frontend snapshot",
+            "bifacial gain (contract-driven)",
+            "parametric P50/P90 uncertainty bands (RSS, clearsky-synthetic)",
+            "battery dispatch (via offgrid_engine chain)",
         ],
         "futureWork": [
-            "measured/PVGIS hourly weather source injection",
-            "AOI losses",
-            "inverter clipping curves",
-            "battery dispatch",
-            "off-grid autonomy",
-            "irrigation pump curves",
+            "measured/PVGIS hourly weather (TMY or ERA5) — replaces clearsky-synthetic",
+            "off-grid irrigation pump curves",
         ],
     }
 
@@ -198,6 +198,67 @@ def can_use_pvlib(request: EngineRequest) -> bool:
         and _has_valid_site_coordinates(request)
         and _system_power_kwp(request)[0] > 0
     )
+
+
+# UNC-1: Parametrik belirsizlik bileşenleri — clearsky-synthetic hava modeli için.
+# Her bileşen 1-sigma oransal standart sapması (birimsiz kesir).
+# Kaynak: NREL PVWatts, IEC 61215, PVGIS validation çalışmaları.
+_UNCERTAINTY_COMPONENTS_CLEARSKY: dict[str, float] = {
+    "clearsky_synthetic_ghi":      0.060,  # clearsky vs. gerçek TMY farkı
+    "panel_performance_tolerance": 0.015,  # IEC 61215 ±3% fabrika toleransı
+    "temperature_model":           0.010,  # SAPM validation belirsizliği
+    "shading_base":                0.020,  # kullanıcı tahmini gölge
+    "soiling_fixed_assumption":    0.015,  # sabit % yerine dinamik model eksikliği
+}
+
+
+def _compute_uncertainty_bands(
+    annual_kwh: float,
+    weather_source: str,
+    shading_pct: float,
+) -> dict[str, Any]:
+    """Parametrik P50/P90 belirsizlik bandı hesabı.
+
+    Bileşik belirsizlik (σ): RSS (Root Sum of Squares) yöntemi.
+    P90 = P50 × (1 − z_0.90 × σ_combined), z_0.90 = 1.282.
+
+    Clearsky-synthetic hava modeli için σ_GHI = %6;
+    gerçek TMY/ERA5 için %2.5'e düşürülür (henüz entegre değil).
+    """
+    components = dict(_UNCERTAINTY_COMPONENTS_CLEARSKY)
+
+    # Hava kaynağına göre GHI belirsizliğini ayarla
+    if weather_source in {"pvgis-tmy", "era5", "measured"}:
+        components["clearsky_synthetic_ghi"] = 0.025
+    elif weather_source == "psh-deterministic-synthetic":
+        components["clearsky_synthetic_ghi"] = 0.080
+
+    # Yüksek gölge → artan belirsizlik
+    if shading_pct > 20:
+        components["shading_base"] = 0.035
+    elif shading_pct > 10:
+        components["shading_base"] = 0.025
+
+    sigma = (sum(v ** 2 for v in components.values())) ** 0.5
+    z_p90 = 1.282   # standart normal: P(X < μ − 1.282σ) = 0.10
+    z_p75 = 0.674
+
+    p50 = annual_kwh
+    return {
+        "p50Kwh": round(p50),
+        "p75Kwh": round(p50 * (1.0 - z_p75 * sigma)),
+        "p90Kwh": round(p50 * (1.0 - z_p90 * sigma)),
+        "uncertaintyPct": round(sigma * 100, 2),
+        "uncertaintyComponents": {k: round(v * 100, 2) for k, v in components.items()},
+        "weatherSourceForUncertainty": weather_source,
+        "methodology": "parametric-rss",
+        "note": (
+            "P90 = P50 × (1 − 1.282 × σ). clearsky-synthetic hava modeliyle "
+            "bankable P90 için ölçülmüş TMY kaynağı gerekir; bu değer ön fizibilite içindir."
+            if weather_source == "clearsky-scaled-synthetic"
+            else "Parametrik RSS belirsizlik hesabı."
+        ),
+    }
 
 
 def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
@@ -256,7 +317,21 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
     winter_trough = _clamp(summer_peak - 22, 4, 18)
     ambient_temp = _ambient_temperature_profile(day_of_year, request.site.cityName)
     wind_speed = pd.Series(1.5, index=times)
-    temp_params = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS["sapm"]["open_rack_glass_glass"]
+
+    # TEMP-1: Montaj tipine göre SAPM sıcaklık modeli seçimi.
+    # open_rack_glass_glass:        a=-3.47, b=-0.0594, ΔT=3 — zemin kurulumu / açık raf
+    # close_mount_glass_glass:      a=-2.98, b=-0.0471, ΔT=1 — çatı montajı (sınırlı hava akışı)
+    # insulated_back_glass_polymer: a=-2.81, b=-0.0455, ΔT=0 — BIPV / bina entegreli
+    # Türkiye ağırlıklı kullanım çatı (rooftop); close_mount_glass_glass varsayılan.
+    _TEMP_MODEL_MAP = {
+        "ground-mount": "open_rack_glass_glass",
+        "carport":      "open_rack_glass_glass",
+        "bipv":         "insulated_back_glass_polymer",
+    }
+    _mounting_type = getattr(request.roof, "mountingType", None) or "rooftop"
+    _temp_model_key = _TEMP_MODEL_MAP.get(_mounting_type, "close_mount_glass_glass")
+    temp_params = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS["sapm"][_temp_model_key]
+
     snapshot_sections = layout_sections_from_snapshot(request)
     use_section_geometry = bool(snapshot_sections)
     pv_sections = snapshot_sections or [
@@ -278,9 +353,11 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
         section_power_kwp = max(0, float(section.get("systemPowerKwp") or 0))
         if section_power_kwp <= 0:
             continue
+        _section_tilt = _clamp(float(section.get("tiltDeg", request.roof.tiltDeg)), 0, 90)
+        _section_azimuth = float(section.get("azimuthDeg", request.roof.azimuthDeg))
         section_poa = pvlib.irradiance.get_total_irradiance(
-            surface_tilt=_clamp(float(section.get("tiltDeg", request.roof.tiltDeg)), 0, 90),
-            surface_azimuth=float(section.get("azimuthDeg", request.roof.azimuthDeg)),
+            surface_tilt=_section_tilt,
+            surface_azimuth=_section_azimuth,
             dni=scaled_dni,
             ghi=scaled_ghi,
             dhi=scaled_dhi,
@@ -289,7 +366,24 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
             dni_extra=dni_extra,
             model="haydavies",
         )
-        section_poa_global = section_poa["poa_global"].clip(lower=0).fillna(0)
+
+        # AOI-1: ASHRAE IAM düzeltmesi — sadece beam (direkt) bileşenine uygulanır.
+        # b=0.05: standart cam panel referans değeri (IEC 61215 kalibrasyonu).
+        # Diffüz ve zemin yansıma bileşenleri değişmez (izotropik ortalama varsayımı).
+        _aoi = pvlib.irradiance.aoi(
+            surface_tilt=_section_tilt,
+            surface_azimuth=_section_azimuth,
+            solar_zenith=solar_position["apparent_zenith"],
+            solar_azimuth=solar_position["azimuth"],
+        )
+        _iam = pvlib.iam.ashrae(_aoi, b=0.05)
+        _beam     = section_poa["poa_direct"].clip(lower=0).fillna(0)
+        _diffuse  = (
+            section_poa["poa_sky_diffuse"].clip(lower=0).fillna(0)
+            + section_poa["poa_ground_diffuse"].clip(lower=0).fillna(0)
+        )
+        section_poa_global = (_beam * _iam + _diffuse).clip(lower=0)
+
         section_shading_pct = float(section.get("shadingPct", request.roof.shadingPct or 0) or 0)
         section_shading_factor = 1 - _clamp(section_shading_pct, 0, 80) / 100
         section_poa_effective = section_poa_global * section_shading_factor * soiling_factor * wiring_mismatch_factor * bifacial_factor
@@ -304,9 +398,16 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
             temp_ref=25,
         ).clip(lower=0)
 
-        section_ac_limit_w = section_pdc0_w * 0.96
-        section_ac_w = (section_pdc_w * inverter_eff).clip(upper=section_ac_limit_w).fillna(0)
-        section_clipped_w = (section_pdc_w * inverter_eff - section_ac_w).clip(lower=0).fillna(0)
+        # INV-1: PVWatts inverter modeli — part-load verim eğrisi + clipping.
+        # eta_inv_ref=0.9637: NREL PVWatts v5 referans değeri.
+        # Sabit eta × clamp yerine gerçekçi kısmi yük düzeltmesi sağlar.
+        section_ac_w = pvlib.inverter.pvwatts(
+            pdc=section_pdc_w,
+            pdc0=section_pdc0_w,
+            eta_inv_nom=inverter_eff,
+            eta_inv_ref=0.9637,
+        ).clip(lower=0).fillna(0)
+        section_clipped_w = (section_pdc_w - section_ac_w / max(inverter_eff, 1e-6)).clip(lower=0).fillna(0)
         pdc_parts.append(section_pdc_w)
         ac_parts.append(section_ac_w)
         clipped_parts.append(section_clipped_w)
@@ -357,19 +458,31 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
         "layoutSnapshot": layout_snapshot(request),
         "gammaPdc": round(gamma_pdc, 4),
         "gammaPdcSource": "contract" if (_contract_coeff is not None and -0.01 <= float(_contract_coeff) <= 0) else "panel-type-map",
-        "temperatureModel": "pvlib.sapm_cell.open_rack_glass_glass",
+        "temperatureModel": f"pvlib.sapm_cell.{_temp_model_key}",
+        "temperatureModelMountingType": _mounting_type,
         "temperatureProfileModel": "city-adjusted-seasonal-sine",
         "temperatureProfileSummerPeakC": round(summer_peak, 1),
         "temperatureProfileWinterTroughC": round(winter_trough, 1),
         "temperatureProfileCity": request.site.cityName or "default",
         "dcModel": "pvlib.pvsystem.pvwatts_dc",
         "transpositionModel": "pvlib.irradiance.haydavies",
-        "inverterApproximation": "constant efficiency with AC cap",
+        "aoiModel": "pvlib.iam.ashrae",
+        "aoiB0": 0.05,
+        "aoiCorrectionApplied": True,
+        "inverterApproximation": "pvlib.inverter.pvwatts (part-load corrected)",
+        "inverterEtaRef": 0.9637,
         "clippingKwh": round(clipping_kwh, 2),
         # Faz-1 D1: explicit weather provenance label so the frontend authoritative
         # gate refuses synthetic clear-sky over real PVGIS until TMY/ERA5 is wired.
         "weatherSource": "clearsky-scaled-synthetic",
     }
+
+    # UNC-1: P50/P90 hesabı — tüm loss_flags tamamlandıktan sonra çağrılır
+    _uncertainty = _compute_uncertainty_bands(
+        annual_kwh=annual_kwh,
+        weather_source="clearsky-scaled-synthetic",
+        shading_pct=weighted_shading_pct,
+    )
 
     return {
         "engineSource": engine_source("pvlib"),
@@ -388,12 +501,18 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
             "engine_quality": "engineering-mvp",
             "confidence_level": PVLIB_CONFIDENCE_LEVEL,
             "weatherSource": "clearsky-scaled-synthetic",
+            "p50Kwh": _uncertainty["p50Kwh"],
+            "p75Kwh": _uncertainty["p75Kwh"],
+            "p90Kwh": _uncertainty["p90Kwh"],
+            "uncertaintyPct": _uncertainty["uncertaintyPct"],
             "assumption_flags": {
                 "usesClearSkyIrradianceScaledToInputGhi": True,
                 "usesMeasuredWeather": False,
                 "usesHourlySolarPosition": True,
                 "usesPvlibTemperatureModel": True,
-                "usesSimplifiedInverterModel": True,
+                "usesSimplifiedInverterModel": False,
+                "usesAoiCorrection": True,
+                "usesPartLoadInverterCurve": True,
                 "weatherSource": "clearsky-scaled-synthetic",
             },
         },
@@ -404,7 +523,11 @@ def calculate_pvlib_production(request: EngineRequest) -> dict[str, Any]:
             "acAnnualKwh": round(annual_kwh, 2),
             "ghiScaleFactor": round(ghi_scale, 4),
             **loss_flags,
-            "modelCompleteness": "pvlib MVP: real solar position/transposition/temperature/DC path with approximate weather and AC clipping.",
+            "uncertaintyBands": _uncertainty,
+            "modelCompleteness": (
+                "pvlib MVP: solar position + Haydavies transposition + ASHRAE AOI/IAM "
+                "+ mounting-type SAPM temperature + PVWatts DC + PVWatts part-load AC."
+            ),
         },
         "raw": {
             "engineUsed": "pvlib-backed",

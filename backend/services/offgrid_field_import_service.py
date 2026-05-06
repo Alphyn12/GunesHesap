@@ -4,10 +4,60 @@ from datetime import datetime
 from io import BytesIO
 import csv
 import re
+from pathlib import Path
 from statistics import median
 from typing import Any
 from xml.etree import ElementTree as ET
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
+
+
+# ── Upload doğrulama sabitleri ────────────────────────────────────────────────
+_XLSX_MAGIC = b"PK\x03\x04"            # OOXML/ZIP magic bytes
+_MAX_UNCOMPRESSED_XLSX_BYTES = 50 * 1024 * 1024   # ZIP bomb üst sınırı: 50 MB
+
+
+def validate_upload_content(filename: str, content: bytes) -> None:
+    """İçerik ile dosya uzantısının tutarlılığını magic byte ile doğrular.
+
+    XLSX: ZIP magic byte kontrolü + sıkıştırılmamış toplam boyut sınırı (ZIP bomb).
+    Text (CSV/TSV/TXT): İlk 2 KB UTF-8 decode edilebilmeli; binary içerik reddedilir.
+
+    Raises:
+        ValueError: Geçersiz içerik, magic byte uyuşmazlığı veya boyut aşımı.
+    """
+    suffix = Path(filename).suffix.lower()
+
+    if suffix in {".xlsx", ".xls"}:
+        if not content.startswith(_XLSX_MAGIC):
+            raise ValueError(
+                "XLSX/XLS dosyası beklendi ancak ZIP/OOXML imzası bulunamadı. "
+                "Dosyanın gerçek bir Excel dosyası olduğunu doğrulayın."
+            )
+        # ZIP bomb koruması: sıkıştırılmamış toplam boyutu sınırla
+        try:
+            with ZipFile(BytesIO(content)) as zf:
+                total = sum(info.file_size for info in zf.infolist())
+                if total > _MAX_UNCOMPRESSED_XLSX_BYTES:
+                    limit_mb = _MAX_UNCOMPRESSED_XLSX_BYTES // (1024 * 1024)
+                    actual_mb = total // (1024 * 1024)
+                    raise ValueError(
+                        f"XLSX sıkıştırılmamış içerik boyutu {limit_mb} MB sınırını "
+                        f"aşıyor ({actual_mb} MB). Dosya boyutunu küçültün."
+                    )
+        except BadZipFile as exc:
+            raise ValueError(
+                "XLSX dosyası açılamadı: ZIP yapısı bozuk veya geçersiz."
+            ) from exc
+    else:
+        # Text formatı: ilk 2 KB UTF-8 / UTF-8-BOM decode edilebilmeli
+        sample = content[:2048]
+        try:
+            sample.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise ValueError(
+                "Dosya içeriği UTF-8 metin olarak okunamadı. "
+                "CSV/TXT/TSV dosyalarının UTF-8 kodlamalı olması gerekir."
+            ) from exc
 
 
 NS = {
@@ -363,6 +413,7 @@ def parse_inverter_event_log(filename: str, content: bytes) -> dict[str, Any]:
 
 
 def analyze_field_import(filename: str, content: bytes, kind: str) -> dict[str, Any]:
+    validate_upload_content(filename, content)
     if kind in {"load", "critical-load"}:
         return parse_high_resolution_load(filename, content, kind=kind)
     if kind == "inverter-log":

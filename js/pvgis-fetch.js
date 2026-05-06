@@ -38,6 +38,11 @@ const MONTH_START_HOURS = COMMON_YEAR_MONTH_DAYS.reduce((acc, days, index) => {
   return acc;
 }, []);
 let pvgisHttpOutageUntil = 0;
+let _lastPvgisError = null;
+
+export function getLastPvgisError() {
+  return _lastPvgisError;
+}
 
 function classifyError(e) {
   const msg = (e?.message || String(e)).toLowerCase();
@@ -249,7 +254,7 @@ export async function fetchPVGISLive(params, options = {}) {
     const errorMessage = proxyAttempted
       ? 'Backend PVGIS proxy unavailable; direct browser PVGIS calls are disabled because PVGIS does not allow AJAX/CORS.'
       : 'Direct browser PVGIS calls are disabled because PVGIS does not allow AJAX/CORS.';
-    if (typeof window !== 'undefined') window._pvgisLastError = errorMessage;
+    _lastPvgisError = errorMessage;
     return {
       fetchStatus: PVGIS_FETCH_STATUS.FALLBACK_USED,
       rawEnergy: null,
@@ -367,7 +372,7 @@ export async function fetchPVGISLive(params, options = {}) {
 
   // ── All tiers failed — caller must use PSH fallback ─────────────────────────
   const userMessage = buildUserMessage(lastErrorType, lang);
-  if (typeof window !== 'undefined') window._pvgisLastError = lastError;
+  _lastPvgisError = lastError;
 
   return {
     fetchStatus: PVGIS_FETCH_STATUS.FALLBACK_USED,

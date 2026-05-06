@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="css/redesign.css"/>
 <link rel="stylesheet" href="css/mobile.css"/>
 <link rel="stylesheet" href="css/landing.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<!-- Fontlar öz-barındırılıyor: css/components.css @font-face blokları, assets/fonts/*.woff2 -->
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js" integrity="sha384-JP5UPxIO2Tm2o79Fb0tGYMa44jkWar53aBoCbd8ah0+LcCDoohTIYr+zIXyfGIJN" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
@@ -2356,6 +2356,13 @@
             <option value="manual" data-i18n="onGridFlow.tariffSourceManual">Manuel giriş</option>
             <option value="estimate" data-i18n="onGridFlow.tariffSourceEstimate">Tahmini / varsayılan</option>
             <option value="official" selected data-i18n="onGridFlow.tariffSourceOfficial">Resmi / güncel kaynak (EPDK, RG)</option>
+          </select>
+        </div>
+        <div>
+          <div class="text-caption-helper" data-i18n="onGridFlow.costSourceType">Maliyet kaynağı</div>
+          <select class="input-form-row" id="cost-source-type" data-change-action="updateTariffAssumptions">
+            <option value="catalog" selected data-i18n="onGridFlow.costSourceCatalog">Katalog / otomatik fiyat</option>
+            <option value="bom-verified" data-i18n="onGridFlow.costSourceBom">BOM ile doğrulanmış tedarikçi teklifi</option>
           </select>
         </div>
       </div>

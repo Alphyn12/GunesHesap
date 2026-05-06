@@ -1,5 +1,5 @@
-// v48: Add storage-crypto.js; remove deleted CRM modules (audit-log, crm-export, identity).
-const CACHE_NAME = 'solarRota-v48';
+// v49: Self-host Inter + Space Grotesk fonts (P3); add font woff2 files to precache.
+const CACHE_NAME = 'solarRota-v49';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -67,6 +67,14 @@ const STATIC_ASSETS = [
   '/locales/de.json',
   '/fixtures/bom-suppliers.json',
   '/assets/solar-proposal-mark.svg',
+  '/assets/fonts/Inter-400.woff2',
+  '/assets/fonts/Inter-500.woff2',
+  '/assets/fonts/Inter-600.woff2',
+  '/assets/fonts/Inter-700.woff2',
+  '/assets/fonts/SpaceGrotesk-400.woff2',
+  '/assets/fonts/SpaceGrotesk-500.woff2',
+  '/assets/fonts/SpaceGrotesk-600.woff2',
+  '/assets/fonts/SpaceGrotesk-700.woff2',
   '/icon-192.svg',
   '/icon-512.svg'
 ];

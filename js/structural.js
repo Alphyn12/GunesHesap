@@ -79,5 +79,4 @@ export function calculateStructural(cityName, tiltDeg, systemPowerKWp, totalPane
   };
 }
 
-// window'a expose et
-window.calculateStructural = calculateStructural;
+// calculateStructural ES module export olarak kullanılıyor — window ataması gereksiz.

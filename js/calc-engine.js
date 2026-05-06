@@ -16,7 +16,8 @@ import {
   getMonthlyLoadKwh, buildBaseHourlyLoad8760, simulateBatteryOnHourlySummary,
   simulateHourlyEnergy, resolveAnnualOperatingCosts,
   resolveTaxTreatment, resolveProductionTemperatureAdjustment,
-  sumMonthlyArrays, normalizeMonthlyProductionToAnnual
+  sumMonthlyArrays, normalizeMonthlyProductionToAnnual,
+  COMMON_YEAR_MONTH_DAYS
 } from './calc-core.js';
 import { buildQuoteReadiness } from './turkey-regulation.js';
 import { buildProposalGovernance } from './proposal-governance.js';
@@ -43,8 +44,9 @@ import {
   runBadWeatherScenario,
   buildOffgridResults
 } from './offgrid-dispatch.js';
-import { fetchPVGISLive, PVGIS_FETCH_STATUS, getPvgisSourceLabel, CALC_TOTAL_TIMEOUT_MS } from './pvgis-fetch.js';
+import { fetchPVGISLive, PVGIS_FETCH_STATUS, getPvgisSourceLabel, CALC_TOTAL_TIMEOUT_MS, getLastPvgisError } from './pvgis-fetch.js';
 import { buildBackendUrl, BACKEND_CONFIG } from './backend-config.js';
+import { calculateStructural } from './structural.js';
 
 // Open-meteo (anlık ortalama yaz sıcaklığı) en kötü durum cevap süresi.
 // Hesap zincirini bloklamasın diye agresif tut (pvgis çağrılarından çok daha kısa).
@@ -96,8 +98,6 @@ const CALC_FOCUS_BY_STEP = {
   ]
 };
 
-const COMMON_YEAR_MONTH_DAYS_LOCAL = [31,28,31,30,31,30,31,31,30,31,30,31];
-
 function completeHourlyArray(value) {
   return hasCompleteHourlyProfile8760(value)
     ? value.slice(0, 8760).map(v => Math.max(0, Number(v) || 0))
@@ -107,7 +107,7 @@ function completeHourlyArray(value) {
 function monthlyFromHourly8760(hourly) {
   const monthly = [];
   let cursor = 0;
-  for (const days of COMMON_YEAR_MONTH_DAYS_LOCAL) {
+  for (const days of COMMON_YEAR_MONTH_DAYS) {
     const hours = days * 24;
     monthly.push(hourly.slice(cursor, cursor + hours).reduce((sum, value) => sum + value, 0));
     cursor += hours;
@@ -129,7 +129,7 @@ function normalizeHourlyProductionToAnnual(hourly, annualTarget) {
 let _activeMsgInterval = null;
 let _calcFinalized = false;
 
-function finalizeCalculationUI({ success = false, targetStep = null, errorMsg = null } = {}) {
+export function finalizeCalculationUI({ success = false, targetStep = null, errorMsg = null } = {}) {
   _calcFinalized = true;
   if (_activeMsgInterval) { clearInterval(_activeMsgInterval); _activeMsgInterval = null; }
   const lp = document.getElementById('loading-particles');
@@ -138,10 +138,6 @@ function finalizeCalculationUI({ success = false, targetStep = null, errorMsg = 
   if (window.state) window.state.isCalculating = false;
   if (targetStep !== null) window.goToStep(targetStep);
   if (errorMsg) window.showToast?.(errorMsg, 'error');
-}
-
-if (typeof window !== 'undefined') {
-  window.finalizeCalculationUI = finalizeCalculationUI;
 }
 
 // FIX-2: Tilt factor lookup for PSH fallback path.
@@ -1407,10 +1403,7 @@ export async function runCalculation() {
       : (systemPower > 0 && state.ghi > 0 ? adjustedEnergy / (systemPower * state.ghi) : 0);
 
   // ── Yapısal Kontrol ──────────────────────────────────────────────────────────
-  let structuralCheck = null;
-  if (window.calculateStructural) {
-    structuralCheck = window.calculateStructural(state.cityName, state.tilt, systemPower, panelArea * panelCount);
-  }
+  const structuralCheck = calculateStructural(state.cityName, state.tilt, systemPower, panelArea * panelCount);
 
   // ── Vergi Avantajı ───────────────────────────────────────────────────────────
   let taxMetrics = null;
@@ -1506,13 +1499,13 @@ export async function runCalculation() {
     sourceQualityNote: authoritativeBackend
       ? scenarioSourceQualityNote(state.scenarioKey, 'python-backend')
       : scenarioSourceQualityNote(state.scenarioKey, usedFallback ? 'fallback-psh' : 'pvgis-live'),
-    pvgisFailReason: usedFallback && !authoritativeBackend ? (window._pvgisLastError || 'unknown') : null,
+    pvgisFailReason: usedFallback && !authoritativeBackend ? (getLastPvgisError() || 'unknown') : null,
     authoritativeEngineSource: authoritativeSourceMeta,
     authoritativeEngineResponse: authoritativeBackend || null,
     authoritativeFinancialBasis: 'frontend-8760-financial-model',
     backendFinancialEstimateWarning: authoritativeBackend?.financial?.warning || authoritativeBackend?.proposal?.warning || null,
     authoritativeEngineMode: authoritativeBackend ? 'python-pvlib-backed' : usedFallback ? 'local-fallback' : 'browser-pvgis',
-    authoritativeEngineFallbackReason: authoritativeBackend ? null : state.authoritativeEngineFallbackReason || (usedFallback ? (window._pvgisLastError || 'PVGIS unavailable; local fallback used.') : null),
+    authoritativeEngineFallbackReason: authoritativeBackend ? null : state.authoritativeEngineFallbackReason || (usedFallback ? (getLastPvgisError() || 'PVGIS unavailable; local fallback used.') : null),
     authoritativeProduction,
     engineParity,
     localProductionSnapshot,
@@ -1841,5 +1834,5 @@ function calculateTaxBenefits(totalCost, npvBase, tax, discountRate, kdvAmount =
 // calculation-service.js which wraps this function with the Python backend adapter.
 // A bare window.runCalculation would bypass the adapter, silently skipping pvlib/backend.
 // Use window.runCalculationService (set in calculation-service.js) for console/debug calls.
-window.calculateBatteryMetrics = calculateBatteryMetrics;
-window.calculateNMMetrics = calculateNMMetrics;
+// calculateBatteryMetrics ve calculateNMMetrics ES module export olarak yeterli;
+// app.js doğrudan import ile kullanıyor — window ataması gereksiz.
