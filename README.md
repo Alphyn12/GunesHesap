@@ -12,7 +12,7 @@
   <img alt="region" src="https://img.shields.io/badge/region-T%C3%BCrkiye-E11D48?style=for-the-badge">
 </p>
 
-Solar Rota, Türkiye odaklı bir güneş enerjisi ön fizibilite ve teklif hazırlama platformudur. Çatı geometrisi, panel/inverter seçimi, canlı güneş verisi, batarya, off-grid jeneratör, tarife rejimi ve 25 yıllık finansal tabloyu aynı hesaplama zincirinde birleştirir.
+Solar Rota, Türkiye odaklı bir güneş enerjisi ön fizibilite ve teklif hazırlama platformudur. Kurulum alanı geometrisi, panel/inverter seçimi, canlı güneş verisi, batarya, off-grid jeneratör, tarife rejimi ve 25 yıllık finansal tabloyu aynı hesaplama zincirinde birleştirir.
 
 Bu repo tek bir "panel sayısı x yıllık ışınım" hesabı değildir. Uygulama, veri kalitesine göre farklı motorları devreye alır:
 
@@ -31,7 +31,7 @@ Bu repo tek bir "panel sayısı x yıllık ışınım" hesabı değildir. Uygula
 - [Hesaplama Mimarisi](#hesaplama-mimarisi)
 - [Ana Akış](#ana-akış)
 - [1. Girdi ve Veri Sözleşmesi](#1-girdi-ve-veri-sözleşmesi)
-- [2. Çatı ve Panel Yerleşimi](#2-çatı-ve-panel-yerleşimi)
+- [2. Kurulum Alanı ve Panel Yerleşimi](#2-kurulum-alanı-ve-panel-yerleşimi)
 - [3. Üretim Motorları](#3-üretim-motorları)
 - [4. Kayıp Zinciri](#4-kayıp-zinciri)
 - [5. Saatlik On-Grid Enerji Dengesi](#5-saatlik-on-grid-enerji-dengesi)
@@ -52,7 +52,7 @@ Solar Rota'nın hedefi, farklı kullanıcı senaryolarında hızlı ama izlenebi
 
 | Senaryo | Uygulamanın hesapladığı ana konu | Kritik fark |
 |---|---|---|
-| On-grid | Çatı üretimi, öz tüketim, şebekeye ihracat, geri ödeme | PVGIS/8760 üretim-tüketim eşleştirmesi |
+| On-grid | Kurulum alanı üretimi, öz tüketim, şebekeye ihracat, geri ödeme | PVGIS/8760 üretim-tüketim eşleştirmesi |
 | Off-grid | PV + batarya + jeneratör ile yük karşılama | Kritik yük öncelikli dispatch ve SOC takibi |
 | Tarımsal sulama | Sezonluk pompa yükü ve üretim penceresi | 365 gün düz tüketim yerine sulama sezonu |
 | Isı pompası | Isıtma/soğutma ek elektrik yükü | COP/SPF tabanlı mevsimsel yük |
@@ -96,7 +96,7 @@ flowchart TD
 ## Ana Akış
 
 1. Kullanıcı senaryoyu seçer: on-grid, off-grid, sulama, ısı pompası, EV vb.
-2. Konum ve çatı geometrisi alınır: il, koordinat, poligon, alan, eğim, azimut.
+2. Konum ve kurulum alanı geometrisi alınır: il, koordinat, poligon, alan, eğim, azimut.
 3. Panel, inverter ve gerekiyorsa batarya/jeneratör seçilir.
 4. Tüketim girilir: günlük, aylık, 8.760 saatlik profil veya off-grid cihaz listesi.
 5. Tarife, ihracat bedeli, dağıtım bedeli, SKTT/kontrat modu ve finansal varsayımlar alınır.
@@ -120,7 +120,7 @@ Sözleşme şu blokları taşır:
 |---|---|
 | `scenario` | Senaryo anahtarı, etiket, teklif tonu |
 | `site` | Enlem, boylam, şehir, GHI, timezone |
-| `roof` | Alan, eğim, azimut, gölge, kirlenme, geometri |
+| `roof` | Teknik sözleşmede korunan alan bloğu: alan, eğim, azimut, gölge, kirlenme, geometri |
 | `system` | Panel Wp, panel alanı, sıcaklık katsayısı, inverter verimi, kablo kaybı, batarya |
 | `load` | Günlük/aylık/saatlik tüketim, off-grid kritik yük, cihaz listesi |
 | `offgrid` | Jeneratör, kötü hava, saha garanti ve dispatch ayarları |
@@ -130,22 +130,22 @@ Sözleşme şu blokları taşır:
 
 Bu yapı sayesinde panel Wp, panel alanı, inverter verimi ve kablo kaybı gibi değerler iki farklı motorda gizli default olarak yeniden icat edilmez; açıkça taşınır.
 
-## 2. Çatı ve Panel Yerleşimi
+## 2. Kurulum Alanı ve Panel Yerleşimi
 
-Çatı tarafı iki katmandan oluşur:
+Kurulum alanı tarafı iki katmandan oluşur:
 
 - Harita/poligon geometrisi: [js/roof-geometry.js](./js/roof-geometry.js)
 - Panel yerleşim hesabı: [js/calc-core.js](./js/calc-core.js)
 
 ### Poligon hesabı
 
-Kullanıcı haritada çatı poligonu çizer. Uygulama:
+Kullanıcı haritada kurulum alanı poligonu çizer. Uygulama:
 
 - Noktaları lokal metre koordinatlarına dönüştürür.
 - Shoelace formülüyle alanı hesaplar.
-- Kenar uzunluklarından dominant çatı yönünü tahmin eder.
+- Kenar uzunluklarından dominant panel/alan yönünü tahmin eder.
 - Azimut katsayısını üretir.
-- Çatı merkezini konum olarak kaydeder.
+- Kurulum alanı merkezini konum olarak kaydeder.
 
 Basitleştirilmiş formül:
 
@@ -155,7 +155,7 @@ panelCount   = floor(usableAreaM2 / panelAreaM2)
 systemPower  = panelCount * panelWattPeak / 1000
 ```
 
-Çoklu çatı modunda her yüzey ayrı hesaplanır:
+Çoklu kurulum yüzeyi modunda her yüzey ayrı hesaplanır:
 
 ```text
 totalPanelCount = sum(section.panelCount)
@@ -166,7 +166,7 @@ Her yüzey kendi alanı, eğimi, azimutu ve gölge oranıyla üretim hesabına g
 
 ### Tüketime göre boyutlandırma
 
-`designTarget = bill-offset` seçilirse sistem çatıyı tamamen doldurmak yerine yıllık tüketim hedefini baz alır.
+`designTarget = bill-offset` seçilirse sistem alanı tamamen doldurmak yerine yıllık tüketim hedefini baz alır.
 
 ```text
 targetSpecificYield = clamp(ghi * 0.85, 900, 1800)
@@ -676,7 +676,7 @@ GitHub Actions akışı:
 │   ├── pv-engine-contracts.js     # Frontend-backend hesap sözleşmesi
 │   ├── pvgis-fetch.js             # PVGIS proxy/direct/fallback veri alma
 │   ├── offgrid-dispatch.js        # Off-grid L2 dispatch
-│   ├── roof-geometry.js           # Çatı poligon/azimut/alan hesabı
+│   ├── roof-geometry.js           # Kurulum alanı poligon/azimut/alan hesabı
 │   ├── turkey-regulation.js       # Türkiye tarife ve regülasyon modeli
 │   ├── evidence-governance.js     # Kanıt ve faz kapıları
 │   └── ui-render.js               # Sonuç ve rapor UI render
@@ -736,6 +736,6 @@ Başlıca sınırlar:
 
 Solar Rota'nın hesaplama mantığı üç cümlede özetlenebilir:
 
-1. Çatı ve ekipman girdileriyle önce fiziksel sistem kapasitesi kurulur.
+1. Kurulum alanı ve ekipman girdileriyle önce fiziksel sistem kapasitesi kurulur.
 2. Üretim ve tüketim mümkün olan en yüksek çözünürlükte 8.760 saatlik profile dönüştürülür.
 3. Finansal ve operasyonel sonuçlar, hangi verinin gerçek hangisinin tahmin olduğunu gizlemeden raporlanır.

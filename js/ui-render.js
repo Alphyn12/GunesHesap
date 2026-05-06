@@ -439,7 +439,7 @@ export function renderResults() {
   const coveragePct = annualLoad > 0 ? Math.min(999, (Number(r.annualEnergy || 0) / annualLoad) * 100) : 0;
   const rows = [
     [tt('summarySystemSize'), `${r.systemPower.toFixed(2)} kWp · ${r.panelCount} ${i18n.t('report.panelCountUnit')}`],
-    [tt('summaryRoofUse'), roofAreaTotal > 0 ? `${roofUseArea.toFixed(1)} m² panel yerleşimi / ${roofAreaTotal.toFixed(1)} m² çatı` : '—'],
+    [tt('summaryRoofUse'), roofAreaTotal > 0 ? `${roofUseArea.toFixed(1)} m² panel yerleşimi / ${roofAreaTotal.toFixed(1)} m² alan` : '—'],
     [tt('summaryAnnualProduction'), `${Number(r.annualEnergy || 0).toLocaleString(activeLocale)} kWh/${i18n.t('units.year')}`],
     [tt('summaryMonthlyAverage'), `${Math.round((Number(r.annualEnergy || 0) / 12)).toLocaleString(activeLocale)} kWh/ay`],
     [tt('summaryConsumption'), `${annualLoad.toLocaleString(activeLocale)} kWh/${i18n.t('units.year')}`],
@@ -457,7 +457,7 @@ export function renderResults() {
     tbody.appendChild(tr);
   });
 
-  // ── Çatı yüzeyleri kırılımı ───────────────────────────────────────────────
+  // ── Kurulum yüzeyleri kırılımı ────────────────────────────────────────────
   const sectionCard = document.getElementById('section-breakdown-card');
   const sectionBody = document.getElementById('section-breakdown-body');
   if (r.sectionResults && r.sectionResults.length > 1 && sectionCard && sectionBody) {
@@ -1720,7 +1720,7 @@ function renderStructuralResults(sc) {
   const overallStatus = snowStatus === 'danger' || windStatus === 'danger'
     ? { label: 'Detaylı statik inceleme gerekli', color: 'danger', note: 'Yükler yüksek göründüğü için mühendislik onayı olmadan uygulama önerilmez.' }
     : snowStatus === 'warn' || windStatus === 'warn'
-      ? { label: 'Saha ve taşıyıcı kontrol önerilir', color: 'warn', note: 'Kurulum öncesi çatı taşıyıcısı ve bağlantı detayları yerinde doğrulanmalıdır.' }
+      ? { label: 'Saha ve taşıyıcı kontrol önerilir', color: 'warn', note: 'Kurulum öncesi taşıyıcı yüzey, konstrüksiyon ve bağlantı detayları yerinde doğrulanmalıdır.' }
       : { label: 'İlk bakışta uygulanabilir görünüyor', color: 'good', note: 'Yine de nihai taşıyıcı kararını statik proje ve saha kontrolü vermelidir.' };
 
   card.innerHTML = `
@@ -1732,7 +1732,7 @@ function renderStructuralResults(sc) {
       <article class="structural-insight-card">
         <div class="structural-insight-value structural-insight--${snowStatus}">${sc.snowLoad.toFixed(2)} kN/m²</div>
         <div class="structural-insight-label">Kar yükü · ${sc.snowZone}</div>
-        <div class="structural-insight-note">Kış koşullarında çatının taşıması beklenen ek yük. Bölge ağırlaştıkça bağlantı detayları daha kritik hale gelir.</div>
+        <div class="structural-insight-note">Kış koşullarında taşıyıcı yüzeyin veya konstrüksiyonun taşıması beklenen ek yük. Bölge ağırlaştıkça bağlantı detayları daha kritik hale gelir.</div>
       </article>
       <article class="structural-insight-card">
         <div class="structural-insight-value structural-insight--${windStatus}">${sc.windPressure.toFixed(2)} kN/m²</div>

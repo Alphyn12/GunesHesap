@@ -178,7 +178,7 @@ export async function refreshOSMShadowAnalysis() {
   if (!state?.osmShadowEnabled) return null;
   const center = state.roofGeometry?.centroid || (state.lat && state.lon ? { lat: state.lat, lng: state.lon } : null);
   if (!center) {
-    window.showToast?.('Önce haritadan konum seçin veya çatı poligonu çizin.', 'error');
+    window.showToast?.('Önce haritadan konum seçin veya kurulum alanı poligonu çizin.', 'error');
     return null;
   }
   const summary = document.getElementById('osm-shadow-summary');

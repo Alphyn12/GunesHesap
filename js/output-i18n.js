@@ -13,7 +13,7 @@ const MESSAGE_RULES = [
   [/^supplierQuote: geçerlilik tarihi yok; marj ve satış fiyatı riskli\.$/, 'warnings.supplierQuoteValidityMissing', []],
   [/^Tarife kaynak kontrol tarihi 45 günden eski veya eksik\.$/, 'warnings.tariffSourceStale45', []],
   [/^PVGIS canlı veri yok; fallback üretim quote-ready kabul edilmez\.$/, 'warnings.pvgisLiveDataMissing', []],
-  [/^Çatı geometrisi harita\/saha çizimiyle doğrulanmadı\.$/, 'warnings.roofGeometryUnverified', []],
+  [/^(?:Çatı|Kurulum alanı) geometrisi harita\/saha çizimiyle doğrulanmadı\.$/, 'warnings.roofGeometryUnverified', []],
   [/^Teklif varsayımları yetkili kullanıcı tarafından doğrulanmadı\.$/, 'warnings.proposalInputsUnverified', []],
   [/^Müşteri fatura\/tüketim verisi doğrulanmadı\.$/, 'warnings.customerBillUnverified', []],
   [/^Proposal onay durumu approved değil\.$/, 'warnings.proposalNotApproved', []],

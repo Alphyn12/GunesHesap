@@ -24,7 +24,7 @@ export const PANEL_CATALOG = [
     vocCoeffPctPerC: -0.25,
     warrantyText: '25 yıl ürün / 30 yıl performans',
     certifications: 'IEC 61215, IEC 61730, IEC 61701, IEC 62716',
-    idealFor: 'Sınırlı çatı alanında yüksek güç yoğunluğu isteyen konut çatıları',
+    idealFor: 'Sınırlı alanda yüksek güç yoğunluğu isteyen konut kurulumları',
     watchFor: 'PERC sınıfına göre ilk yatırım maliyeti daha yüksektir.',
     sourceType: 'Üretici datasheet',
     verifiedAt: '2026-04-22',
@@ -121,7 +121,7 @@ export const PANEL_CATALOG = [
     vocCoeffPctPerC: -0.24,
     warrantyText: '25 yıl ürün / 30 yıl lineer performans',
     certifications: 'IEC 61215, IEC 61730, IEC 61701, IEC 62716',
-    idealFor: 'Açık renk zemin, sehpa sistem, carport ve yükseltilmiş çatı kurulumları',
+    idealFor: 'Açık renk zemin, sehpa sistem, carport ve yükseltilmiş montaj kurulumları',
     watchFor: 'Koyu membran veya yüzeye sıfır montajda arka yüz kazancı sınırlı kalır.',
     sourceType: 'Üretici datasheet',
     verifiedAt: '2026-04-22',
@@ -185,8 +185,8 @@ export const PANEL_CATALOG = [
     vocCoeffPctPerC: -0.27,
     warrantyText: '25 yıl ürün / 25 yıl performans',
     certifications: 'IEC / UL varyantı bölgeye göre',
-    idealFor: 'Estetik görünüm ve marka güveni arayan premium çatı projeleri',
-    watchFor: 'Daha düşük watt sınıfı nedeniyle büyük çatıda aynı kWp için daha fazla adet gerekebilir.',
+    idealFor: 'Estetik görünüm ve marka güveni arayan premium konut projeleri',
+    watchFor: 'Daha düşük watt sınıfı nedeniyle büyük alanlarda aynı kWp için daha fazla adet gerekebilir.',
     sourceType: 'Üretici datasheet',
     verifiedAt: '2026-04-22',
     sourceLabel: 'Qcells resmi ürün sayfası',
@@ -206,7 +206,7 @@ export const PANEL_CATALOG_TECH_FILTERS = [
 
 export const PANEL_CATALOG_SEGMENT_FILTERS = [
   { id: 'all', label: 'Tüm segmentler' },
-  { id: 'residential', label: 'Konut çatı' },
+  { id: 'residential', label: 'Konut kurulumu' },
   { id: 'premium', label: 'Premium konut' },
   { id: 'carport', label: 'Carport / sehpa' }
 ];

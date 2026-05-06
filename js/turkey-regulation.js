@@ -315,7 +315,7 @@ export function buildQuoteReadiness({ state = {}, results = {}, tariffModel = nu
     if (productionWeatherIsSynthetic) {
       blockers.push(`Üretim verisi sentetik meteoroloji modelinden geliyor (${productionWeatherSource}); off-grid teklif için PVGIS canlı/TMY veya ölçülmüş hava verisi zorunlu.`);
     }
-    if (!state.roofGeometry) blockers.push('Çatı geometrisi harita/saha çizimiyle doğrulanmadı.');
+    if (!state.roofGeometry) blockers.push('Kurulum alanı geometrisi harita/saha çizimiyle doğrulanmadı.');
     if (!state.quoteInputsVerified) blockers.push('Teklif varsayımları yetkili kullanıcı tarafından doğrulanmadı.');
     if (!hasMeaningfulConsumptionEvidence(state) && !hasHourlyConsumptionProfile) blockers.push('Off-grid toplam yük kaynağı doğrulanmadı.');
     if (state.bomCommercials?.supplierQuoteState !== 'received') blockers.push('Tedarikçi BOM teklifi alınmadı.');
@@ -354,7 +354,7 @@ export function buildQuoteReadiness({ state = {}, results = {}, tariffModel = nu
   if (productionWeatherIsSynthetic) {
     blockers.push(`Üretim verisi sentetik meteoroloji modelinden geliyor (${productionWeatherSource}); ticari teklif için PVGIS canlı/TMY veya ölçülmüş hava verisi zorunlu.`);
   }
-  if (!state.roofGeometry) blockers.push('Çatı geometrisi harita/saha çizimiyle doğrulanmadı.');
+  if (!state.roofGeometry) blockers.push('Kurulum alanı geometrisi harita/saha çizimiyle doğrulanmadı.');
   if (!state.quoteInputsVerified) blockers.push('Teklif varsayımları yetkili kullanıcı tarafından doğrulanmadı.');
   if (!hasMeaningfulConsumptionEvidence(state)) blockers.push('Müşteri fatura/tüketim verisi doğrulanmadı.');
   if (!tariffModel?.regulation?.effectiveRegime) blockers.push('Tarife rejimi belirlenemedi.');

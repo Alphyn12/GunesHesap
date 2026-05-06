@@ -73,19 +73,19 @@ const CALC_SCENARIO_SUMMARIES = {
   'off-grid': 'Bağımsız sistem için üretim, kritik yük, batarya ve yedekleme davranışı birlikte değerlendiriliyor.',
   'agricultural-irrigation': 'Sulama senaryosunda mevsimsel yük, üretim penceresi ve saha uygunluğu birlikte analiz ediliyor.',
   'heat-pump': 'Isı pompası yükü mevsimsel tüketim profiliyle eşleştirilerek sistem boyutu netleştiriliyor.',
-  'ev-charging': 'Araç şarj yükü ile çatı üretim profili eşleştirilip sistem kapasitesi dengeleniyor.',
+  'ev-charging': 'Araç şarj yükü ile kurulum alanı üretim profili eşleştirilip sistem kapasitesi dengeleniyor.',
   'mobile-offgrid': 'Mobil bağımsız sistem için kompakt üretim ve depolama mimarisi değerlendiriliyor.'
 };
 
 const CALC_FOCUS_BY_STEP = {
   'on-grid': [
-    'Çatı ve ışınım verisi çekiliyor; saha potansiyeli doğrulanıyor.',
+    'Kurulum alanı ve ışınım verisi çekiliyor; saha potansiyeli doğrulanıyor.',
     'Saatlik üretim davranışı ve hava etkileri modele ekleniyor.',
     'Üretim, öz tüketim ve şebeke etkileşimi dengeleniyor.',
     'Tasarruf, nakit akışı ve geri ödeme hesapları tamamlanıyor.'
   ],
   'off-grid': [
-    'Çatı ve ışınım verisi çekiliyor; bağımsız çalışma potansiyeli doğrulanıyor.',
+    'Kurulum alanı ve ışınım verisi çekiliyor; bağımsız çalışma potansiyeli doğrulanıyor.',
     'Kritik yük ve saatlik davranış modeli kuruluyor.',
     'Üretim, batarya ve yedek güç dengesi simüle ediliyor.',
     'Toplam yatırım ve işletme maliyetleri tamamlanıyor.'
@@ -143,7 +143,7 @@ export function finalizeCalculationUI({ success = false, targetStep = null, erro
 // FIX-2: Tilt factor lookup for PSH fallback path.
 // Tek kaynak: app.js bu tabloyu/yardımcıyı bu modülden import eder; backend simple_engine.py
 // içindeki Python eşdeğeri ile bilinçli olarak senkron tutulmalı (manuel parite).
-// Optimum 30–35° (coeff = 1.00); düz çatı (0°) ~%22, dik (90°) ~%38 kayıp.
+// Optimum 30–35° (coeff = 1.00); düz yüzey (0°) ~%22, dik (90°) ~%38 kayıp.
 export const TILT_COEFFS = {0:0.78,10:0.90,15:0.94,20:0.97,25:0.99,30:1.00,33:1.00,35:1.00,40:0.99,45:0.97,50:0.94,60:0.87,75:0.75,90:0.62};
 export function getTiltCoeff(deg) {
   const keys = Object.keys(TILT_COEFFS).map(Number).sort((a, b) => a - b);
@@ -185,7 +185,7 @@ function formatStageEnergy(state) {
 
 function formatStageTarget(state) {
   if (state.designTarget === 'bill-offset') return 'Tüketime göre boyutlandırma';
-  return 'Maksimum çatı kapasitesi';
+  return 'Maksimum alan kapasitesi';
 }
 
 export function refreshCalculationStageMeta(msgIdx = 0) {
@@ -253,7 +253,7 @@ function offgridBatteryChemistryDefaults(chemistry = '') {
 function classifyOutputConfidence({ usedFallback, warnings = [], state }) {
   const blocking = [];
   if (usedFallback) blocking.push('PVGIS yerine PSH fallback kullanıldı.');
-  if (!state?.roofGeometry) blocking.push('Çatı geometrisi saha keşfiyle doğrulanmadı.');
+  if (!state?.roofGeometry) blocking.push('Kurulum alanı geometrisi saha keşfiyle doğrulanmadı.');
   if (state?.osmShadowEnabled && !state?.osmShadow?.buildings) blocking.push('OSM gölge analizi doğrulanmış bina verisi içermiyor.');
   if (warnings.length) blocking.push(...warnings.slice(0, 5));
   if (state?.quoteReadyApproved === true && state?.quoteInputsVerified === true && !usedFallback && blocking.length === 0) {
@@ -442,7 +442,7 @@ export async function runCalculation() {
 
   const totalPCCheck = layout.panelCount;
   if (totalPCCheck === 0) {
-    finalizeCalculationUI({ targetStep: 3, errorMsg: 'Panel sayısı sıfır. Lütfen çatı alanını artırın (min ~5 m² gerekli).' });
+    finalizeCalculationUI({ targetStep: 3, errorMsg: 'Panel sayısı sıfır. Lütfen kurulum alanını artırın (min ~5 m² gerekli).' });
     return;
   }
 
@@ -640,7 +640,7 @@ export async function runCalculation() {
 
   const validSections = sectionResults.filter(r => r !== null);
   if (validSections.length === 0) {
-    finalizeCalculationUI({ targetStep: 5, errorMsg: 'Hesaplama başarısız. Lütfen panel ve çatı ayarlarını kontrol edin.' });
+    finalizeCalculationUI({ targetStep: 5, errorMsg: 'Hesaplama başarısız. Lütfen panel ve kurulum alanı ayarlarını kontrol edin.' });
     return;
   }
 

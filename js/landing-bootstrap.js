@@ -120,7 +120,7 @@
   // Ürün Turu — 7 adım tab navigation
   var lpTourCurrent = 1;
   var lpTourLabels = {
-    1: 'Senaryo', 2: 'Konum', 3: 'Çatı',
+    1: 'Senaryo', 2: 'Konum', 3: 'Kurulum Alanı',
     4: 'Ekipman', 5: 'Ayarlar', 6: 'Hesapla', 7: 'Sonuçlar'
   };
   window.lpTourStep = function(n){

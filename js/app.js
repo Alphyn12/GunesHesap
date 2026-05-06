@@ -371,7 +371,7 @@ window.state = {
   enginePreference: 'pvgis-hybrid-js',
   backendEngineAvailable: null,
   backendEngineLastError: null,
-  // Çoklu çatı
+  // Çoklu kurulum yüzeyi
   multiRoof: false,
   roofSections: [],
   roofGeometry: null,
@@ -678,7 +678,7 @@ function initMap() {
   // ── Layer control ────────────────────────────────────────
   L.control.layers({
     'Koyu (Genel)': darkLayer,
-    'Uydu (Çatı Çizimi İçin)': satelliteLayer,
+    'Uydu (Kurulum Alanı Çizimi İçin)': satelliteLayer,
     'OpenStreetMap': osmLayer
   }, {}, { position: 'bottomleft', collapsed: false }).addTo(map);
 
@@ -1432,7 +1432,7 @@ function updateTilt(val) {
   if (summaryAngleEl) summaryAngleEl.textContent = val + '°';
   positionRangeThumb('tilt-slider', 'tilt-val', 0, 90);
 
-  // Pivot point: (155, 145) — çatı köşesi
+  // Pivot point: (155, 145) — panel dayanak noktası
   const pivotX = 155, pivotY = 145;
   const panelGroup = document.getElementById('panel-group');
   if (panelGroup) panelGroup.setAttribute('transform', `rotate(-${val}, ${pivotX}, ${pivotY})`);
@@ -2197,7 +2197,7 @@ function syncOffgridDesignTargetCards() {
   if (note) {
     note.textContent = target === 'bill-offset'
       ? 'Elektrik ihtiyacına göre sistem seçili: panel sayısı, seçilen profil veya cihaz listesinden türeyen yıllık yüke göre sınırlandırılır.'
-      : 'Maksimum çatı kapasitesi seçili: panel sayısı çatının net kullanılabilir alanına göre sınırlandırılır; fazla üretim ve otonomi potansiyeli ayrıca değerlendirilir.';
+      : 'Maksimum alan kapasitesi seçili: panel sayısı net kullanılabilir alana göre sınırlandırılır; fazla üretim ve otonomi potansiyeli ayrıca değerlendirilir.';
   }
   const hideLoadProfiles = target === 'fill-roof';
   const simpleProfileElements = [
@@ -2285,7 +2285,7 @@ function updateOnGridFlowSummary() {
     ? 'Maksimum teknik performans'
     : 'Elektrik faturasını dengele';
   const targetCopy = s.designTarget === 'fill-roof'
-    ? 'Çatı alanı izin verdiği sürece panel sayısı artırılır.'
+    ? 'Kurulum alanı izin verdiği sürece panel sayısı artırılır.'
     : 'Sistem yıllık tüketimi karşılayacak seviyede sınırlandırılır.';
   const settlement = s.exportSettlementMode === 'auto'
     ? (s.settlementDate ? `${i18n.t('onGridFlow.settlementAuto')} (${s.settlementDate})` : i18n.t('onGridFlow.settlementAutoMissing'))
@@ -2303,15 +2303,15 @@ function updateOnGridFlowSummary() {
     <div><strong>${annual.toLocaleString('tr-TR')} kWh/yıl</strong><span>Hesapta kullanılan tüketim hedefi</span></div>
     <div><strong>${monthlyKwh > 0 ? `${monthlyKwh.toLocaleString('tr-TR')} kWh/${currentMonthLabel}` : 'Otomatik'}</strong><span>Girilen fatura ayı tüketimi; yıllık değer bu aydan ölçeklenir</span></div>
     <div><strong>${monthlyBill > 0 ? `${formatMonthlyBillTry(monthlyBill)} ₺/${currentMonthLabel}` : 'Otomatik'}</strong><span>Seçili tarife varsayımına göre aynı ay için yaklaşık fatura karşılığı</span></div>
-    <div><strong>${defaultsSummary}</strong><span>Basit modun otomatik profili ve çatı kabulü</span></div>
+    <div><strong>${defaultsSummary}</strong><span>Basit modun otomatik profili ve alan kabulü</span></div>
     <div><strong>${settlement}</strong><span>${i18n.t('onGridFlow.summarySettlement')}</span></div>
     <div><strong>${profileSource}</strong><span>Tüketim eğrisinin hesapta üretildiği kaynak</span></div>
   `;
   const basicNarrative = document.getElementById('on-grid-basic-target-copy');
   if (basicNarrative) {
     basicNarrative.textContent = s.designTarget === 'fill-roof'
-      ? 'Bu seçimde sistem, çatının net kullanılabilir alanı ve panel ölçülerine göre teknik olarak sığabilecek en yüksek kurulu güce çıkarılır. Tüketiminiz daha düşük olsa bile sonuç sayfasında olası fazla üretim ayrıca gösterilir.'
-      : `Bu seçimde sistem, yıllık yaklaşık ${annual.toLocaleString('tr-TR')} kWh tüketimi karşılamaya odaklanır. Kullanıcı ek veri vermezse dengeli tüketim profili, ${Math.round((Number(s.usableRoofRatio) || 0.75) * 100)}% net çatı kullanımı ve otomatik mahsuplaşma varsayımı uygulanır.`;
+      ? 'Bu seçimde sistem, net kullanılabilir alan ve panel ölçülerine göre teknik olarak sığabilecek en yüksek kurulu güce çıkarılır. Tüketiminiz daha düşük olsa bile sonuç sayfasında olası fazla üretim ayrıca gösterilir.'
+      : `Bu seçimde sistem, yıllık yaklaşık ${annual.toLocaleString('tr-TR')} kWh tüketimi karşılamaya odaklanır. Kullanıcı ek veri vermezse dengeli tüketim profili, ${Math.round((Number(s.usableRoofRatio) || 0.75) * 100)}% net alan kullanımı ve otomatik mahsuplaşma varsayımı uygulanır.`;
   }
   const quickBillNote = document.getElementById('on-grid-bill-estimate-note');
   if (quickBillNote) {
@@ -2565,7 +2565,7 @@ function updateProposalGovernanceInput() {
       connectionOpinion: 'Dağıtım şirketi bağlantı görüşü',
       singleLine: 'Tek hat şeması',
       staticReview: 'Statik uygunluk/taşıyıcı sistem kontrolü',
-      layout: 'Çatı yerleşim planı',
+      layout: 'Kurulum alanı yerleşim planı',
       inverterDocs: 'İnverter/panel teknik dokümanları',
       metering: 'Sayaç/mahsuplaşma gereksinimleri'
     };
@@ -2879,7 +2879,7 @@ function syncRoofOrientationUI({ azimuth, coeff, name } = {}) {
   const mapLabel = document.getElementById('roof-map-compass-label');
   const mapDegree = document.getElementById('roof-map-compass-degree');
   if (mapArrow) mapArrow.style.transform = `rotate(${safeAzimuth}deg)`;
-  if (mapLabel) mapLabel.textContent = `Çatı yönü: ${safeName}`;
+  if (mapLabel) mapLabel.textContent = `Panel yönü: ${safeName}`;
   if (mapDegree) mapDegree.textContent = `${Math.round(safeAzimuth)}°`;
 }
 
@@ -3051,7 +3051,7 @@ function describePanelTypeScenario(panelType) {
   const panelText = usesLoadTarget
     ? `${layout.panelCount}/${roofCapacityLayout.panelCount} panel`
     : `${layout.panelCount} panel`;
-  return `Bu çatıda: ${panelText} · ${layout.systemPower.toFixed(2)} kWp · ${areaText}`;
+  return `Bu alanda: ${panelText} · ${layout.systemPower.toFixed(2)} kWp · ${areaText}`;
 }
 
 function updateSimplePanelCardScenarioSummaries() {
@@ -3080,7 +3080,7 @@ function describePanelCardScenario(entry) {
     ? `${layout.panelCount}/${roofCapacityLayout.panelCount} panel`
     : `${layout.panelCount} panel`;
   const sizingNote = panel.dimensionsSource === 'catalog' ? '' : ' · ölçü varsayımı';
-  return `Bu çatıda: ${panelText} · ${layout.systemPower.toFixed(2)} kWp · ${areaText}${sizingNote}`;
+  return `Bu alanda: ${panelText} · ${layout.systemPower.toFixed(2)} kWp · ${areaText}${sizingNote}`;
 }
 
 function updatePanelCardScenarioSummaries(visibleCatalog = null) {
@@ -3378,13 +3378,13 @@ function updatePanelPreview() {
     const previewVerb = isBillTarget ? 'seçilir' : 'sığar';
     preview.textContent = totalPanelCount > 0
       ? (isBillTarget && roofCapacityPanelCount > totalPanelCount
-        ? `${loadTargetLabel}ne göre ≈ ${totalPanelCount} panel seçilir (${systemPower.toFixed(2)} kWp). Bu çatıya teknik olarak ≈ ${roofCapacityPanelCount} panel sığar (${roofCapacitySystemPower.toFixed(2)} kWp, ${roofCapacityPlacedArea.toFixed(1)}/${usableArea.toFixed(1)} m² net).`
-        : `≈ ${totalPanelCount} panel ${previewVerb} (${systemPower.toFixed(2)} kWp, brüt çatı ${roofAreaTotal.toFixed(1)} m², net ${usableArea.toFixed(1)} m², yerleşen panel ${placedArea.toFixed(1)} m²)`)
+        ? `${loadTargetLabel}ne göre ≈ ${totalPanelCount} panel seçilir (${systemPower.toFixed(2)} kWp). Bu alana teknik olarak ≈ ${roofCapacityPanelCount} panel sığar (${roofCapacitySystemPower.toFixed(2)} kWp, ${roofCapacityPlacedArea.toFixed(1)}/${usableArea.toFixed(1)} m² net).`
+        : `≈ ${totalPanelCount} panel ${previewVerb} (${systemPower.toFixed(2)} kWp, brüt alan ${roofAreaTotal.toFixed(1)} m², net ${usableArea.toFixed(1)} m², yerleşen panel ${placedArea.toFixed(1)} m²)`)
       : '';
   }
   const roofMode = document.getElementById('on-grid-roof-mode-preview');
   if (roofMode) {
-    const target = isBillTarget ? `${loadTargetLabel} kadar boyutlandır` : 'Çatıyı teknik sınıra kadar kullan';
+    const target = isBillTarget ? `${loadTargetLabel} kadar boyutlandır` : 'Alanı teknik sınıra kadar kullan';
     roofMode.textContent = `${target} · ${Math.round(usableRatio * 100)}% kullanılabilir alan · ${totalPanelCount}/${roofCapacityPanelCount} panel · ${placedArea.toFixed(1)}/${usableArea.toFixed(1)} m²`;
   }
   if (getPanelSelectionMode() === 'advanced') updatePanelCardScenarioSummaries();
@@ -3576,13 +3576,13 @@ function validateStep2() {
   goToStep(3);
 }
 
-// ADIM 3: Çatı alanı doğrula → Adım 4
+// ADIM 3: Kurulum alanı doğrula → Adım 4
 function validateStep3() {
   const state = window.state;
   const area = parseFloat(document.getElementById('roof-area').value);
   if (!area || area < 10 || area > 2000) {
     syncRoofAreaValidationUi(true);
-    setStepInlineAlert(3, 'Çatı alanı 10 ile 2000 m² arasında olmalıdır.');
+    setStepInlineAlert(3, 'Kurulum alanı 10 ile 2000 m² arasında olmalıdır.');
     return;
   }
   syncRoofAreaValidationUi(false);
@@ -3688,7 +3688,7 @@ function toggleMultiRoof(checked) {
 
 function addRoofSection() {
   if (window.state.roofSections.length >= 2) {
-    showToast('Maksimum 3 çatı yüzeyi eklenebilir (1 ana + 2 ek).', 'warning'); return;
+    showToast('Maksimum 3 kurulum yüzeyi eklenebilir (1 ana + 2 ek).', 'warning'); return;
   }
   const id = Date.now();
   window.state.roofSections.push({ id, area: 30, tilt: 20, azimuth: 90, azimuthCoeff: 0.85, azimuthName: 'Doğu', shadingFactor: 10 });
@@ -3738,8 +3738,8 @@ function renderRoofSections() {
     div.innerHTML = `
       <div class="roof-section-header">
         <div class="roof-section-title-wrap">
-          <div class="roof-section-title"><span class="roof-section-index">${secNum}</span> Ek Çatı Yüzeyi</div>
-          <div class="roof-section-subtitle">Bu yüzey ana çatıdan bağımsız yön, eğim ve gölge değerleriyle hesaplanır.</div>
+          <div class="roof-section-title"><span class="roof-section-index">${secNum}</span> Ek Kurulum Yüzeyi</div>
+          <div class="roof-section-subtitle">Bu yüzey ana alandan bağımsız yön, eğim ve gölge değerleriyle hesaplanır.</div>
         </div>
         <button class="remove-section-btn" data-click-action="removeRoofSection" data-arg="${sec.id}" data-arg-type="number">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -4503,7 +4503,7 @@ window.clearRoofDrawing = function() {
     window.state.roofGeometry = null;
     const roofAreaInput = document.getElementById('roof-area');
     if (roofAreaInput) roofAreaInput.value = '';
-    showToast('Çatı çizimleri temizlendi.', 'info');
+    showToast('Kurulum alanı çizimleri temizlendi.', 'info');
     document.getElementById('clear-roof-btn').style.display = 'none';
     const startHint = document.getElementById('roof-draw-start-hint');
     if (startHint) startHint.style.display = 'flex';

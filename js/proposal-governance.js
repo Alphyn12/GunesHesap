@@ -266,7 +266,7 @@ export function calculateProposalConfidence({ state = {}, results = {}, quoteRea
   // PVGIS fallback aynı zamanda buildApprovalWorkflow'da hard-blocker; ikisi tutarlı
   // olarak fallback'i quote-ready'den engelliyor (confidence -25, approval blocked).
   if (results.usedFallback) add(25, 'PVGIS canlı veri yok.');
-  if (!state.roofGeometry) add(15, 'Çatı geometrisi doğrulanmadı.');
+  if (!state.roofGeometry) add(15, 'Kurulum alanı geometrisi doğrulanmadı.');
   if (!hasMeaningfulConsumptionEvidence(state)) add(15, 'Fatura/tüketim kanıtı yok.');
   // Kanıt yönetimi blocker'ları için 5 puan/blocker × max 35 (önceki 25 cap, çok blocker
   // varken yeterince agresif ceza vermiyordu — quote-ready eşiği 85'in altına itmek için).
@@ -313,7 +313,7 @@ export function buildApprovalWorkflow(state = {}, confidence = null) {
     if (!canApproveProposal(user) && !existingRecord) blockers.push('Yalnızca approver/admin rolü proposal onayı verebilir.');
     if (legacyApprovalWithoutBasis || approvalBasisChanged) blockers.push('Proposal ticari temeli değişti; mevcut onay geçersiz, yeni revizyon/onay gerekli.');
     if (state.results?.usedFallback) blockers.push('PVGIS canlı veri yok; fallback üretim quote-ready kabul edilmez.');
-    if (!state.roofGeometry) blockers.push('Çatı geometrisi harita/saha çizimiyle doğrulanmadı.');
+    if (!state.roofGeometry) blockers.push('Kurulum alanı geometrisi harita/saha çizimiyle doğrulanmadı.');
     if (!state.quoteInputsVerified) blockers.push('Teklif varsayımları doğrulanmadan onay verilemez.');
     if (!hasMeaningfulConsumptionEvidence(state)) blockers.push('Fatura/tüketim kanıtı olmadan onay verilemez.');
     if (confidence && confidence.score < 85) blockers.push('Güven skoru 85 altında; quote-ready onay bloke edildi.');
@@ -435,7 +435,7 @@ export function defaultGridApplicationChecklist(existing = {}) {
     ['connectionOpinion', 'Dağıtım şirketi bağlantı görüşü'],
     ['singleLine', 'Tek hat şeması'],
     ['staticReview', 'Statik uygunluk/taşıyıcı sistem kontrolü'],
-    ['layout', 'Çatı yerleşim planı'],
+    ['layout', 'Kurulum alanı yerleşim planı'],
     ['inverterDocs', 'İnverter/panel teknik dokümanları'],
     ['metering', 'Sayaç/mahsuplaşma gereksinimleri']
   ];

@@ -201,7 +201,7 @@ export function renderSunPath() {
     }));
   }
 
-  // ─── Çatı yön oku (kalın, okbaşı ile) ────────────────────────────────────
+  // ─── Panel yön oku (kalın, okbaşı ile) ───────────────────────────────────
   const roofAz = state.azimuth || 180;
   const roofRad = toRad(roofAz - 90);
   const arrowLen = R * 0.60;
@@ -221,10 +221,10 @@ export function renderSunPath() {
     'marker-end': 'url(#arrowhead)'
   }));
 
-  // "Çatı Yönü" etiketi
+  // "Panel Yönü" etiketi
   const lx = cx + (arrowLen + 18) * Math.cos(roofRad);
   const ly = cy + (arrowLen + 18) * Math.sin(roofRad);
-  svg.appendChild(svgText(lx.toFixed(1), ly.toFixed(1), `Çatı ${roofAz}°`, {
+  svg.appendChild(svgText(lx.toFixed(1), ly.toFixed(1), `Panel ${roofAz}°`, {
     fill: '#F59E0B', 'font-size': '9', 'font-weight': '700',
     'text-anchor': lx > cx ? 'start' : 'end'
   }));
