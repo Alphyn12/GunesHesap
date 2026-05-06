@@ -421,7 +421,7 @@ window.state = {
   contractedPowerKw: 10,
   contractedTariff: DEFAULT_RESIDENTIAL_TARIFF,
   skttTariff: DEFAULT_RESIDENTIAL_TARIFF,
-  exportTariff: 0,
+  exportTariff: 2.27,
   annualPriceIncrease: 0.12,
   discountRate: 0.18,
   tariffIncludesTax: true,
@@ -2400,7 +2400,7 @@ function updateTariffAssumptions() {
   };
   let importTariffBase = readNumber('tariff-input', s.importTariffBase || s.tariff || DEFAULT_RESIDENTIAL_TARIFF);
   s.importTariffBase = importTariffBase;
-  s.exportTariff = readNumber('export-tariff-input', s.exportTariff ?? 0);
+  s.exportTariff = readNumber('export-tariff-input', s.exportTariff ?? 2.27);
   if (s.scenarioKey === 'on-grid') updateOnGridAssumptions();
   importTariffBase = readNumber('tariff-input', s.importTariffBase || importTariffBase);
   s.importTariffBase = importTariffBase;
@@ -4123,7 +4123,7 @@ window.addEventListener('load', () => {
 window.goToStep = goToStep;
 window.requestStepChange = requestStepChange;
 // F1.B.2 — step-nav grubu: 18 inline onclick'in yerine data-action delegation.
-registerActions({ goToStep, requestStepChange });
+registerActions({ goToStep, requestStepChange, setExportTariffAuto });
 window.validateStep1 = validateStep1;
 window.validateStep2 = validateStep2;
 window.validateStep3 = validateStep3;
@@ -4389,6 +4389,16 @@ function updateOmRateFromInput(_arg, el) {
 }
 function updateInsuranceRateFromInput(_arg, el) {
   if (el) window.state.insuranceRate = parseFloat(el.value) || 0;
+}
+function setExportTariffAuto() {
+  const tariffEl = document.getElementById('tariff-input');
+  const exportEl = document.getElementById('export-tariff-input');
+  if (!tariffEl || !exportEl) return;
+  const pst = parseFloat(tariffEl.value) || 0;
+  const autoVal = Math.round(pst * 0.70 * 100) / 100;
+  exportEl.value = autoVal;
+  updateTariffAssumptions();
+  if (window.state?.results) renderResults();
 }
 function setManualUsdTryRateAndRefresh(_arg, el) {
   if (!el) return;

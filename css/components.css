@@ -1185,6 +1185,11 @@ body>main{z-index:auto}
   line-height: 1.6;
 }
 
+.expert-modules-section {
+  margin-top: 24px;
+  padding: 0 0 8px;
+}
+
 .step5-module-section-head {
   margin: 18px 0 12px;
   padding: 14px 16px;
