@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
@@ -2212,13 +2212,325 @@
 
   <div id="offgrid-l2-anchor"></div>
 
+  <!-- ═══ UZMAN ANALİZ MODÜLLERİ ═══ -->
+  <details class="card expert-modules-card" id="expert-modules-section">
+    <summary class="expert-modules-summary">
+      <span class="expert-modules-summary-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        Uzman Analiz Modülleri
+      </span>
+      <span class="expert-modules-summary-copy">Her modül hesaba bağımsız bir analiz katmanı ekler. Senaryonuzla ilgili olanları açın.</span>
+    </summary>
+    <div class="expert-modules-body">
+    <div class="step5-inline-note" id="scenario-guidance-panel"></div>
+
+    <div class="form-group" id="step5-daily-consumption-block">
+      <label>Günlük Elektrik Tüketiminiz (kWh/gün)
+        <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Hanenizdeki ortalama günlük elektrik tüketimi. Faturanızdaki aylık kWh ÷ 30 ≈ günlük tüketim.</span></span>
+      </label>
+      <div class="range-wrap">
+        <span class="range-value" id="consumption-val">10 kWh/gün</span>
+        <input type="range" id="consumption-slider" min="2" max="100" value="10" data-input-action="updateConsumption" data-arg-prop="value"/>
+        <div class="range-labels"><span>2 kWh</span><span>50 kWh</span><span>100 kWh</span></div>
+      </div>
+      <div class="u-1a">Türkiye konut ortalaması: ~10–15 kWh/gün (~300–450 kWh/ay)</div>
+      <div class="u-1b">
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="5" data-arg-type="number">Stüdyo ~5 kWh</button>
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="10" data-arg-type="number">3+1 Konut ~10 kWh</button>
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="20" data-arg-type="number">Villa ~20 kWh</button>
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="30" data-arg-type="number">Ticarethane ~30 kWh</button>
+      </div>
+    </div>
+
+    <div class="expert-modules-list">
+
+    <!-- Şebeke İhracatı / Mahsuplaşma -->
+    <div class="expert-module-card" id="nm-block" data-module-rank="primary">
+      <div class="expert-module-header" data-click-action="toggleNMBlock">
+        <div class="expert-module-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        </div>
+        <div class="expert-module-info">
+          <div class="expert-module-name">Şebeke İhracatı / Mahsuplaşma</div>
+          <div class="expert-module-desc">Fazla üretim Türkiye mevzuatına göre aylık ya da saatlik mahsuplaşmayla değerlendirilir. İhracat geliri, öz tüketim oranı ve net tasarrufa etkisi ayrı ayrı hesaplanır.</div>
+          <div class="expert-module-meta">
+            <span class="expert-module-tag tag-law">Mevzuat</span>
+          </div>
+        </div>
+        <label class="toggle-switch" data-click-action="stopPropagation">
+          <input type="checkbox" id="nm-toggle" data-change-action="onNMToggle" data-arg-prop="checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="expert-module-body is-hidden" id="nm-inputs">
+        <div class="u-1c">
+          <strong class="text-emerald">2026 Lisanssız Üretim:</strong> Fazla üretim saatlik mahsuplaşma ve tüketim bazlı ihracat sınırıyla değerlendirilir.<br>
+          <strong class="u-1d">Not:</strong> Sözleşme, bağlantı görüşü, tüketim limiti ve depolama kuralları proje bazında doğrulanmalıdır.
+        </div>
+        <div class="form-group mb-0">
+          <label class="text-sm">USD/TRY Kuru
+            <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Para birimi dönüşümü için kullanılır.</span></span>
+          </label>
+          <input class="u-1e" type="number" id="usd-try-input-nm" value="38.5" min="1" step="0.5"
+            data-input-action="setManualUsdTryRateSyncAndRefresh"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aylık Fatura Analizi -->
+    <div class="expert-module-card" id="bill-analysis-block" data-module-rank="primary">
+      <div class="expert-module-header" data-click-action="toggleBillBlock">
+        <div class="expert-module-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="expert-module-info">
+          <div class="expert-module-name">Aylık Fatura Analizi</div>
+          <div class="expert-module-desc">12 aylık gerçek tüketim dağılımı girilerek mevsimsel fark modele yansıtılır. Profil bilinmadan yapılan hesap öz tüketim oranını %10–25 hatalı tahmin edebilir.</div>
+          <div class="expert-module-meta">
+            <span class="expert-module-tag">Hassasiyet</span>
+          </div>
+        </div>
+        <label class="toggle-switch" data-click-action="stopPropagation">
+          <input type="checkbox" id="bill-toggle" data-change-action="onBillToggle" data-arg-prop="checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="expert-module-body is-hidden" id="bill-inputs-block">
+        <div class="u-1f">12 aylık elektrik tüketim verilerinizi girerek gerçekçi tasarruf hesabı yapın.</div>
+        <div id="bill-inputs-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Bakım & İşletme Giderleri -->
+    <div class="expert-module-card" id="om-block" data-module-rank="primary">
+      <div class="expert-module-header" data-click-action="toggleOMBlock">
+        <div class="expert-module-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <div class="expert-module-info">
+          <div class="expert-module-name">Bakım & İşletme Giderleri</div>
+          <div class="expert-module-desc">Yıllık bakım, sigorta ve yıl 12'deki inverter yenileme 25 yıllık finansal tabloya dahil edilir. Gerçekçi geri dönüş süresi için önerilir; varsayılan olarak açıktır.</div>
+          <div class="expert-module-meta">
+            <span class="expert-module-tag tag-long">Uzun Vade</span>
+            <span class="expert-module-tag tag-on">Varsayılan: Açık</span>
+          </div>
+        </div>
+        <label class="toggle-switch" data-click-action="stopPropagation">
+          <input type="checkbox" id="om-toggle" checked data-change-action="onOMToggle" data-arg-prop="checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="expert-module-body" id="om-inputs">
+        <div class="u-1g">
+          <strong class="u-1h">Profesyonel hesap:</strong> Yıllık bakım, sigorta ve inverter yenileme maliyetlerini 25 yıllık projeksiyona dahil eder.
+        </div>
+        <div class="roof-section-grid">
+          <div class="form-group m-0">
+            <label class="text-sm">Yıllık Bakım (O&M) Oranı (%)
+              <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Toplam sistem maliyetinin yıllık bakım gideri oranı. Sektör ortalaması %1–1.5 arasındadır.</span></span>
+            </label>
+            <input class="input-form-row" type="number" id="om-rate" value="1.2" min="0" max="5" step="0.1"
+              data-input-action="updateOmRateFromInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Yıllık Sigorta Oranı (%)
+              <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Sistem sigortası yıllık maliyeti. %0 yaparak devre dışı bırakabilirsiniz.</span></span>
+            </label>
+            <input class="input-form-row" type="number" id="insurance-rate" value="0.5" min="0" max="3" step="0.1"
+              data-input-action="updateInsuranceRateFromInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Yıllık Yük Artışı (%)
+              <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Her yıl tüketiminizin artış oranı. EV veya ısı pompası ekliyorsanız %5–15 girebilirsiniz. Varsayılan %0 (sabit tüketim).</span></span>
+            </label>
+            <input class="input-form-row" type="number" id="annual-load-growth" value="0" min="0" max="30" step="0.5"
+              data-input-action="updateTariffAssumptions"/>
+          </div>
+        </div>
+        <div class="u-1i">
+          <strong>İnverter yenileme:</strong> Yıl 12'de inverter maliyeti kadar ek gider otomatik dahil edilir.
+        </div>
+      </div>
+    </div>
+
+    <!-- Elektrikli Araç Şarjı -->
+    <div class="expert-module-card" id="ev-analysis-block" data-module-rank="secondary">
+      <div class="expert-module-header" data-click-action="toggleEVBlock">
+        <div class="expert-module-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div class="expert-module-info">
+          <div class="expert-module-name">Elektrikli Araç Şarjı</div>
+          <div class="expert-module-desc">EV şarjının yıllık enerji yükü ve yakıt tasarrufu hesaplanır. Gündüz şarjında güneş üretiminin doğrudan araca ne kadar aktarıldığını gösterir.</div>
+          <div class="expert-module-meta">
+            <span class="expert-module-tag tag-load">Yük Artışı</span>
+          </div>
+        </div>
+        <label class="toggle-switch" data-click-action="stopPropagation">
+          <input type="checkbox" id="ev-toggle" data-change-action="onEVToggle" data-arg-prop="checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="expert-module-body is-hidden" id="ev-block">
+        <div class="roof-section-grid">
+          <div class="form-group u-1j">
+            <label class="text-sm">Araç Modeli</label>
+            <select class="u-1k" id="ev-type" data-change-action="onEVModelChange"></select>
+            <div id="ev-model-info"></div>
+          </div>
+          <div class="form-group u-1l" id="ev-custom-group">
+            <label class="text-sm">Tüketim (kWh/100km)</label>
+            <input class="input-form-row" type="number" id="ev-kwh100" min="5" max="50" value="18"
+              data-input-action="updateEVInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Günlük Km</label>
+            <input class="input-form-row" type="number" id="ev-daily-km" min="0" max="1000" value="50"
+              data-input-action="updateEVInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Şarj Gücü (kW AC)</label>
+            <input class="input-form-row" type="number" id="ev-charge-kw" min="3.7" max="22" step="0.1" value="7.4"
+              data-input-action="updateEVInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Şarj Zamanı</label>
+            <select class="input-form-row" id="ev-charge-time" data-change-action="updateEVInput">
+              <option value="day">Gündüz (Solar)</option>
+              <option value="night">Gece</option>
+            </select>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Yakıt Fiyatı (₺/L) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">2026 Türkiye benzin/motorin ortalaması. Gerçek fiyatı girerek tasarrufu güncelleyebilirsiniz.</span></span></label>
+            <input class="input-form-row" type="number" id="ev-fuel-price" min="10" max="200" value="58"
+              data-input-action="updateEVInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Benzin Tüketimi (L/100km)</label>
+            <input class="input-form-row" type="number" id="ev-fuel-l100" min="3" max="25" step="0.1" value="8"
+              data-input-action="updateEVInput"/>
+          </div>
+        </div>
+        <div class="mt-2-5" id="ev-preview"></div>
+      </div>
+    </div>
+
+    <!-- Isı Pompası Entegrasyonu -->
+    <div class="expert-module-card" id="hp-analysis-block" data-module-rank="secondary">
+      <div class="expert-module-header" data-click-action="toggleHeatPumpBlock">
+        <div class="expert-module-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
+        </div>
+        <div class="expert-module-info">
+          <div class="expert-module-name">Isı Pompası Entegrasyonu</div>
+          <div class="expert-module-desc">Elektrikli ısıtma/soğutma talebini derece-gün yöntemiyle hesaplar. Doğalgaz veya yakıt-oil'den geçişin yıllık maliyet farkını ortaya koyar.</div>
+          <div class="expert-module-meta">
+            <span class="expert-module-tag tag-load">Yük Artışı</span>
+          </div>
+        </div>
+        <label class="toggle-switch" data-click-action="stopPropagation">
+          <input type="checkbox" id="hp-toggle" data-change-action="onHeatPumpToggle" data-arg-prop="checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="expert-module-body is-hidden" id="hp-block">
+        <div class="roof-section-grid">
+          <div class="form-group m-0">
+            <label class="text-sm">Kullanım Alanı (m²)</label>
+            <input class="input-form-row" type="number" id="hp-area" min="20" max="2000" value="120"
+              data-input-action="updateHeatPumpInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Yalıtım Kalitesi</label>
+            <select class="input-form-row" id="hp-insulation" data-change-action="updateHeatPumpInput">
+              <option value="poor">Zayıf</option>
+              <option value="avg" selected>Ortalama</option>
+              <option value="good">İyi</option>
+            </select>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Isıtma Tipi</label>
+            <select class="input-form-row" id="hp-type" data-change-action="updateHeatPumpInput">
+              <option value="heat">Sadece Isıtma</option>
+              <option value="cool">Sadece Soğutma</option>
+              <option value="both" selected>Isıtma + Soğutma</option>
+            </select>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Mevcut Isıtma</label>
+            <select class="input-form-row" id="hp-current" data-change-action="updateHeatPumpInput">
+              <option value="gas" selected>Doğalgaz</option>
+              <option value="electric">Elektrik</option>
+              <option value="fueloil">Fuel-Oil</option>
+            </select>
+          </div>
+        </div>
+        <div class="u-1m" id="hp-preview"></div>
+      </div>
+    </div>
+
+    <!-- Kurumsal Vergi Avantajı -->
+    <div class="expert-module-card" id="tax-analysis-block" data-module-rank="secondary">
+      <div class="expert-module-header" data-click-action="toggleTaxBlock">
+        <div class="expert-module-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="expert-module-info">
+          <div class="expert-module-name">Kurumsal Vergi Avantajı</div>
+          <div class="expert-module-desc">Amortisman kalkanı, KDV iadesi ve yatırım teşvik bölgesi katkıları hesaplanır. Kurumsal yatırımcılarda geri dönüş süresini 1–3 yıl kısaltabilir.</div>
+          <div class="expert-module-meta">
+            <span class="expert-module-tag tag-corp">Kurumsal</span>
+          </div>
+        </div>
+        <label class="toggle-switch" data-click-action="stopPropagation">
+          <input type="checkbox" id="tax-toggle" data-change-action="onTaxToggle" data-arg-prop="checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="expert-module-body is-hidden" id="tax-block">
+        <div class="roof-section-grid">
+          <div class="form-group m-0">
+            <label class="text-sm">Kurumlar Vergisi Oranı (%)</label>
+            <input class="input-form-row" type="number" id="tax-rate" min="0" max="50" value="25" step="1"
+              data-input-action="updateTaxInput"/>
+          </div>
+          <div class="form-group m-0">
+            <label class="text-sm">Amortisman Süresi (Yıl)</label>
+            <input class="input-form-row" type="number" id="tax-amort" min="1" max="25" value="10"
+              data-input-action="updateTaxInput"/>
+          </div>
+        </div>
+        <div class="roof-section-grid mt-3">
+          <div class="form-group m-0">
+            <label class="text-sm">Yatırım Katkı Oranı (%)</label>
+            <input class="input-form-row" type="number" id="tax-invest-rate" min="0" max="45" value="0" step="5"
+              data-input-action="updateTaxInput"/>
+            <div class="text-helper-72-mt-3">Bölge 1:%15 · Bölge 2:%20 · Bölge 3:%25 · Bölge 4:%30 · Bölge 5:%40 · Bölge 6:%45</div>
+          </div>
+        </div>
+        <div class="u-1n">
+          <label class="flex-row-md">
+            <input type="checkbox" id="tax-kdv" checked data-change-action="updateTaxInput"> KDV İadesi (%20)
+          </label>
+          <label class="flex-row-md">
+            <input type="checkbox" id="tax-incentive-cert" data-change-action="updateTaxInput"> Yatırım Teşvik Belgesi var
+          </label>
+        </div>
+        <div class="mt-3" id="tax-preview"></div>
+      </div>
+    </div>
+
+    </div><!-- /expert-modules-list -->
+    </div><!-- /expert-modules-body -->
+  </details>
+
   <details class="card step5-advanced-card" id="step5-advanced-card">
     <summary class="step5-advanced-summary">
       <span class="step5-advanced-summary-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         <span data-i18n="step5.advancedOptions">Gelişmiş Seçenekler</span>
       </span>
-      <span class="step5-advanced-summary-copy">Tarife rejimi, ihracat hesabı, kanıt dosyaları, bakım giderleri ve uzman seviyesi finansal ayarlar</span>
+      <span class="step5-advanced-summary-copy">Tarife rejimi, ihracat hesabı, finans varsayımları ve kanıt dosyaları</span>
     </summary>
     <div class="step5-advanced-body">
       <div class="step5-advanced-guide">
@@ -2984,309 +3296,6 @@
     </div>
   </details>
 
-  <!-- ═══ UZMAN ANALİZ MODÜLLERİ — ön fizibilite kartının hemen altında ═══ -->
-  <section class="expert-modules-section" id="expert-modules-section">
-    <div class="step5-module-section-head">
-      <div class="step5-module-section-title">Uzman Analiz Modülleri</div>
-      <div class="step5-module-section-copy">Temel ön fizibilite sonucunu genişletmek için senaryonuzla ilgili modülleri açın. Her modül bağımsız çalışır ve birbirini etkilemez.</div>
-    </div>
-    <div class="step5-inline-note" id="scenario-guidance-panel"></div>
-
-    <!-- Daily consumption -->
-    <div class="form-group" id="step5-daily-consumption-block">
-      <label>Günlük Elektrik Tüketiminiz (kWh/gün)
-        <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Hanenizdeki ortalama günlük elektrik tüketimi. Faturanızdaki aylık kWh ÷ 30 ≈ günlük tüketim.</span></span>
-      </label>
-      <div class="range-wrap">
-        <span class="range-value" id="consumption-val">10 kWh/gün</span>
-        <input type="range" id="consumption-slider" min="2" max="100" value="10" data-input-action="updateConsumption" data-arg-prop="value"/>
-        <div class="range-labels"><span>2 kWh</span><span>50 kWh</span><span>100 kWh</span></div>
-      </div>
-      <div class="u-1a">Türkiye konut ortalaması: ~10–15 kWh/gün (~300–450 kWh/ay)</div>
-      <div class="u-1b">
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="5" data-arg-type="number">Stüdyo ~5 kWh</button>
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="10" data-arg-type="number">3+1 Konut ~10 kWh</button>
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="20" data-arg-type="number">Villa ~20 kWh</button>
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="30" data-arg-type="number">Ticarethane ~30 kWh</button>
-      </div>
-    </div>
-
-    <div class="step5-module-section-head">
-      <div class="step5-module-section-title">Öncelikli Modüller</div>
-      <div class="step5-module-section-copy">Çoğu proje için önce bu üçlü yeterlidir: mahsuplaşma kuralı, 12 aylık fatura dağılımı ve uzun vadeli işletme giderleri.</div>
-    </div>
-    <div class="step5-module-grid">
-    <!-- Net metering block -->
-    <div class="advanced-feature-block step5-module-card" id="nm-block" data-module-rank="primary">
-      <div class="feature-toggle-header" data-click-action="toggleNMBlock">
-        <div class="feature-toggle-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-          <div class="feature-toggle-copy">
-            <strong>Şebeke İhracatı / Saatlik Mahsuplaşma</strong>
-            <span>Fazla üretimin hangi kuralla değerlendirileceğini görmek ve ihracat varsayımını daha gerçekçi kurmak için açın.</span>
-          </div>
-          <span class="feature-badge" data-i18n="common.badgeOptional">Opsiyonel</span>
-        </div>
-        <label class="toggle-switch" data-click-action="stopPropagation">
-          <input type="checkbox" id="nm-toggle" data-change-action="onNMToggle" data-arg-prop="checked">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="feature-toggle-body is-hidden" id="nm-inputs">
-        <div class="u-1c">
-          <strong class="text-emerald">2026 Lisanssız Üretim:</strong> Fazla üretim saatlik mahsuplaşma ve tüketim bazlı ihracat sınırıyla değerlendirilir.<br>
-          <strong class="u-1d">Not:</strong> Sözleşme, bağlantı görüşü, tüketim limiti ve depolama kuralları proje bazında doğrulanmalıdır.
-        </div>
-        <div class="form-group mb-0">
-          <label class="text-sm">USD/TRY Kuru
-            <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Para birimi dönüşümü için kullanılır.</span></span>
-          </label>
-          <input class="u-1e" type="number" id="usd-try-input-nm" value="38.5" min="1" step="0.5"
-            data-input-action="setManualUsdTryRateSyncAndRefresh"/>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bill analysis block -->
-    <div class="advanced-feature-block step5-module-card" id="bill-analysis-block" data-module-rank="primary">
-      <div class="feature-toggle-header" data-click-action="toggleBillBlock">
-        <div class="feature-toggle-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <div class="feature-toggle-copy">
-            <strong>Fatura Analizi</strong>
-            <span>12 aylık tüketim dağılımını girerek tasarruf hesabını kaba tahminden daha savunulabilir hale getirir.</span>
-          </div>
-          <span class="feature-badge" data-i18n="common.badgeDetailed">Detay</span>
-        </div>
-        <label class="toggle-switch" data-click-action="stopPropagation">
-          <input type="checkbox" id="bill-toggle" data-change-action="onBillToggle" data-arg-prop="checked">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="feature-toggle-body is-hidden" id="bill-inputs-block">
-        <div class="u-1f">12 aylık elektrik tüketim verilerinizi girerek gerçekçi tasarruf hesabı yapın.</div>
-        <div id="bill-inputs-wrap"></div>
-      </div>
-    </div>
-
-    <!-- O&M block -->
-    <div class="advanced-feature-block step5-module-card" id="om-block" data-module-rank="primary">
-      <div class="feature-toggle-header" data-click-action="toggleOMBlock">
-        <div class="feature-toggle-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-          <div class="feature-toggle-copy">
-            <strong>Bakım & İşletme Giderleri</strong>
-            <span>Uzun vadeli finansal tabloda bakım, sigorta ve inverter yenileme giderlerini hesaba katar.</span>
-          </div>
-          <span class="feature-badge" data-i18n="common.badgeOptional">Opsiyonel</span>
-        </div>
-        <label class="toggle-switch" data-click-action="stopPropagation">
-          <input type="checkbox" id="om-toggle" checked data-change-action="onOMToggle" data-arg-prop="checked">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="feature-toggle-body" id="om-inputs">
-        <div class="u-1g">
-          <strong class="u-1h">Profesyonel hesap:</strong> Yıllık bakım, sigorta ve inverter yenileme maliyetlerini 25 yıllık projeksiyona dahil eder.
-        </div>
-        <div class="roof-section-grid">
-          <div class="form-group m-0">
-            <label class="text-sm">Yıllık Bakım (O&M) Oranı (%)
-              <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Toplam sistem maliyetinin yıllık bakım gideri oranı. Sektör ortalaması %1–1.5 arasındadır.</span></span>
-            </label>
-            <input class="input-form-row" type="number" id="om-rate" value="1.2" min="0" max="5" step="0.1"
-              data-input-action="updateOmRateFromInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Yıllık Sigorta Oranı (%)
-              <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Sistem sigortası yıllık maliyeti. %0 yaparak devre dışı bırakabilirsiniz.</span></span>
-            </label>
-            <input class="input-form-row" type="number" id="insurance-rate" value="0.5" min="0" max="3" step="0.1"
-              data-input-action="updateInsuranceRateFromInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Yıllık Yük Artışı (%)
-              <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Her yıl tüketiminizin artış oranı. EV veya ısı pompası ekliyorsanız %5–15 girebilirsiniz. Varsayılan %0 (sabit tüketim).</span></span>
-            </label>
-            <input class="input-form-row" type="number" id="annual-load-growth" value="0" min="0" max="30" step="0.5"
-              data-input-action="updateTariffAssumptions"/>
-          </div>
-        </div>
-        <div class="u-1i">
-          <strong>İnverter yenileme:</strong> Yıl 12'de inverter maliyeti kadar ek gider otomatik dahil edilir.
-        </div>
-      </div>
-    </div>
-    </div>
-
-    <div class="step5-module-section-head">
-      <div class="step5-module-section-title">Senaryoya Bağlı Genişletmeler</div>
-      <div class="step5-module-section-copy">EV şarj, ısı pompası veya kurumsal vergi avantajı senaryosu varsa ilgili modülü açın.</div>
-    </div>
-    <div class="step5-module-grid">
-
-    <!-- EV block -->
-    <div class="advanced-feature-block step5-module-card" id="ev-analysis-block" data-module-rank="secondary">
-      <div class="feature-toggle-header" data-click-action="toggleEVBlock">
-        <div class="feature-toggle-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-          <div class="feature-toggle-copy">
-            <strong>EV Şarj Entegrasyonu</strong>
-            <span>İleride elektrikli araç şarjı eklenecekse yeni yükü sisteme dahil ederek boyutlandırmayı günceller.</span>
-          </div>
-          <span class="feature-badge" data-i18n="common.badgeLoadGrowth">Yük artışı</span>
-        </div>
-        <label class="toggle-switch" data-click-action="stopPropagation">
-          <input type="checkbox" id="ev-toggle" data-change-action="onEVToggle" data-arg-prop="checked">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="feature-toggle-body is-hidden" id="ev-block">
-        <div class="roof-section-grid">
-          <div class="form-group u-1j">
-            <label class="text-sm">Araç Modeli</label>
-            <select class="u-1k" id="ev-type" data-change-action="onEVModelChange"></select>
-            <div id="ev-model-info"></div>
-          </div>
-          <div class="form-group u-1l" id="ev-custom-group">
-            <label class="text-sm">Tüketim (kWh/100km)</label>
-            <input class="input-form-row" type="number" id="ev-kwh100" min="5" max="50" value="18"
-              data-input-action="updateEVInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Günlük Km</label>
-            <input class="input-form-row" type="number" id="ev-daily-km" min="0" max="1000" value="50"
-              data-input-action="updateEVInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Şarj Gücü (kW AC)</label>
-            <input class="input-form-row" type="number" id="ev-charge-kw" min="3.7" max="22" step="0.1" value="7.4"
-              data-input-action="updateEVInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Şarj Zamanı</label>
-            <select class="input-form-row" id="ev-charge-time" data-change-action="updateEVInput">
-              <option value="day">Gündüz (Solar)</option>
-              <option value="night">Gece</option>
-            </select>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Yakıt Fiyatı (₺/L) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">2026 Türkiye benzin/motorin ortalaması. Gerçek fiyatı girerek tasarrufu güncelleyebilirsiniz.</span></span></label>
-            <input class="input-form-row" type="number" id="ev-fuel-price" min="10" max="200" value="58"
-              data-input-action="updateEVInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Benzin Tüketimi (L/100km)</label>
-            <input class="input-form-row" type="number" id="ev-fuel-l100" min="3" max="25" step="0.1" value="8"
-              data-input-action="updateEVInput"/>
-          </div>
-        </div>
-        <div class="mt-2-5" id="ev-preview"></div>
-      </div>
-    </div>
-
-    <!-- Heat pump block -->
-    <div class="advanced-feature-block step5-module-card" id="hp-analysis-block" data-module-rank="secondary">
-      <div class="feature-toggle-header" data-click-action="toggleHeatPumpBlock">
-        <div class="feature-toggle-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
-          <div class="feature-toggle-copy">
-            <strong>Isı Pompası Entegrasyonu</strong>
-            <span>Elektrik tüketimi ileride ısı pompası nedeniyle artacaksa yeni yıllık yükü hesaba katar.</span>
-          </div>
-          <span class="feature-badge" data-i18n="common.badgeLoadGrowth">Yük artışı</span>
-        </div>
-        <label class="toggle-switch" data-click-action="stopPropagation">
-          <input type="checkbox" id="hp-toggle" data-change-action="onHeatPumpToggle" data-arg-prop="checked">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="feature-toggle-body is-hidden" id="hp-block">
-        <div class="roof-section-grid">
-          <div class="form-group m-0">
-            <label class="text-sm">Kullanım Alanı (m²)</label>
-            <input class="input-form-row" type="number" id="hp-area" min="20" max="2000" value="120"
-              data-input-action="updateHeatPumpInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Yalıtım Kalitesi</label>
-            <select class="input-form-row" id="hp-insulation" data-change-action="updateHeatPumpInput">
-              <option value="poor">Zayıf</option>
-              <option value="avg" selected>Ortalama</option>
-              <option value="good">İyi</option>
-            </select>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Isıtma Tipi</label>
-            <select class="input-form-row" id="hp-type" data-change-action="updateHeatPumpInput">
-              <option value="heat">Sadece Isıtma</option>
-              <option value="cool">Sadece Soğutma</option>
-              <option value="both" selected>Isıtma + Soğutma</option>
-            </select>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Mevcut Isıtma</label>
-            <select class="input-form-row" id="hp-current" data-change-action="updateHeatPumpInput">
-              <option value="gas" selected>Doğalgaz</option>
-              <option value="electric">Elektrik</option>
-              <option value="fueloil">Fuel-Oil</option>
-            </select>
-          </div>
-        </div>
-        <div class="u-1m" id="hp-preview"></div>
-      </div>
-    </div>
-
-    <!-- Tax block -->
-    <div class="advanced-feature-block step5-module-card" id="tax-analysis-block" data-module-rank="secondary">
-      <div class="feature-toggle-header" data-click-action="toggleTaxBlock">
-        <div class="feature-toggle-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <div class="feature-toggle-copy">
-            <strong>Vergi Avantajı</strong>
-            <span>Kurumlar vergisi, amortisman ve yatırım teşviklerinin ticari geri dönüşe etkisini görmek için kullanılır.</span>
-          </div>
-          <span class="feature-badge" data-i18n="common.badgeCommercial">Ticari</span>
-        </div>
-        <label class="toggle-switch" data-click-action="stopPropagation">
-          <input type="checkbox" id="tax-toggle" data-change-action="onTaxToggle" data-arg-prop="checked">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="feature-toggle-body is-hidden" id="tax-block">
-        <div class="roof-section-grid">
-          <div class="form-group m-0">
-            <label class="text-sm">Kurumlar Vergisi Oranı (%)</label>
-            <input class="input-form-row" type="number" id="tax-rate" min="0" max="50" value="25" step="1"
-              data-input-action="updateTaxInput"/>
-          </div>
-          <div class="form-group m-0">
-            <label class="text-sm">Amortisman Süresi (Yıl)</label>
-            <input class="input-form-row" type="number" id="tax-amort" min="1" max="25" value="10"
-              data-input-action="updateTaxInput"/>
-          </div>
-        </div>
-        <div class="roof-section-grid mt-3">
-          <div class="form-group m-0">
-            <label class="text-sm">Yatırım Katkı Oranı (%)</label>
-            <input class="input-form-row" type="number" id="tax-invest-rate" min="0" max="45" value="0" step="5"
-              data-input-action="updateTaxInput"/>
-            <div class="text-helper-72-mt-3">Bölge 1:%15 · Bölge 2:%20 · Bölge 3:%25 · Bölge 4:%30 · Bölge 5:%40 · Bölge 6:%45</div>
-          </div>
-        </div>
-        <div class="u-1n">
-          <label class="flex-row-md">
-            <input type="checkbox" id="tax-kdv" checked data-change-action="updateTaxInput"> KDV İadesi (%20)
-          </label>
-          <label class="flex-row-md">
-            <input type="checkbox" id="tax-incentive-cert" data-change-action="updateTaxInput"> Yatırım Teşvik Belgesi var
-          </label>
-        </div>
-        <div class="mt-3" id="tax-preview"></div>
-      </div>
-    </div>
-    </div>
-  </section>
 
   <div class="nav-btns mt-7">
     <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number">← Geri</button>
