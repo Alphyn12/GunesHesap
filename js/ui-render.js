@@ -592,7 +592,7 @@ function renderBESSResults(bess) {
         <div class="offgrid-note offgrid-note--warn"><strong>Ön değerlendirme:</strong> ${escapeHtml(i18n.t('offGrid.syntheticDispatchNote'))}</div>
         <div class="offgrid-note offgrid-note--danger"><strong>Dikkat:</strong> ${escapeHtml(i18n.t('offGrid.notFeasibilityAnalysis'))}</div>
       `
-      : '';
+      : `<div class="offgrid-note offgrid-note--warn"><strong>Not:</strong> Model sabit batarya kapasitesi varsayar. Gerçekte LFP piller ~3.000–5.000 çevrimde %80'e iner; 10+ yılda özerklik değerleri bu tablodan düşük çıkabilir.</div>`;
   }
 }
 

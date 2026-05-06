@@ -2279,7 +2279,7 @@
           </div>
         </summary>
         <div class="step5-subbody">
-          <div class="step5-inline-note"><strong>Önerilen kullanım:</strong> Önce tarife rejimini, baz alış fiyatını, ihracat/mahsup fiyatını ve mahsuplaşma modunu girin. SKTT, sözleşmeli fiyat ve kur gibi uzman alanları yalnızca elinizde net sözleşme veya resmi kaynak varsa değiştirin.</div>
+          <div class="step5-inline-note">Abone tipini seçin, alış fiyatını kontrol edin ve ihracat/mahsup fiyatını onaylayın. Çoğu proje için bu kadar yeterlidir. SKTT veya sözleşme rejimi kullanıyorsanız aşağıdaki <strong>Gelişmiş Tarife</strong> bölümünü açın.</div>
 
     <!-- Electricity Tariff -->
     <div class="form-group mb-4-5">
@@ -2319,27 +2319,17 @@
 
       <div class="step5-tariff-quick-grid">
         <div>
-          <div class="text-caption-helper">Tarife Rejimi</div>
-          <select class="input-form-row" id="tariff-regime" data-change-action="updateTariffAssumptions"
-           >
-            <option value="auto" selected>Otomatik PST/SKTT</option>
-            <option value="pst">PST / Ulusal Tarife</option>
-            <option value="sktt">SKTT</option>
-            <option value="contract">İkili Anlaşma</option>
-            <option value="custom">Özel</option>
-          </select>
-        </div>
-        <div>
           <div class="text-caption-helper">PST / Baz Fiyat (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Perakende Satış Tarifesi — elektrik dağıtım şirketinden kWh başına ödediğiniz fiyat.</span></span></div>
           <input class="input-form-row" type="number" id="tariff-input" value="3.237826" min="0.5" step="0.01"
            
             data-input-action="updateTariffAssumptions"/>
         </div>
         <div>
-          <div class="text-caption-helper">İhracat / Mahsup Fiyatı (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Üretip şebekeye sattığınız ya da mahsup ettiğiniz fazla enerji için alınan birim fiyat.</span></span></div>
-          <input class="input-form-row" type="number" id="export-tariff-input" value="0" min="0" step="0.01"
-           
+          <div class="text-caption-helper">İhracat / Mahsup Fiyatı (TL/kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Üretip şebekeye verdiğiniz fazla enerji için alınan birim fiyat. Türkiye'de aylık mahsuplaşmada genellikle alış fiyatına (PST) eşit ya da PST × %70 civarında uygulanır. "Otomatik" ile PST × %70 hesaplanır.</span></span></div>
+          <input class="input-form-row" type="number" id="export-tariff-input" value="2.27" min="0" step="0.01"
+
             data-input-action="updateTariffAssumptions"/>
+          <button type="button" class="chip-toggle-glass" style="margin-top:4px;font-size:0.72rem;" data-click-action="setExportTariffAuto">Otomatik (PST × %70)</button>
         </div>
         <div>
           <div class="text-caption-helper">Mahsuplaşma Modu</div>
@@ -2356,7 +2346,7 @@
            
             data-input-action="updateTariffAssumptions"/>
         </div>
-        <div>
+        <div class="is-hidden">
           <div class="text-caption-helper" data-i18n="onGridFlow.tariffSourceType">Tarife kaynak türü</div>
           <select class="input-form-row" id="tariff-source-type" data-change-action="updateTariffAssumptions"
            >
@@ -2365,7 +2355,7 @@
             <option value="official" selected data-i18n="onGridFlow.tariffSourceOfficial">Resmi / güncel kaynak (EPDK, RG)</option>
           </select>
         </div>
-        <div>
+        <div class="is-hidden">
           <div class="text-caption-helper" data-i18n="onGridFlow.costSourceType">Maliyet kaynağı</div>
           <select class="input-form-row" id="cost-source-type" data-change-action="updateTariffAssumptions">
             <option value="catalog" selected data-i18n="onGridFlow.costSourceCatalog">Katalog / otomatik fiyat</option>
@@ -2374,16 +2364,6 @@
         </div>
       </div>
 
-      <div class="step5-tariff-tips">
-        <div class="step5-tariff-tip">
-          <strong>Çoğu projede yeterli olan alanlar</strong>
-          <span>Rejim, baz alış fiyatı, mahsuplaşma tipi ve devreye alma tarihi çoğu on-grid ön fizibilite için yeterlidir.</span>
-        </div>
-        <div class="step5-tariff-tip">
-          <strong>Ne zaman uzman alan açılmalı?</strong>
-          <span>SKTT, ikili anlaşma, satış sınırı, kur ve kanıt dosyaları yalnızca elinizde doğrulanmış veri varsa değiştirilmelidir. Tarife kaynak türü burada görünür bırakıldı; çünkü sonuç güvenini en hızlı etkileyen ticari alanlardan biridir.</span>
-        </div>
-      </div>
 
       <div class="error-msg-hidden-mt-14" id="off-grid-cost-wrap">
         <div class="text-caption-helper" data-i18n="offGrid.costPerKwhLabel">Dizel/Alternatif Kaynak Maliyeti (₺/kWh)</div>
@@ -2396,47 +2376,57 @@
       <details class="step5-subdetails mt-3-5">
         <summary class="step5-subsummary">
           <div>
-            <strong>Uzman Tarife Alanları</strong>
-            <span>SKTT, sözleşmeli fiyat, satış limiti ve özel tüketim eşikleri gibi daha teknik alanlar.</span>
+            <strong>Gelişmiş Tarife (SKTT / Sözleşme)</strong>
+            <span>SKTT, ikili anlaşma veya özel tüketim eşiği olan projeler için tarife rejimi ve fiyat ayarları.</span>
           </div>
         </summary>
         <div class="step5-subbody">
-          <div class="step5-inline-note"><strong>Yalnızca gerekli olduğunda değiştirin:</strong> Bu alanlar genellikle büyük ticari tesis, ikili anlaşma veya özel mahsuplaşma kısıtları olan projelerde önemlidir.</div>
+          <div class="step5-inline-note">Standart mesken veya ticarethane projelerinde bu bölümü açmanıza gerek yoktur. Yalnızca <strong>SKTT</strong> veya <strong>ikili anlaşma</strong> kullanıyorsanız ilgili alanları doldurun.</div>
           <div class="step5-tariff-quick-grid">
+            <div>
+              <div class="text-caption-helper">Tarife Rejimi <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Varsayılan "Otomatik PST/SKTT" çoğu proje için uygundur. SKTT veya ikili anlaşma durumunda manuel seçin.</span></span></div>
+              <select class="input-form-row" id="tariff-regime" data-change-action="updateTariffAssumptions">
+                <option value="auto" selected>Otomatik PST/SKTT</option>
+                <option value="pst">PST / Ulusal Tarife</option>
+                <option value="sktt">SKTT</option>
+                <option value="contract">İkili Anlaşma</option>
+                <option value="custom">Özel</option>
+              </select>
+            </div>
             <div>
               <div class="text-caption-helper">SKTT Fiyatı (TL/kWh)</div>
               <input class="input-form-row" type="number" id="sktt-tariff-input" value="4.857548" min="0" step="0.01"
-               
+
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div class="text-caption-helper">Sözleşmeli Fiyat (TL/kWh)</div>
               <input class="input-form-row" type="number" id="contracted-tariff-input" value="3.237826" min="0" step="0.01"
-               
+
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
               <div class="text-caption-helper">Sözleşme Gücü (kW)</div>
               <input class="input-form-row" type="number" id="contracted-power-input" value="10" min="0" step="0.1"
-               
+
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div class="text-caption-helper">Önceki Yıl Tüketim (kWh)</div>
+              <div class="text-caption-helper">Önceki Yıl Tüketim (kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Faturanızdaki bir önceki yılın toplam tüketimi. SKTT geçiş eşiği hesabında kullanılır.</span></span></div>
               <input class="input-form-row" type="number" id="previous-year-consumption-input" value="0" min="0" step="1"
-               
+
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div class="text-caption-helper">Cari Yıl Tüketim (kWh)</div>
+              <div class="text-caption-helper">Cari Yıl Tüketim (kWh) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Faturanızdaki bu yılın toplam tüketimi. SKTT geçiş eşiği hesabında kullanılır.</span></span></div>
               <input class="input-form-row" type="number" id="current-year-consumption-input" value="0" min="0" step="1"
-               
+
                 data-input-action="updateTariffAssumptions"/>
             </div>
-            <div>
+            <div class="is-hidden">
               <div class="text-caption-helper">Satılabilir İhracat Sınırı (kWh)</div>
               <input class="input-form-row" type="number" id="sellable-export-cap-input" value="0" min="0" step="1"
-               
+
                 data-input-action="updateTariffAssumptions"/>
             </div>
           </div>
@@ -2446,75 +2436,25 @@
       <details class="step5-subdetails">
         <summary class="step5-subsummary">
           <div>
-            <strong>Kaynak, Kur ve Finans Varsayımları</strong>
-            <span>Veri kaynağı, iskonto, fiyat artışı ve sonuç para birimi gibi uzman düzeyi finans ayarları.</span>
+            <strong>Finans ve Para Birimi</strong>
+            <span>Yıllık fiyat artışı, iskonto oranı ve sonuç para birimi. Çoğu proje için varsayılanlar uygundur.</span>
           </div>
         </summary>
         <div class="step5-subbody">
-          <div class="step5-inline-note"><strong>Bu bölüm neden ayrı?</strong> Bu alanlar teknik hesap motorunu değil, finansal sunum kalitesini ve ticari yorum biçimini etkiler. İlk görüşmede çoğu zaman varsayılan bırakılabilir.</div>
           <div class="step5-tariff-quick-grid">
             <div>
-              <div class="text-caption-helper">Yıllık Fiyat Artışı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Elektrik tarifesinin yılda kaç yüzde artacağı tahmini.</span></span></div>
+              <div class="text-caption-helper">Yıllık Fiyat Artışı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Elektrik tarifesinin yılda kaç yüzde artacağı tahmini. Türkiye ortalaması son 5 yılda %30–80 arasında değişti; %12 muhafazakâr bir projeksiyondur.</span></span></div>
               <input class="input-form-row" type="number" id="price-increase-input" value="12" min="-50" max="200" step="1"
-               
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div class="text-caption-helper">Gider Eskalasyonu (%)</div>
-              <input class="input-form-row" type="number" id="expense-escalation-input" value="10" min="-50" max="200" step="1"
-               
-                data-input-action="updateTariffAssumptions"/>
-            </div>
-            <div>
-              <div class="text-caption-helper">İskonto Oranı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Paranın zaman değerini yansıtan oran; NPV hesabında kullanılır.</span></span></div>
+              <div class="text-caption-helper">İskonto Oranı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Paranın zaman değerini yansıtan oran; NPV hesabında kullanılır. Türkiye için tipik aralık %15–25.</span></span></div>
               <input class="input-form-row" type="number" id="discount-rate-input" value="18" min="0" max="100" step="1"
-               
                 data-input-action="updateTariffAssumptions"/>
-            </div>
-            <div>
-              <div class="text-caption-helper">Kaynak Tarihi</div>
-              <input class="input-form-row" type="date" id="tariff-source-date" value="2026-04-04"
-               
-                data-input-action="updateTariffAssumptions"/>
-            </div>
-            <div>
-              <div class="text-caption-helper">Kaynak Kontrol Tarihi</div>
-              <input class="input-form-row" type="date" id="tariff-source-checked-at"
-               
-                data-input-action="updateTariffAssumptions"/>
-            </div>
-            <div>
-              <div class="text-caption-helper">Tarife Kanıt Durumu</div>
-              <select class="input-form-row" id="tariff-evidence-status" data-change-action="updateTariffAssumptions"
-               >
-                <option value="verified" selected>Doğrulandı</option>
-                <option value="pending">Bekliyor</option>
-                <option value="missing">Eksik</option>
-                <option value="rejected">Reddedildi</option>
-              </select>
-            </div>
-            <div>
-              <div class="text-caption-helper">Tarife Kanıt Ref</div>
-              <input class="input-form-row" type="text" id="tariff-evidence-ref" value="EPDK-EMO-2026-04"
-               
-                data-input-action="updateTariffAssumptions"/>
-            </div>
-            <div class="u-5">
-              <div class="text-caption-helper">Tarife Kaynak URL</div>
-              <input class="input-form-row" type="url" id="tariff-evidence-url" value="https://www.emo.org.tr/ekler/e551bd640f4d509_ek.pdf?sube=13&amp;tipi=2&amp;turu=X"
-               
-                data-input-action="updateTariffAssumptions"/>
-            </div>
-            <div>
-              <div class="text-caption-helper">Tarife Kaynak Dosyası</div>
-              <input class="input-form-row-sm" type="file" id="tariff-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
-                data-change-action="attachEvidenceFromInput" data-evidence-field="tariffSource"
-               />
             </div>
             <div>
               <div class="text-caption-helper">Sonuç Para Birimi</div>
-              <select class="input-form-row" id="display-currency" data-change-action="updateTariffAssumptionsAndRefresh"
-               >
+              <select class="input-form-row" id="display-currency" data-change-action="updateTariffAssumptionsAndRefresh">
                 <option value="TRY" selected>TL</option>
                 <option value="USD">USD</option>
               </select>
@@ -2522,7 +2462,6 @@
             <div>
               <div class="text-caption-helper">USD/TRY Kuru <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Sonuç Para Birimi olarak USD seçildiğinde tüm tutarlar bu kur üzerinden dönüştürülür.</span></span></div>
               <input class="input-form-row" type="number" id="usd-try-input" value="38.5" min="1" step="0.5"
-               
                 data-input-action="setManualUsdTryRateAndRefresh"/>
               <button type="button" class="btn btn-secondary u-6" data-click-action="refreshExchangeRate">Canlı Kur</button>
             </div>
@@ -2531,26 +2470,76 @@
           <label class="u-8">
             <input type="checkbox" id="tariff-tax-included" checked data-change-action="updateTariffAssumptions"> Birim fiyat vergi/dağıtım dahil kabul edilsin
           </label>
-          <div class="step5-tariff-quick-grid mt-2-5">
-            <label class="flex-row-muted-sm">
-              <input type="checkbox" id="quote-bill-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.billVerified">Fatura/tüketim verisi doğrulandı</span>
-            </label>
-            <input class="input-form-row-md" type="text" id="bill-evidence-ref" placeholder="Fatura kanıt ref / dosya adı" data-input-action="updateTariffAssumptions"
-             />
-            <input class="input-form-row-md" type="date" id="bill-evidence-date" data-change-action="updateTariffAssumptions"
-             />
-            <select class="u-9" id="bill-evidence-status" data-change-action="updateTariffAssumptions"
-             >
-              <option value="missing" selected>Fatura kanıtı eksik</option>
-              <option value="pending">Fatura kanıtı bekliyor</option>
-              <option value="verified">Fatura kanıtı doğrulandı</option>
-            </select>
-            <input class="input-form-row-sm" type="file" id="bill-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
-              data-change-action="attachEvidenceFromInput" data-evidence-field="customerBill"
-             />
-          </div>
-          <div class="u-a" id="evidence-file-status">customerBill: dosya yok | supplierQuote: dosya yok | tariffSource: dosya yok</div>
           <div class="text-helper-78-mt-6" id="tariff-desc">2026 tarife seçimi: mesken yıllık 4.000 kWh, mesken dışı 15.000 kWh SKTT eşiğiyle değerlendirilir.</div>
+
+          <!-- Kaynak & Kanıt Belgeleri — teklif kalitesini yükseltmek isteyenler için -->
+          <details class="step5-subdetails mt-3-5">
+            <summary class="step5-subsummary">
+              <div>
+                <strong>Kaynak & Kanıt Belgeleri</strong>
+                <span>Tarife kanıtı, fatura doğrulaması, gider eskalasyonu ve kaynak dosyaları. Teklif güven seviyesini etkiler.</span>
+              </div>
+            </summary>
+            <div class="step5-subbody">
+              <div class="step5-inline-note">Bu alanlar hesap sonucunu değil, <strong>sonuç ekranındaki güven seviyesini</strong> etkiler. İlk görüşmede açmanıza gerek yoktur; müşteri teklifine hazırlanırken doldurun.</div>
+              <div class="step5-tariff-quick-grid">
+                <div>
+                  <div class="text-caption-helper">Gider Eskalasyonu (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">O&M, sigorta ve işletme giderlerinin yıllık artış oranı. Genellikle fiyat artışının %80–90'ı civarındadır.</span></span></div>
+                  <input class="input-form-row" type="number" id="expense-escalation-input" value="10" min="-50" max="200" step="1"
+                    data-input-action="updateTariffAssumptions"/>
+                </div>
+                <div>
+                  <div class="text-caption-helper">Kaynak Tarihi</div>
+                  <input class="input-form-row" type="date" id="tariff-source-date" value="2026-04-04"
+                    data-input-action="updateTariffAssumptions"/>
+                </div>
+                <div>
+                  <div class="text-caption-helper">Kaynak Kontrol Tarihi</div>
+                  <input class="input-form-row" type="date" id="tariff-source-checked-at"
+                    data-input-action="updateTariffAssumptions"/>
+                </div>
+                <div>
+                  <div class="text-caption-helper">Tarife Kanıt Durumu</div>
+                  <select class="input-form-row" id="tariff-evidence-status" data-change-action="updateTariffAssumptions">
+                    <option value="verified" selected>Doğrulandı</option>
+                    <option value="pending">Bekliyor</option>
+                    <option value="missing">Eksik</option>
+                    <option value="rejected">Reddedildi</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="text-caption-helper">Tarife Kanıt Ref</div>
+                  <input class="input-form-row" type="text" id="tariff-evidence-ref" value="EPDK-EMO-2026-04"
+                    data-input-action="updateTariffAssumptions"/>
+                </div>
+                <div class="u-5">
+                  <div class="text-caption-helper">Tarife Kaynak URL</div>
+                  <input class="input-form-row" type="url" id="tariff-evidence-url" value="https://www.emo.org.tr/ekler/e551bd640f4d509_ek.pdf?sube=13&amp;tipi=2&amp;turu=X"
+                    data-input-action="updateTariffAssumptions"/>
+                </div>
+                <div>
+                  <div class="text-caption-helper">Tarife Kaynak Dosyası</div>
+                  <input class="input-form-row-sm" type="file" id="tariff-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
+                    data-change-action="attachEvidenceFromInput" data-evidence-field="tariffSource"/>
+                </div>
+              </div>
+              <div class="step5-tariff-quick-grid mt-2-5">
+                <label class="flex-row-muted-sm">
+                  <input type="checkbox" id="quote-bill-verified" data-change-action="updateTariffAssumptions"> <span data-i18n="governance.billVerified">Fatura/tüketim verisi doğrulandı</span>
+                </label>
+                <input class="input-form-row-md" type="text" id="bill-evidence-ref" placeholder="Fatura kanıt ref / dosya adı" data-input-action="updateTariffAssumptions"/>
+                <input class="input-form-row-md" type="date" id="bill-evidence-date" data-change-action="updateTariffAssumptions"/>
+                <select class="u-9" id="bill-evidence-status" data-change-action="updateTariffAssumptions">
+                  <option value="missing" selected>Fatura kanıtı eksik</option>
+                  <option value="pending">Fatura kanıtı bekliyor</option>
+                  <option value="verified">Fatura kanıtı doğrulandı</option>
+                </select>
+                <input class="input-form-row-sm" type="file" id="bill-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv"
+                  data-change-action="attachEvidenceFromInput" data-evidence-field="customerBill"/>
+              </div>
+              <div class="u-a" id="evidence-file-status">customerBill: dosya yok | supplierQuote: dosya yok | tariffSource: dosya yok</div>
+            </div>
+          </details>
         </div>
       </details>
 
@@ -2992,18 +2981,16 @@
         </div>
       </details>
 
-    <div class=”step5-inline-note” id=”scenario-guidance-panel”></div>
+    </div>
+  </details>
 
-
-      <details class="step5-subdetails">
-        <summary class="step5-subsummary">
-          <div>
-            <strong>Opsiyonel Uzman Modülleri</strong>
-            <span>Temel on-grid hesabını genişletmek için kullanılan ileri analiz modülleri. Sadece senaryonuzla ilgili olanları açın.</span>
-          </div>
-        </summary>
-        <div class="step5-subbody">
-          <div class="step5-inline-note"><strong>Ne zaman açılmalı?</strong> Fatura detayıyla tasarrufu iyileştirmek istiyorsanız Fatura Analizi’ni, elektrikli araç veya ısı pompası eklenecekse ilgili modülü, 25 yıllık daha muhafazakar finansal tablo istiyorsanız Bakım & İşletme bölümünü açın.</div>
+  <!-- ═══ UZMAN ANALİZ MODÜLLERİ — ön fizibilite kartının hemen altında ═══ -->
+  <section class="expert-modules-section" id="expert-modules-section">
+    <div class="step5-module-section-head">
+      <div class="step5-module-section-title">Uzman Analiz Modülleri</div>
+      <div class="step5-module-section-copy">Temel ön fizibilite sonucunu genişletmek için senaryonuzla ilgili modülleri açın. Her modül bağımsız çalışır ve birbirini etkilemez.</div>
+    </div>
+    <div class="step5-inline-note" id="scenario-guidance-panel"></div>
 
     <!-- Daily consumption -->
     <div class="form-group" id="step5-daily-consumption-block">
@@ -3017,28 +3004,16 @@
       </div>
       <div class="u-1a">Türkiye konut ortalaması: ~10–15 kWh/gün (~300–450 kWh/ay)</div>
       <div class="u-1b">
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="5" data-arg-type="number"
-         >
-          Stüdyo ~5 kWh
-        </button>
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="10" data-arg-type="number"
-         >
-          3+1 Konut ~10 kWh
-        </button>
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="20" data-arg-type="number"
-         >
-          Villa ~20 kWh
-        </button>
-        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="30" data-arg-type="number"
-         >
-          Ticarethane ~30 kWh
-        </button>
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="5" data-arg-type="number">Stüdyo ~5 kWh</button>
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="10" data-arg-type="number">3+1 Konut ~10 kWh</button>
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="20" data-arg-type="number">Villa ~20 kWh</button>
+        <button type="button" class="chip-toggle-glass" data-click-action="updateConsumptionQuickFill" data-arg="30" data-arg-type="number">Ticarethane ~30 kWh</button>
       </div>
     </div>
 
     <div class="step5-module-section-head">
-      <div class="step5-module-section-title">Öncelikli Uzman Modülleri</div>
-      <div class="step5-module-section-copy">Bu grup, on-grid teklifin savunulabilirliğini en hızlı artıran modülleri toplar. Çoğu kullanıcı için önce bu üçlü yeterlidir: mahsuplaşma kuralı, 12 aylık fatura dağılımı ve uzun vadeli işletme giderleri.</div>
+      <div class="step5-module-section-title">Öncelikli Modüller</div>
+      <div class="step5-module-section-copy">Çoğu proje için önce bu üçlü yeterlidir: mahsuplaşma kuralı, 12 aylık fatura dağılımı ve uzun vadeli işletme giderleri.</div>
     </div>
     <div class="step5-module-grid">
     <!-- Net metering block -->
@@ -3067,7 +3042,6 @@
             <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Para birimi dönüşümü için kullanılır.</span></span>
           </label>
           <input class="u-1e" type="number" id="usd-try-input-nm" value="38.5" min="1" step="0.5"
-           
             data-input-action="setManualUsdTryRateSyncAndRefresh"/>
         </div>
       </div>
@@ -3121,7 +3095,6 @@
               <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Toplam sistem maliyetinin yıllık bakım gideri oranı. Sektör ortalaması %1–1.5 arasındadır.</span></span>
             </label>
             <input class="input-form-row" type="number" id="om-rate" value="1.2" min="0" max="5" step="0.1"
-             
               data-input-action="updateOmRateFromInput"/>
           </div>
           <div class="form-group m-0">
@@ -3129,7 +3102,6 @@
               <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Sistem sigortası yıllık maliyeti. %0 yaparak devre dışı bırakabilirsiniz.</span></span>
             </label>
             <input class="input-form-row" type="number" id="insurance-rate" value="0.5" min="0" max="3" step="0.1"
-             
               data-input-action="updateInsuranceRateFromInput"/>
           </div>
           <div class="form-group m-0">
@@ -3137,7 +3109,6 @@
               <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Her yıl tüketiminizin artış oranı. EV veya ısı pompası ekliyorsanız %5–15 girebilirsiniz. Varsayılan %0 (sabit tüketim).</span></span>
             </label>
             <input class="input-form-row" type="number" id="annual-load-growth" value="0" min="0" max="30" step="0.5"
-             
               data-input-action="updateTariffAssumptions"/>
           </div>
         </div>
@@ -3150,7 +3121,7 @@
 
     <div class="step5-module-section-head">
       <div class="step5-module-section-title">Senaryoya Bağlı Genişletmeler</div>
-      <div class="step5-module-section-copy">Bu modüller yalnızca ek yük veya ticari teşvik senaryosu varsa açılmalıdır. Böylece arayüz temiz kalır ve kullanıcı sadece gerçekten etkileyen uzman alanlarını görür.</div>
+      <div class="step5-module-section-copy">EV şarj, ısı pompası veya kurumsal vergi avantajı senaryosu varsa ilgili modülü açın.</div>
     </div>
     <div class="step5-module-grid">
 
@@ -3174,47 +3145,39 @@
         <div class="roof-section-grid">
           <div class="form-group u-1j">
             <label class="text-sm">Araç Modeli</label>
-            <select class="u-1k" id="ev-type" data-change-action="onEVModelChange"
-             >
-            </select>
+            <select class="u-1k" id="ev-type" data-change-action="onEVModelChange"></select>
             <div id="ev-model-info"></div>
           </div>
           <div class="form-group u-1l" id="ev-custom-group">
             <label class="text-sm">Tüketim (kWh/100km)</label>
             <input class="input-form-row" type="number" id="ev-kwh100" min="5" max="50" value="18"
-             
               data-input-action="updateEVInput"/>
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Günlük Km</label>
             <input class="input-form-row" type="number" id="ev-daily-km" min="0" max="1000" value="50"
-             
               data-input-action="updateEVInput"/>
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Şarj Gücü (kW AC)</label>
             <input class="input-form-row" type="number" id="ev-charge-kw" min="3.7" max="22" step="0.1" value="7.4"
-             
               data-input-action="updateEVInput"/>
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Şarj Zamanı</label>
-            <select class="input-form-row" id="ev-charge-time" data-change-action="updateEVInput"
-             >
+            <select class="input-form-row" id="ev-charge-time" data-change-action="updateEVInput">
               <option value="day">Gündüz (Solar)</option>
               <option value="night">Gece</option>
             </select>
           </div>
           <div class="form-group m-0">
-            <label class="text-sm">Yakıt Fiyatı (₺/L)</label>
-            <input class="input-form-row" type="number" id="ev-fuel-price" min="10" max="200" value="45"
-             
+            <label class="text-sm">Yakıt Fiyatı (₺/L) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">2026 Türkiye benzin/motorin ortalaması. Gerçek fiyatı girerek tasarrufu güncelleyebilirsiniz.</span></span></label>
+            <input class="input-form-row" type="number" id="ev-fuel-price" min="10" max="200" value="58"
               data-input-action="updateEVInput"/>
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Benzin Tüketimi (L/100km)</label>
             <input class="input-form-row" type="number" id="ev-fuel-l100" min="3" max="25" step="0.1" value="8"
-             
               data-input-action="updateEVInput"/>
           </div>
         </div>
@@ -3243,13 +3206,11 @@
           <div class="form-group m-0">
             <label class="text-sm">Kullanım Alanı (m²)</label>
             <input class="input-form-row" type="number" id="hp-area" min="20" max="2000" value="120"
-             
               data-input-action="updateHeatPumpInput"/>
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Yalıtım Kalitesi</label>
-            <select class="input-form-row" id="hp-insulation" data-change-action="updateHeatPumpInput"
-             >
+            <select class="input-form-row" id="hp-insulation" data-change-action="updateHeatPumpInput">
               <option value="poor">Zayıf</option>
               <option value="avg" selected>Ortalama</option>
               <option value="good">İyi</option>
@@ -3257,8 +3218,7 @@
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Isıtma Tipi</label>
-            <select class="input-form-row" id="hp-type" data-change-action="updateHeatPumpInput"
-             >
+            <select class="input-form-row" id="hp-type" data-change-action="updateHeatPumpInput">
               <option value="heat">Sadece Isıtma</option>
               <option value="cool">Sadece Soğutma</option>
               <option value="both" selected>Isıtma + Soğutma</option>
@@ -3266,8 +3226,7 @@
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Mevcut Isıtma</label>
-            <select class="input-form-row" id="hp-current" data-change-action="updateHeatPumpInput"
-             >
+            <select class="input-form-row" id="hp-current" data-change-action="updateHeatPumpInput">
               <option value="gas" selected>Doğalgaz</option>
               <option value="electric">Elektrik</option>
               <option value="fueloil">Fuel-Oil</option>
@@ -3299,13 +3258,11 @@
           <div class="form-group m-0">
             <label class="text-sm">Kurumlar Vergisi Oranı (%)</label>
             <input class="input-form-row" type="number" id="tax-rate" min="0" max="50" value="25" step="1"
-             
               data-input-action="updateTaxInput"/>
           </div>
           <div class="form-group m-0">
             <label class="text-sm">Amortisman Süresi (Yıl)</label>
             <input class="input-form-row" type="number" id="tax-amort" min="1" max="25" value="10"
-             
               data-input-action="updateTaxInput"/>
           </div>
         </div>
@@ -3313,7 +3270,6 @@
           <div class="form-group m-0">
             <label class="text-sm">Yatırım Katkı Oranı (%)</label>
             <input class="input-form-row" type="number" id="tax-invest-rate" min="0" max="45" value="0" step="5"
-             
               data-input-action="updateTaxInput"/>
             <div class="text-helper-72-mt-3">Bölge 1:%15 · Bölge 2:%20 · Bölge 3:%25 · Bölge 4:%30 · Bölge 5:%40 · Bölge 6:%45</div>
           </div>
@@ -3330,10 +3286,7 @@
       </div>
     </div>
     </div>
-        </div>
-      </details>
-    </div>
-  </details>
+  </section>
 
   <div class="nav-btns mt-7">
     <button type="button" class="btn btn-secondary" data-click-action="goToStep" data-arg="4" data-arg-type="number">← Geri</button>

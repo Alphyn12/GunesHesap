@@ -166,7 +166,7 @@ const PANEL_TYPE_PROFILES = {
     wattPeak: 460,
     width: 1.205, height: 1.728,
     tempCoeff: -0.0024,
-    degradation: 0.0025,
+    degradation: 0.003,   // 0.30%/yıl — IEC 61215 uyumlu savunulabilir aralık; 0.25% üreticilerin agresif iddiası
     firstYearDeg: 0.01,
     pricePerWatt: 28.5,
     warranty: 25,
@@ -412,7 +412,7 @@ export const APRIL_2026_TARIFF_PROFILES = {
     pst: 3.237826,
     sktt: 4.857548,
     contracted: 3.237826,
-    export: 0,
+    export: 2.27,  // PST × %70 — muhafazakâr mahsuplaşma tahmini
     distributionFee: 0,
     note: 'Mesken düşük kademe: EMO 230 kWh = 744,7 TL fatura hesabı.'
   },
@@ -420,7 +420,7 @@ export const APRIL_2026_TARIFF_PROFILES = {
     pst: 5.35,
     sktt: 5.93,
     contracted: 5.35,
-    export: 0,
+    export: 3.75,  // PST × %70
     distributionFee: 0,
     note: 'Ticarethane AG tek zamanlı: EPDK 4 Nisan 2026 vergisiz aktif enerji + dağıtım toplamı.'
   },
@@ -428,7 +428,7 @@ export const APRIL_2026_TARIFF_PROFILES = {
     pst: 4.81,
     sktt: 4.81,
     contracted: 4.81,
-    export: 0,
+    export: 3.37,  // PST × %70
     distributionFee: 0,
     note: 'Sanayi AG tek terim tek zamanlı: EPDK 4 Nisan 2026 vergisiz aktif enerji + dağıtım toplamı.'
   },
@@ -436,7 +436,7 @@ export const APRIL_2026_TARIFF_PROFILES = {
     pst: 4.37,
     sktt: 4.37,
     contracted: 4.37,
-    export: 0,
+    export: 3.06,  // PST × %70
     distributionFee: 0,
     note: 'Tarımsal sulama AG tek zamanlı: EPDK 4 Nisan 2026 vergisiz aktif enerji + dağıtım toplamı.'
   }
