@@ -186,7 +186,7 @@ function updateUiAndState(summary) {
   });
   const selected = document.getElementById('selected-loc-text');
   if (selected && summary.centroid) {
-    selected.textContent = `${state.cityName || 'Çatı merkezi'} — ${summary.centroid.lat.toFixed(4)}°K, ${summary.centroid.lng.toFixed(4)}°D`;
+    selected.textContent = `${state.cityName || 'Kurulum alanı merkezi'} — ${summary.centroid.lat.toFixed(4)}°K, ${summary.centroid.lng.toFixed(4)}°D`;
   }
 
   // ── Badge güncelle ───────────────────────────────────────
@@ -300,7 +300,7 @@ export function initRoofDrawing(map) {
     if (map.getZoom() > 18) map.setZoom(18);
     const hint = document.getElementById('map-draw-hint');
     if (hint) hint.style.display = 'block';
-    window.showToast?.(window.i18n?.t?.('step3.drawToastStart') || 'Çatı köşelerine tıklayın, çift tıklayarak tamamlayın. Dikdörtgen araç düzenli çatılar için daha hızlıdır.', 'info');
+    window.showToast?.(window.i18n?.t?.('step3.drawToastStart') || 'Kurulum alanının sınır noktalarına tıklayın, çift tıklayarak tamamlayın. Dikdörtgen araç düzenli alanlarda daha hızlıdır.', 'info');
   });
 
   map.on(L.Draw.Event.DRAWSTOP, () => {
@@ -334,18 +334,18 @@ export function initRoofDrawing(map) {
     }
     const summary = syncRoofLayers(drawn);
     if (summary) {
-      window.showToast?.(`Çatı çizildi: ${summary.areaM2.toFixed(1)} m² · ${summary.azimuthName} (${Math.round(summary.azimuth)}°)`, 'success');
+      window.showToast?.(`Kurulum alanı çizildi: ${summary.areaM2.toFixed(1)} m² · ${summary.azimuthName} (${Math.round(summary.azimuth)}°)`, 'success');
     }
   });
 
   map.on(L.Draw.Event.EDITED, () => {
     syncRoofLayers(drawn);
-    window.showToast?.('Çatı düzenlendi, alan güncellendi.', 'info');
+    window.showToast?.('Kurulum alanı düzenlendi, alan güncellendi.', 'info');
   });
 
   map.on(L.Draw.Event.DELETED, () => {
     syncRoofLayers(drawn);
-    window.showToast?.('Çatı poligonu silindi.', 'info');
+    window.showToast?.('Kurulum alanı poligonu silindi.', 'info');
   });
 
   // ── Kayıtlı poligonları geri yükle ──────────────────────
@@ -384,7 +384,7 @@ export function syncRoofLayers(drawn) {
     window.state.roofArea = 0;
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     const out = document.getElementById('roof-geometry-summary');
-    if (out) out.textContent = 'Haritada bir veya daha fazla çatı poligonu çizin.';
+    if (out) out.textContent = 'Haritada bir veya daha fazla kurulum alanı poligonu çizin.';
     const badge = document.getElementById('roof-area-badge');
     if (badge) badge.style.display = 'none';
     const clearBtn = document.getElementById('clear-roof-btn');

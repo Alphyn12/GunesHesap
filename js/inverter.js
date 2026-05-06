@@ -6,9 +6,9 @@ import { INVERTER_TYPES } from './data.js';
 import { convertTry } from './exchange-rate.js';
 
 const inverterDescriptions = {
-  string:    'Merkezi mimari. Tek yönlü ve düzenli çatılarda yatırım/performans dengesi güçlüdür.',
+  string:    'Merkezi mimari. Tek yönlü ve düzenli kurulum yüzeylerinde yatırım/performans dengesi güçlüdür.',
   micro:     'Panel bazlı mimari. Karma yönlü veya kısmi gölgeli yüzeylerde performans avantajı sağlar.',
-  optimizer: 'Panel bazında optimizasyon ile merkezi inverteri birleştirir. Karma çatı projelerinde kontrollü orta yol sunar.'
+  optimizer: 'Panel bazında optimizasyon ile merkezi inverteri birleştirir. Karma yüzeyli projelerde kontrollü orta yol sunar.'
 };
 
 export function buildInverterCards() {
