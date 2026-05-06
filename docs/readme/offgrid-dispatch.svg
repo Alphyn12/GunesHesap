@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Off-grid L2 dispatch modeli</title>
+  <desc id="desc">Off-grid L2 dispatch modelinde PV, yuk, batarya, inverter ve jeneratör akislarini gosteren gorsel.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111F"/>
+      <stop offset="1" stop-color="#102A43"/>
+    </linearGradient>
+    <linearGradient id="pv" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <linearGradient id="bat" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="gen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C4B5FD"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#9FB5C7"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+    <style>
+      .h1{font:800 40px Inter,Segoe UI,Arial,sans-serif;fill:#F8FAFC}
+      .sub{font:500 17px Inter,Segoe UI,Arial,sans-serif;fill:#B8CBDD}
+      .head{font:800 21px Inter,Segoe UI,Arial,sans-serif;fill:#F8FAFC}
+      .body{font:500 14px Inter,Segoe UI,Arial,sans-serif;fill:#C8D7E4}
+      .chip{font:800 15px Inter,Segoe UI,Arial,sans-serif;fill:#FFFFFF}
+      .num{font:800 18px Inter,Segoe UI,Arial,sans-serif;fill:#07111F}
+    </style>
+  </defs>
+  <rect width="1200" height="760" rx="30" fill="url(#bg)"/>
+  <text x="64" y="72" class="h1">Off-Grid L2 Dispatch: saat saat enerji karari</text>
+  <text x="64" y="108" class="sub">Model, her saat once kritik yuku korur; PV, batarya, inverter limiti ve jeneratör kurallarini ayni dongude cozer.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="68" y="176" width="230" height="126" rx="22" fill="#102235" stroke="#28465E"/>
+    <circle cx="108" cy="216" r="26" fill="url(#pv)"/>
+    <text x="150" y="214" class="head">PV profili</text>
+    <text x="150" y="242" class="body">Gercek 8760, PVGIS</text>
+    <text x="150" y="264" class="body">veya aylik sentetik seri</text>
+
+    <rect x="486" y="176" width="230" height="126" rx="22" fill="#102235" stroke="#28465E"/>
+    <circle cx="526" cy="216" r="26" fill="#FFFFFF"/>
+    <text x="518" y="223" class="num">1</text>
+    <text x="568" y="214" class="head">Kritik yuk</text>
+    <text x="568" y="242" class="body">Kritik olan enerji</text>
+    <text x="568" y="264" class="body">once beslenir</text>
+
+    <rect x="902" y="176" width="230" height="126" rx="22" fill="#102235" stroke="#28465E"/>
+    <circle cx="942" cy="216" r="26" fill="url(#gen)"/>
+    <text x="984" y="214" class="head">Jeneratör</text>
+    <text x="984" y="242" class="body">SOC kapisi, saat limiti,</text>
+    <text x="984" y="264" class="body">min yuk orani</text>
+  </g>
+
+  <path d="M298 239H486" stroke="#9FB5C7" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M716 239H902" stroke="#9FB5C7" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M600 302V392" stroke="#9FB5C7" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="372" y="392" width="456" height="154" rx="26" fill="#0D1C2A" stroke="#2C536A"/>
+    <circle cx="430" cy="448" r="32" fill="url(#bat)"/>
+    <text x="420" y="457" class="num">2</text>
+    <text x="486" y="430" class="head">Batarya SOC modeli</text>
+    <text x="486" y="460" class="body">Sarj verimi, desarj verimi, C-rate / SOC dinamik verim,</text>
+    <text x="486" y="482" class="body">maksimum sarj-desarj kW limiti ve minimum rezerv korunur.</text>
+    <rect x="486" y="506" width="292" height="24" rx="12" fill="#142F42"/>
+    <rect x="486" y="506" width="178" height="24" rx="12" fill="url(#bat)"/>
+  </g>
+
+  <path d="M486 546L300 636" stroke="#9FB5C7" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M714 546L900 636" stroke="#9FB5C7" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="622" width="300" height="82" rx="20" fill="#102235" stroke="#28465E"/>
+    <text x="92" y="656" class="chip">Served load</text>
+    <text x="92" y="682" class="body">direct PV + battery + generator</text>
+    <rect x="836" y="622" width="300" height="82" rx="20" fill="#102235" stroke="#28465E"/>
+    <text x="864" y="656" class="chip">Unmet / curtailed</text>
+    <text x="864" y="682" class="body">karsilanamayan yuk ve kesilen PV</text>
+  </g>
+
+  <g transform="translate(64 342)">
+    <rect x="0" y="0" width="250" height="150" rx="20" fill="#0D1C2A" stroke="#2C536A"/>
+    <text x="26" y="38" class="chip">Saatlik karar sirasi</text>
+    <text x="26" y="70" class="body">1. PV dogrudan kritik yuke</text>
+    <text x="26" y="94" class="body">2. PV dogrudan normal yuke</text>
+    <text x="26" y="118" class="body">3. Fazla PV bataryaya</text>
+  </g>
+  <g transform="translate(886 342)">
+    <rect x="0" y="0" width="250" height="150" rx="20" fill="#0D1C2A" stroke="#2C536A"/>
+    <text x="26" y="38" class="chip">Kisitlar</text>
+    <text x="26" y="70" class="body">Inverter AC ve surge limiti</text>
+    <text x="26" y="94" class="body">Batarya guc limiti</text>
+    <text x="26" y="118" class="body">Jeneratör stratejisi</text>
+  </g>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD54F" />
+      <stop offset="100%" stop-color="#FF8F00" />
+    </linearGradient>
+    
+    <linearGradient id="panelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E88E5" />
+      <stop offset="100%" stop-color="#0D47A1" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="200" cy="150" r="75" fill="url(#sunGrad)" />
+
+  <g stroke="#FFB300" stroke-width="8" stroke-linecap="round">
+    <path d="M 200 35 L 200 55" />
+    <path d="M 281 69 L 267 83" />
+    <path d="M 345 150 L 325 150" />
+    <path d="M 281 231 L 267 217" />
+    <path d="M 119 69 L 133 83" />
+    <path d="M 55 150 L 75 150" />
+    <path d="M 119 231 L 133 217" />
+  </g>
+
+  <g transform="translate(0, 25)">
+    <path d="M 70 270 L 140 180 L 330 180 L 260 270 Z" fill="#0A2A66" />
+    
+    <path d="M 60 260 L 130 170 L 320 170 L 250 260 Z" fill="url(#panelGrad)" stroke="#1976D2" stroke-width="4" stroke-linejoin="round"/>
+    
+    <line x1="83" y1="230" x2="273" y2="230" stroke="#64B5F6" stroke-width="4" opacity="0.6"/>
+    <line x1="106" y1="200" x2="296" y2="200" stroke="#64B5F6" stroke-width="4" opacity="0.6"/>
+
+    <line x1="177" y1="170" x2="107" y2="260" stroke="#64B5F6" stroke-width="4" opacity="0.6"/>
+    <line x1="225" y1="170" x2="155" y2="260" stroke="#64B5F6" stroke-width="4" opacity="0.6"/>
+    <line x1="272" y1="170" x2="202" y2="260" stroke="#64B5F6" stroke-width="4" opacity="0.6"/>
+  </g>
+</svg>

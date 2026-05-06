@@ -1,0 +1,60 @@
+{
+  "flatNoDegradation": {
+    "annualEnergy": 1000,
+    "hourlySummary": {
+      "annualProduction": 1000,
+      "annualLoad": 1000,
+      "selfConsumption": 800,
+      "gridExport": 200,
+      "gridImport": 200
+    },
+    "totalCost": 10000,
+    "tariff": {
+      "tariffType": "residential",
+      "tariff": 5,
+      "exportTariff": 2,
+      "annualPriceIncrease": 0,
+      "discountRate": 0
+    },
+    "panel": {
+      "firstYearDeg": 0,
+      "degradation": 0
+    },
+    "expected": {
+      "year1Rate": "5.00",
+      "year1Savings": 4400,
+      "discountedCashFlow": 110000,
+      "projectNPV": 100000,
+      "paybackYear": 3,
+      "roi": 1000
+    }
+  },
+  "priceIncreaseStartsAfterFirstYear": {
+    "annualEnergy": 1000,
+    "hourlySummary": {
+      "annualProduction": 1000,
+      "annualLoad": 1000,
+      "selfConsumption": 1000,
+      "gridExport": 0,
+      "gridImport": 0
+    },
+    "totalCost": 10000,
+    "tariff": {
+      "tariffType": "residential",
+      "tariff": 5,
+      "exportTariff": 0,
+      "annualPriceIncrease": 0.10,
+      "discountRate": 0
+    },
+    "panel": {
+      "firstYearDeg": 0,
+      "degradation": 0
+    },
+    "expected": {
+      "year1Rate": "5.00",
+      "year2Rate": "5.50",
+      "year1Savings": 5000,
+      "year2Savings": 5500
+    }
+  }
+}

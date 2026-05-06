@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <style>
+      .sun-pulse { animation: pulse 2.5s ease-in-out infinite alternate; }
+      .dc-flow { stroke-dasharray: 4 6; animation: flowMove 1s linear infinite; }
+      .ac-flow { stroke-dasharray: 4 6; animation: flowMove 1s linear infinite; }
+      .led-blink { animation: blink 1.5s step-end infinite; }
+      .glass-shine { animation: shine 4s ease-in-out infinite alternate; }
+      
+      @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.7; } 100% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 8px #F59E0B); } }
+      @keyframes flowMove { to { stroke-dashoffset: -10; } }
+      @keyframes blink { 0%, 100% { fill: #10B981; filter: drop-shadow(0 0 4px #10B981); } 50% { fill: #064E3B; filter: none; } }
+      @keyframes shine { 0% { opacity: 0.1; } 100% { opacity: 0.3; } }
+    </style>
+
+    <linearGradient id="panelCells" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(35, 35)" class="sun-pulse">
+    <circle cx="0" cy="0" r="14" fill="url(#sunGrad)" />
+    <path d="M 0 -19 L 0 -24 M 0 19 L 0 24 M -19 0 L -24 0 M 19 0 L 24 0 M -13.5 -13.5 L -17 -17 M 13.5 13.5 L 17 17 M -13.5 13.5 L -17 17 M 13.5 -13.5 L 17 -17" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <path d="M 70 110 Q 70 150, 95 150" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" class="dc-flow"/>
+  
+  <path d="M 125 150 Q 165 150, 165 110 L 165 80" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linecap="round" class="ac-flow"/>
+
+  <g transform="translate(165, 75)" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M -12 35 L 0 -15 L 12 35" fill="none" stroke="#64748B" stroke-width="2.5"/>
+    <path d="M 0 -15 L 0 35" fill="none" stroke="#475569" stroke-width="1.5"/>
+    <path d="M -18 5 L 18 5 M -12 -5 L 12 -5 M -22 15 L 22 15" fill="none" stroke="#64748B" stroke-width="2"/>
+    <path d="M -12 35 L 0 15 L 12 35 M -8 15 L 0 5 L 8 15 M -4 5 L 0 -5 L 4 5" fill="none" stroke="#475569" stroke-width="1" opacity="0.6"/>
+    <circle cx="-18" cy="5" r="2" fill="#E2E8F0" stroke="none"/>
+    <circle cx="18" cy="5" r="2" fill="#E2E8F0" stroke="none"/>
+    <circle cx="-22" cy="15" r="2" fill="#E2E8F0" stroke="none"/>
+    <circle cx="22" cy="15" r="2" fill="#E2E8F0" stroke="none"/>
+  </g>
+
+  <g transform="translate(110, 150)">
+    <rect x="-14" y="-18" width="28" height="36" rx="4" fill="#0F172A"/>
+    <rect x="-16" y="-20" width="32" height="40" rx="4" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+    <path d="M -10 -12 L 10 -12 M -10 -7 L 10 -7 M -10 -2 L 10 -2" stroke="#334155" stroke-width="2" stroke-linecap="round"/>
+    <rect x="-8" y="5" width="16" height="10" rx="1.5" fill="#020617"/>
+    <circle cx="0" cy="10" r="2" class="led-blink"/>
+  </g>
+
+  <g transform="translate(70, 95) scale(0.9) rotate(-30) skewX(25)">
+    <rect x="-38" y="-38" width="76" height="76" rx="4" fill="#64748B" transform="translate(2, 2)"/>
+    <rect x="-40" y="-40" width="80" height="80" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5"/>
+    <rect x="-36" y="-36" width="72" height="72" rx="2" fill="url(#panelCells)"/>
+    
+    <g stroke="#3B82F6" stroke-width="0.75" opacity="0.6">
+      <line x1="-12" y1="-36" x2="-12" y2="36" />
+      <line x1="12" y1="-36" x2="12" y2="36" />
+      
+      <line x1="-36" y1="-12" x2="36" y2="-12" />
+      <line x1="-36" y1="12" x2="36" y2="12" />
+    </g>
+
+    <g stroke="#94A3B8" stroke-width="0.3" opacity="0.8">
+      <line x1="-24" y1="-36" x2="-24" y2="36" />
+      <line x1="0" y1="-36" x2="0" y2="36" />
+      <line x1="24" y1="-36" x2="24" y2="36" />
+    </g>
+
+    <polygon points="-36,-36 10,-36 -36,10" fill="#ffffff" class="glass-shine"/>
+  </g>
+</svg>

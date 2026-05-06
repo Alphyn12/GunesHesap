@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Arka plan dairesi (koyu lacivert) -->
+  <circle cx="256" cy="256" r="256" fill="#0F172A"/>
+
+  <!-- Amber dış çember -->
+  <circle cx="256" cy="256" r="213" fill="#F59E0B"/>
+
+  <!-- Güneş ışınları — 8 adet, her biri 45° farkla döndürülmüş dikdörtgen -->
+  <!-- Işın 1: 0° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(0 256 256)"/>
+  <!-- Işın 2: 45° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(45 256 256)"/>
+  <!-- Işın 3: 90° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(90 256 256)"/>
+  <!-- Işın 4: 135° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(135 256 256)"/>
+  <!-- Işın 5: 180° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(180 256 256)"/>
+  <!-- Işın 6: 225° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(225 256 256)"/>
+  <!-- Işın 7: 270° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(270 256 256)"/>
+  <!-- Işın 8: 315° -->
+  <rect x="235" y="37" width="42" height="90" rx="21" fill="white" transform="rotate(315 256 256)"/>
+
+  <!-- Merkez amber daire (güneş gövdesi) -->
+  <circle cx="256" cy="256" r="80" fill="#F59E0B"/>
+
+  <!-- Merkez beyaz iç daire -->
+  <circle cx="256" cy="256" r="68" fill="white"/>
+
+  <!-- "GH" metni -->
+  <text
+    x="256"
+    y="276"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="64"
+    font-weight="700"
+    fill="#0F172A"
+    letter-spacing="3"
+  >GH</text>
+</svg>

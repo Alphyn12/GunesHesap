@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+pytest
+httpx
+python-multipart
+python-dotenv
+slowapi>=0.1.9
+# Optional but required for the pvlib-backed engine path:
+pvlib

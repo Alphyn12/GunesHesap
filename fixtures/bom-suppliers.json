@@ -1,0 +1,62 @@
+[
+  {
+    "id": "panel-reference-550w",
+    "category": "panel",
+    "supplier": "Reference BOM",
+    "name": "550 Wp Mono PERC panel",
+    "unit": "wp",
+    "unitCost": 8.5,
+    "qty": 1,
+    "currency": "TRY"
+  },
+  {
+    "id": "inverter-reference-10kw",
+    "category": "inverter",
+    "supplier": "Reference BOM",
+    "name": "10 kW string inverter",
+    "unit": "kwp",
+    "unitCost": 4200,
+    "qty": 1,
+    "currency": "TRY"
+  },
+  {
+    "id": "mounting-reference-roof",
+    "category": "mounting",
+    "supplier": "Reference BOM",
+    "name": "Roof mounting kit",
+    "unit": "wp",
+    "unitCost": 1.3,
+    "qty": 1,
+    "currency": "TRY"
+  },
+  {
+    "id": "cable-reference-dc-ac",
+    "category": "cable",
+    "supplier": "Reference BOM",
+    "name": "DC/AC cable and protection set",
+    "unit": "kwp",
+    "unitCost": 1250,
+    "qty": 1,
+    "currency": "TRY"
+  },
+  {
+    "id": "labor-reference-install",
+    "category": "labor",
+    "supplier": "Reference BOM",
+    "name": "Installation labor",
+    "unit": "kwp",
+    "unitCost": 2100,
+    "qty": 1,
+    "currency": "TRY"
+  },
+  {
+    "id": "battery-reference-lfp",
+    "category": "battery",
+    "supplier": "Reference BOM",
+    "name": "LFP battery module",
+    "unit": "kwh",
+    "unitCost": 9800,
+    "qty": 1,
+    "currency": "TRY"
+  }
+]

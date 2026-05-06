@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <style>
+      .sun-pulse { animation: pulse 2.5s ease-in-out infinite alternate; }
+      .dc-flow { stroke-dasharray: 4 6; animation: flowMove 1s linear infinite; }
+      .charge-flow { stroke-dasharray: 4 6; animation: flowMove 1.2s linear infinite; }
+      .mppt-blink { animation: blink 1s step-end infinite; }
+      .glass-shine { animation: shine 4s ease-in-out infinite alternate; }
+      
+      /* Batarya Dolum Animasyonu (Aşağıdan Yukarı Sıralı) */
+      .led-1 { animation: ledPulse 1.5s infinite 0.0s; }
+      .led-2 { animation: ledPulse 1.5s infinite 0.3s; }
+      .led-3 { animation: ledPulse 1.5s infinite 0.6s; }
+
+      @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.7; } 100% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 8px #F59E0B); } }
+      @keyframes flowMove { to { stroke-dashoffset: -10; } }
+      @keyframes blink { 0%, 100% { fill: #F59E0B; filter: drop-shadow(0 0 4px #F59E0B); } 50% { fill: #78350F; filter: none; } }
+      @keyframes shine { 0% { opacity: 0.1; } 100% { opacity: 0.3; } }
+      @keyframes ledPulse { 0%, 100% { fill: #064E3B; filter: none; } 50% { fill: #10B981; filter: drop-shadow(0 0 4px #10B981); } }
+    </style>
+
+    <linearGradient id="panelCells" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(35, 35)" class="sun-pulse">
+    <circle cx="0" cy="0" r="14" fill="url(#sunGrad)" />
+    <path d="M 0 -19 L 0 -24 M 0 19 L 0 24 M -19 0 L -24 0 M 19 0 L 24 0 M -13.5 -13.5 L -17 -17 M 13.5 13.5 L 17 17 M -13.5 13.5 L -17 17 M 13.5 -13.5 L 17 -17" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <path d="M 85 100 Q 120 75, 145 75" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" class="dc-flow"/>
+  
+  <path d="M 165 100 Q 165 150, 135 150" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" class="charge-flow"/>
+
+  <g transform="translate(165, 75)">
+    <rect x="-14" y="-18" width="28" height="36" rx="3" fill="#0F172A"/>
+    <rect x="-16" y="-20" width="32" height="40" rx="3" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+    <path d="M -16 -10 L -20 -10 M -16 -4 L -20 -4 M -16 2 L -20 2 M -16 8 L -20 8" stroke="#334155" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 16 -10 L 20 -10 M 16 -4 L 20 -4 M 16 2 L 20 2 M 16 8 L 20 8" stroke="#334155" stroke-width="2" stroke-linecap="round"/>
+    <rect x="-8" y="-12" width="16" height="10" rx="1.5" fill="#020617"/>
+    <circle cx="0" cy="-7" r="2" class="mppt-blink"/>
+    <circle cx="-6" cy="15" r="2.5" fill="#F59E0B"/>
+    <circle cx="6" cy="15" r="2.5" fill="#10B981"/>
+  </g>
+
+  <g transform="translate(110, 150)">
+    <rect x="-22" y="-22" width="44" height="44" rx="4" fill="#0F172A"/>
+    <rect x="-24" y="-24" width="48" height="48" rx="4" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+    
+    <rect x="-16" y="-28" width="10" height="6" rx="1.5" fill="#EF4444"/> <rect x="6" y="-28" width="10" height="6" rx="1.5" fill="#3B82F6"/> <rect x="-12" y="-14" width="24" height="28" rx="2" fill="#020617"/>
+    
+    <rect x="-6" y="6" width="12" height="4" rx="1" class="led-1"/>
+    <rect x="-6" y="-1" width="12" height="4" rx="1" class="led-2"/>
+    <rect x="-6" y="-8" width="12" height="4" rx="1" class="led-3"/>
+  </g>
+
+  <g transform="translate(70, 95) scale(0.9) rotate(-30) skewX(25)">
+    <rect x="-38" y="-38" width="76" height="76" rx="4" fill="#64748B" transform="translate(2, 2)"/>
+    <rect x="-40" y="-40" width="80" height="80" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5"/>
+    <rect x="-36" y="-36" width="72" height="72" rx="2" fill="url(#panelCells)"/>
+    
+    <g stroke="#3B82F6" stroke-width="0.75" opacity="0.6">
+      <line x1="-12" y1="-36" x2="-12" y2="36" />
+      <line x1="12" y1="-36" x2="12" y2="36" />
+      <line x1="-36" y1="-12" x2="36" y2="-12" />
+      <line x1="-36" y1="12" x2="36" y2="12" />
+    </g>
+
+    <g stroke="#94A3B8" stroke-width="0.3" opacity="0.8">
+      <line x1="-24" y1="-36" x2="-24" y2="36" />
+      <line x1="0" y1="-36" x2="0" y2="36" />
+      <line x1="24" y1="-36" x2="24" y2="36" />
+    </g>
+
+    <polygon points="-36,-36 10,-36 -36,10" fill="#ffffff" class="glass-shine"/>
+  </g>
+</svg>
