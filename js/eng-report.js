@@ -309,7 +309,6 @@ IRR = ${r.irr === 'N/A' ? escapeHtml(report('unableToCalculate')) : r.irr + '%'}
         <tr><td>${escapeHtml(report('gridConnection'))}</td><td>${escapeHtml(report('fixed'))}</td><td>1</td><td>${money(cb.permits)}</td></tr>
         <tr><td colspan="3">${escapeHtml(i18n.t('report.subtotalExVat'))}</td><td>${money(cb.subtotal)}</td></tr>
         <tr><td colspan="3">${escapeHtml(i18n.t('kdv.note'))}</td><td>${money(cb.kdv)}</td></tr>
-        ${cb.marketFloorAdjustment > 0 ? `<tr><td colspan="3">${escapeHtml(i18n.t('onGridResult.costConfidenceMarketFloor'))}</td><td>${money(cb.marketFloorAdjustment)}</td></tr>` : ''}
         <tr class="total-row"><td colspan="3"><strong>${escapeHtml(i18n.t('report.grandTotal'))}</strong></td><td><strong>${money(cb.total)}</strong></td></tr>
         ${r.annualOMCost > 0 ? `<tr class="tr-border-top-2"><td colspan="3">${escapeHtml(report('annualMaintenance'))} (O&M) — %${state.omRate}</td><td>${money(r.annualOMCost)}/${escapeHtml(yearUnit)}</td></tr>` : ''}
         ${r.annualInsurance > 0 ? `<tr><td colspan="3">${escapeHtml(report('annualInsurance'))} — %${state.insuranceRate}</td><td>${money(r.annualInsurance)}/${escapeHtml(yearUnit)}</td></tr>` : ''}
