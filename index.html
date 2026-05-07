@@ -2640,7 +2640,7 @@
           <input class="input-form-row" type="number" id="export-tariff-input" value="2.27" min="0" step="0.01"
 
             data-input-action="updateTariffAssumptions"/>
-          <button type="button" class="chip-toggle-glass" style="margin-top:4px;font-size:0.72rem;" data-click-action="setExportTariffAuto">Otomatik (PST × %70)</button>
+          <button type="button" class="chip-toggle-glass export-tariff-auto-chip" data-click-action="setExportTariffAuto">Otomatik (PST × %70)</button>
         </div>
         <div>
           <div class="text-caption-helper">Mahsuplaşma Modu</div>
@@ -3761,7 +3761,7 @@
     </table>
   </div>
 
-  <div id="eng-report-body" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;"></div>
+  <div id="eng-report-body" class="eng-report-output-buffer" aria-hidden="true"></div>
   <div class="result-action-groups">
     <section class="action-group-card" data-testid="result-actions">
       <div class="action-group-head">
