@@ -1387,6 +1387,8 @@ export async function runCalculation() {
   const totalExpenses25y = economicSummary.totalExpenses25y;
   const npvTotal = economicSummary.projectNPV;
   const roi = economicSummary.roi;
+  const totalNominalReturnPct = economicSummary.totalNominalReturnPct;
+  const averageAnnualNominalReturnPct = economicSummary.averageAnnualNominalReturnPct;
   const irr = economicSummary.irr;
   const lcoe = economicSummary.lcoe;
   const compensatedLcoe = economicSummary.compensatedLcoe;
@@ -1426,7 +1428,13 @@ export async function runCalculation() {
     grossSimplePaybackYear: grossSimplePaybackYear ? Number(grossSimplePaybackYear.toFixed(2)) : 0,
     netSimplePaybackYear: netSimplePaybackYear ? Number(netSimplePaybackYear.toFixed(2)) : 0,
     discountedPaybackYear,
-    npvTotal: Math.round(npvTotal), discountedCashFlow: Math.round(economicSummary.discountedCashFlow), roi: roi.toFixed(1),
+    npvTotal: Math.round(npvTotal),
+    discountedCashFlow: Math.round(economicSummary.discountedCashFlow),
+    totalNetCashFlow: Math.round(economicSummary.totalNetCashFlow),
+    totalNominalReturnPct: Number(totalNominalReturnPct.toFixed(1)),
+    averageAnnualNominalReturnPct: Number(averageAnnualNominalReturnPct.toFixed(1)),
+    roiMetricBasis: economicSummary.roiMetricBasis,
+    roi: roi.toFixed(1),
     co2Savings: co2Savings.toFixed(2), trees, monthlyData,
     tempLoss: (tempLoss * 100).toFixed(2), pr: (pr * 100).toFixed(1),
     temperatureAdjustment: authoritativeTempAdjustment,
@@ -1479,6 +1487,12 @@ export async function runCalculation() {
       acElec: Math.round(acElecCost), labor: Math.round(laborCost),
       permits: Math.round(permitCost), subtotal: Math.round(subtotal),
       kdv: Math.round(kdv), kdvRate, total: Math.round(solarCost), invUnit: invUnitEffective,
+      detailedTotal: Math.round(costBreakdownBase.detailedSolarCost),
+      marketFloorCost: Math.round(costBreakdownBase.marketFloorCost),
+      marketFloorAdjustment: Math.round(costBreakdownBase.marketFloorAdjustment),
+      marketFloorFixed: Math.round(costBreakdownBase.marketFloorFixed),
+      marketFloorPerKwp: Math.round(costBreakdownBase.marketFloorPerKwp),
+      marketFloorTier: costBreakdownBase.marketFloorTier,
       battery: batteryCostVal,
       generator: generatorCapexVal,
       generatorCapex: generatorCapexVal,
@@ -1487,6 +1501,16 @@ export async function runCalculation() {
     },
     generatorCapex: Math.round(generatorCapexVal),
     financialCostBasis: Math.round(financialCostBasis),
+    costConfidence: costBreakdownBase.costConfidence,
+    costModelBasis: costBreakdownBase.costModelBasis,
+    costFloorApplied: !!costBreakdownBase.costFloorApplied,
+    annualConsumptionKwh: Math.round(tariffModel.annualConsumptionKwh || hourlySummaryRaw.annualLoad || 0),
+    monthlyConsumptionKwh: Math.round((tariffModel.annualConsumptionKwh || hourlySummaryRaw.annualLoad || 0) / 12),
+    financialConsistency: {
+      npvNegativeButNominalPositive: npvTotal < 0 && Number(totalNominalReturnPct) > 0,
+      nominalReturnBasis: economicSummary.roiMetricBasis,
+      decisionMetric: 'npvTotal-and-discountedPaybackYear'
+    },
     taxTreatment,
     methodologyVersion: METHODOLOGY_VERSION,
     pvgisLossParam: PVGIS_LOSS_PARAM,

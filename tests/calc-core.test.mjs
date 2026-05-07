@@ -4,6 +4,8 @@ import {
   buildTariffModel,
   calculateSystemLayout,
   computeFinancialTable,
+  estimateSolarCapex,
+  evaluateProjectEconomics,
   getLoadProfile,
   getSeasonForMonth,
   normalizeMonthlyProductionToAnnual,
@@ -112,6 +114,25 @@ const billTargetLayout = calculateSystemLayout({
 }, 'mono');
 assert.ok(billTargetLayout.panelCount < fillRoofLayout.panelCount);
 assert.equal(billTargetLayout.designTargetApplied, 'bill-offset');
+assert.equal(Math.round(billTargetLayout.targetSystemPowerKwp * 1000), 870);
+
+const lowConsumptionCapex = estimateSolarCapex({
+  systemPowerKwp: billTargetLayout.systemPower,
+  panel: PANEL_TYPES.mono,
+  inverterTypeKey: 'string'
+});
+assert.equal(lowConsumptionCapex.costFloorApplied, true);
+assert.equal(lowConsumptionCapex.costConfidence, 'market-floor');
+assert.ok(lowConsumptionCapex.marketFloorAdjustment > 0);
+assert.ok(lowConsumptionCapex.solarCost >= lowConsumptionCapex.marketFloorCost);
+
+const largeCommercialCapex = estimateSolarCapex({
+  systemPowerKwp: 160,
+  panel: PANEL_TYPES.mono,
+  inverterTypeKey: 'string'
+});
+assert.equal(largeCommercialCapex.costFloorApplied, false);
+assert.ok(largeCommercialCapex.solarCost > 4_000_000);
 
 const qcellsLayout = calculateSystemLayout({
   scenarioKey: 'on-grid',
@@ -168,6 +189,26 @@ assert.ok(financial.projectNPV < financial.discountedCashFlow);
 assert.equal(Math.round(financial.projectNPV), Math.round(financial.discountedCashFlow - 10000));
 assert.equal(financial.simplePaybackYear, financial.paybackYear);
 assert.ok(financial.discountedPaybackYear >= financial.simplePaybackYear || financial.discountedPaybackYear === 0);
+assert.equal(financial.totalNominalReturnPct, financial.roi);
+assert.equal(financial.averageAnnualNominalReturnPct, financial.roi / 25);
+assert.equal(financial.roiMetricBasis, '25y-cumulative-nominal-net-return-pct');
+
+const economics = evaluateProjectEconomics({
+  annualEnergy: 1200,
+  hourlySummary: hourly,
+  batterySummary: null,
+  totalCost: lowConsumptionCapex.solarCost,
+  tariffModel: buildTariffModel({ tariff: 3.5, exportTariff: 1.5, annualPriceIncrease: 0.12, discountRate: 0.18 }),
+  panel: PANEL_TYPES.mono,
+  annualOMCost: 0,
+  annualInsurance: 0,
+  inverterLifetime: 12,
+  inverterReplaceCost: 0,
+  netMeteringEnabled: true,
+  exportRateOverride: 1.5
+});
+assert.equal(economics.totalNominalReturnPct, economics.roi);
+assert.ok(Number.isFinite(economics.averageAnnualNominalReturnPct));
 
 const cappedFinancial = computeFinancialTable({
   annualEnergy: 1000,

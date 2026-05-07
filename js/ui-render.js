@@ -58,6 +58,19 @@ function setVisible(el, visible, display = '') {
   el.style.display = visible ? display : 'none';
 }
 
+function financialInterpretationMessages(r = {}) {
+  const messages = [];
+  if (r.costFloorApplied) messages.push(i18n.t('onGridResult.costFloorWarning'));
+  if (r.financialConsistency?.npvNegativeButNominalPositive) messages.push(i18n.t('onGridResult.nominalVsNpvWarning'));
+  if (Number(r.annualConsumptionKwh) > 0 && Number(r.annualConsumptionKwh) <= 2400 && Number(r.systemPower) <= 3) {
+    messages.push(i18n.t('onGridResult.lowConsumptionSystemWarning')
+      .replace('{annual}', Math.round(Number(r.annualConsumptionKwh)).toLocaleString(localeTag()))
+      .replace('{monthly}', Math.round(Number(r.monthlyConsumptionKwh || r.annualConsumptionKwh / 12)).toLocaleString(localeTag()))
+      .replace('{power}', Number(r.systemPower || 0).toFixed(2)));
+  }
+  return messages;
+}
+
 // Faz-3 D7: explicit weather-provenance labels so a "8760-hour simulation" badge
 // can never imply "real meteorology" when the actual data is a clear-sky scaling
 // or deterministic PSH model. Mirrors the synthetic set guarded by the
@@ -398,8 +411,9 @@ export function renderResults() {
   }
   const finRoiEl = document.getElementById('fin-roi');
   if (finRoiEl) {
-    finRoiEl.textContent = r.roi + '%';
-    setSignedFinancialClass(finRoiEl, r.roi);
+    const nominalReturn = Number.isFinite(Number(r.totalNominalReturnPct)) ? Number(r.totalNominalReturnPct).toFixed(1) : r.roi;
+    finRoiEl.textContent = nominalReturn + '%';
+    setSignedFinancialClass(finRoiEl, nominalReturn);
   }
   // ROI etiketi: childNodes[0].nodeValue yerine dedikli span (tooltip yapısı değişse bile sağlam).
   const finRoiLabelText = document.querySelector('#fin-roi-label .fin-label-text');
@@ -412,6 +426,18 @@ export function renderResults() {
     setSignedFinancialClass(finIrrEl, r.irr === 'N/A' ? null : r.irr);
   }
   document.getElementById('fin-lcoe').textContent = moneyRate(r.compensatedLcoe || r.lcoe, 'kWh');
+
+  const finFinancialWarning = document.getElementById('fin-financial-warning');
+  if (finFinancialWarning) {
+    const messages = financialInterpretationMessages(r);
+    if (messages.length) {
+      finFinancialWarning.innerHTML = `<strong>${escapeHtml(i18n.t('onGridResult.financialInterpretationTitle'))}</strong><ul class="result-alert-list">${messages.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+      setVisible(finFinancialWarning, true);
+    } else {
+      finFinancialWarning.innerHTML = '';
+      setVisible(finFinancialWarning, false);
+    }
+  }
 
   const omRow = document.getElementById('fin-om-row');
   const invRow = document.getElementById('fin-inverter-row');
@@ -1133,14 +1159,19 @@ function renderOnGridResultLayers(state, r) {
     : `${settlementIntervalLabels[settlementIntervalRaw] || settlementIntervalRaw}${comp.annualExportCapKwh ? ` / yıllık ${Math.round(comp.annualExportCapKwh).toLocaleString(localeTag())} kWh sınır` : ''}`;
 
   // Cost source display
-  const costSourceType = r.costSourceType || state.costSourceType || 'catalog';
+  const costSourceType = r.costConfidence === 'market-floor' ? 'market-floor' : (r.costSourceType || state.costSourceType || 'catalog');
   const costSourceLabels = {
     'bom-verified': i18n.t('onGridFlow.costSourceBom'),
     'manual': i18n.t('onGridFlow.costSourceManual'),
-    'catalog': i18n.t('onGridFlow.costSourceCatalog')
+    'catalog': i18n.t('onGridFlow.costSourceCatalog'),
+    'market-floor': i18n.t('onGridResult.costConfidenceMarketFloor')
   };
   const costSourceText = costSourceLabels[costSourceType] || costSourceType;
   const costSourceClass = costSourceType === 'bom-verified' ? 'data-source-good' : costSourceType === 'manual' ? 'data-source-ok' : 'data-source-warn';
+  const financialMessages = financialInterpretationMessages(r);
+  const financialWarningHtml = financialMessages.length
+    ? `<div class="result-alert-banner result-alert-banner--warn"><strong>${escapeHtml(i18n.t('onGridResult.financialInterpretationTitle'))}</strong><ul class="result-alert-list">${financialMessages.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>`
+    : '';
 
   setVisible(wrap, true);
   wrap.innerHTML = `
@@ -1176,11 +1207,12 @@ function renderOnGridResultLayers(state, r) {
         <div class="on-grid-result-metric"><strong>${money(r.npvTotal)}</strong><span>${escapeHtml(i18n.t('onGridResult.netGainPotential'))}</span></div>
         <div class="on-grid-result-metric"><strong>${r.irr === 'N/A' ? 'N/A' : r.irr + '%'}</strong><span>${escapeHtml(i18n.t('onGridResult.averageAnnualReturn'))}</span></div>
         <div class="on-grid-result-metric"><strong>${moneyRate(r.compensatedLcoe || r.lcoe, 'kWh')}</strong><span>${escapeHtml(i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${r.roi}%</strong><span>${escapeHtml(i18n.t('onGridResult.roiLabel'))}</span></div>
+        <div class="on-grid-result-metric"><strong>${Number.isFinite(Number(r.totalNominalReturnPct)) ? Number(r.totalNominalReturnPct).toFixed(1) : r.roi}%</strong><span>${escapeHtml(i18n.t('onGridResult.roiLabel'))}</span></div>
         <div class="on-grid-result-metric"><strong>${escapeHtml(settlementBasisText)}</strong><span>${escapeHtml(i18n.t('onGridResult.settlementBasisLabel'))}</span></div>
         <div class="on-grid-result-metric"><strong>${escapeHtml(tariffModeText)}</strong><span>${escapeHtml(i18n.t('onGridResult.pricingModeLabel'))}</span></div>
         <div class="on-grid-result-metric"><strong><span class="${costSourceClass}">${escapeHtml(costSourceText)}</span></strong><span>${escapeHtml(i18n.t('onGridResult.costConfidenceLabel'))}</span></div>
       </div>
+      ${financialWarningHtml}
     </section>
   `;
 }

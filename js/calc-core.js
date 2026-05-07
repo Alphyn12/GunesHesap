@@ -249,6 +249,35 @@ export function resolvePermitCost(systemPowerKwp = 0) {
   return 4000;
 }
 
+export function resolveSolarCapexMarketFloor(systemPowerKwp = 0) {
+  const systemPower = Math.max(0, Number(systemPowerKwp) || 0);
+  if (systemPower <= 0) {
+    return {
+      marketFloorCost: 0,
+      marketFloorFixed: 0,
+      marketFloorPerKwp: 0,
+      marketFloorTier: 'none',
+      costModelBasis: 'no-system-power'
+    };
+  }
+
+  const tier = systemPower < 5
+    ? { key: 'small-rooftop', fixed: 35000, perKwp: 45000 }
+    : systemPower < 20
+      ? { key: 'standard-rooftop', fixed: 50000, perKwp: 40000 }
+      : systemPower < 50
+        ? { key: 'commercial-rooftop', fixed: 75000, perKwp: 35000 }
+        : { key: 'large-commercial', fixed: 125000, perKwp: 30000 };
+
+  return {
+    marketFloorCost: Math.round(tier.fixed + systemPower * tier.perKwp),
+    marketFloorFixed: tier.fixed,
+    marketFloorPerKwp: tier.perKwp,
+    marketFloorTier: tier.key,
+    costModelBasis: '2026-market-floor-turnkey-pre-feasibility'
+  };
+}
+
 export function estimateSolarCapex({
   systemPowerKwp = 0,
   panel = null,
@@ -259,7 +288,8 @@ export function estimateSolarCapex({
   acElecPerKwp = 900,
   laborPerKwp = 1800,
   panelKdvRate = 0,
-  nonPanelKdvRate = 0.20
+  nonPanelKdvRate = 0.20,
+  applyMarketFloor = true
 } = {}) {
   const systemPower = Math.max(0, Number(systemPowerKwp) || 0);
   const inverterType = INVERTER_TYPES[inverterTypeKey] || INVERTER_TYPES.string;
@@ -280,8 +310,14 @@ export function estimateSolarCapex({
   const subtotal = panelCost + inverterCost + mountingCost + dcCableCost + acElecCost + laborCost + permitCost;
   const nonPanelSubtotal = subtotal - panelCost;
   const solarKdv = panelCost * (Number(panelKdvRate) || 0) + nonPanelSubtotal * (Number(nonPanelKdvRate) || 0);
-  const solarCost = subtotal + solarKdv;
+  const detailedSolarCost = subtotal + solarKdv;
+  const marketFloor = resolveSolarCapexMarketFloor(systemPower);
+  const marketFloorAdjustment = applyMarketFloor
+    ? Math.max(0, marketFloor.marketFloorCost - detailedSolarCost)
+    : 0;
+  const solarCost = detailedSolarCost + marketFloorAdjustment;
   const kdvRate = subtotal > 0 ? solarKdv / subtotal : 0;
+  const costFloorApplied = marketFloorAdjustment > 0;
 
   return {
     inverterTypeKey,
@@ -297,6 +333,15 @@ export function estimateSolarCapex({
     subtotal,
     nonPanelSubtotal,
     solarKdv,
+    detailedSolarCost,
+    marketFloorCost: marketFloor.marketFloorCost,
+    marketFloorFixed: marketFloor.marketFloorFixed,
+    marketFloorPerKwp: marketFloor.marketFloorPerKwp,
+    marketFloorTier: marketFloor.marketFloorTier,
+    marketFloorAdjustment,
+    costFloorApplied,
+    costConfidence: costFloorApplied ? 'market-floor' : 'catalog-estimate',
+    costModelBasis: costFloorApplied ? marketFloor.costModelBasis : 'catalog-component-estimate',
     solarCost,
     kdvRate,
     panelKdvRate: Number(panelKdvRate) || 0,
@@ -833,6 +878,8 @@ export function computeFinancialTable({
   const grossSimplePaybackYear = totalCost > 0 && firstYearGrossSavings > 0 ? totalCost / firstYearGrossSavings : 0;
   const netSimplePaybackYear = totalCost > 0 && firstYearNetCashFlow > 0 ? totalCost / firstYearNetCashFlow : 0;
   const roi = totalCost > 0 ? ((totalNetCashFlow - totalCost) / totalCost) * 100 : 0;
+  const totalNominalReturnPct = roi;
+  const averageAnnualNominalReturnPct = totalNominalReturnPct / 25;
 
   return {
     rows,
@@ -846,6 +893,10 @@ export function computeFinancialTable({
     discountedCashFlow,
     projectNPV,
     cumulativeSavings,
+    totalNetCashFlow,
+    totalNominalReturnPct,
+    averageAnnualNominalReturnPct,
+    roiMetricBasis: '25y-cumulative-nominal-net-return-pct',
     roi
   };
 }
@@ -977,6 +1028,9 @@ export function detectCalculationWarnings(results) {
   const warnings = [];
   if (!isFinite(results.annualEnergy) || results.annualEnergy < 0) warnings.push('Yıllık üretim geçersiz.');
   if (!isFinite(results.totalCost) || results.totalCost <= 0) warnings.push('Toplam maliyet geçersiz.');
+  if (results.costFloorApplied) warnings.push('Katalog maliyet piyasa tabanının altında kaldı; kurulum bütçesi gerçekçi taban maliyetle yükseltildi.');
+  if (results.financialConsistency?.npvNegativeButNominalPositive) warnings.push('Nominal 25 yıl getirisi pozitif olsa da bugünkü değerle net kazanç negatif; yatırım kararında NPV ve temkinli geri ödeme esas alınmalı.');
+  if (Number(results.annualConsumptionKwh) > 0 && Number(results.annualConsumptionKwh) <= 2400 && Number(results.systemPower) <= 3) warnings.push('Girilen tüketim düşük ölçekli bir sisteme karşılık geliyor; büyük ticari GES sonucu beklenmemeli.');
   if (Number(results.pr) > 95) warnings.push('PR %95 üzerinde; ışınım/kayıp varsayımlarını kontrol edin.');
   if (Number(results.cf) > 30) warnings.push('Kapasite faktörü PV için olağan dışı yüksek.');
   if (results.usedFallback) warnings.push('PVGIS verisi alınamadı; fallback PSH hesabı düşük güven seviyesidir.');
