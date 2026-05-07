@@ -417,13 +417,13 @@ window.state = {
   previousYearConsumptionKwh: null,
   currentYearConsumptionKwh: null,
   sellableExportCapKwh: null,
-  expenseEscalationRate: 0.10,
+  expenseEscalationRate: 0.15,
   contractedPowerKw: 10,
   contractedTariff: DEFAULT_RESIDENTIAL_TARIFF,
   skttTariff: DEFAULT_RESIDENTIAL_TARIFF,
   exportTariff: 2.27,
-  annualPriceIncrease: 0.12,
-  discountRate: 0.18,
+  annualPriceIncrease: 0.20,
+  discountRate: 0.28,
   tariffIncludesTax: true,
   tariffSourceDate: DEFAULT_TARIFF_SOURCE_DATE,
   tariffSourceCheckedAt: currentLocalDateIso(),
@@ -2463,9 +2463,9 @@ function updateTariffAssumptions() {
   s.sellableExportCapKwh = readNumber('sellable-export-cap-input', s.sellableExportCapKwh ?? 0);
   s.usdToTry = readNumber('usd-try-input', s.usdToTry || 38.5);
   s.displayCurrency = document.getElementById('display-currency')?.value || s.displayCurrency || 'TRY';
-  s.annualPriceIncrease = readNumber('price-increase-input', 12) / 100;
-  s.discountRate = readNumber('discount-rate-input', 18) / 100;
-  s.expenseEscalationRate = readNumber('expense-escalation-input', 10) / 100;
+  s.annualPriceIncrease = readNumber('price-increase-input', 20) / 100;
+  s.discountRate = readNumber('discount-rate-input', 28) / 100;
+  s.expenseEscalationRate = readNumber('expense-escalation-input', 15) / 100;
   s.tariffIncludesTax = document.getElementById('tariff-tax-included')?.checked ?? true;
   s.hasSignedCustomerBillData = document.getElementById('quote-bill-verified')?.checked ?? false;
   s.quoteInputsVerified = document.getElementById('quote-inputs-verified')?.checked ?? false;
@@ -2664,9 +2664,9 @@ function syncEnterpriseInputsFromState() {
   setVal('previous-year-consumption-input', s.previousYearConsumptionKwh ?? 0);
   setVal('current-year-consumption-input', s.currentYearConsumptionKwh ?? 0);
   setVal('sellable-export-cap-input', s.sellableExportCapKwh ?? 0);
-  setVal('price-increase-input', Math.round((s.annualPriceIncrease ?? 0.12) * 100));
-  setVal('discount-rate-input', Math.round((s.discountRate ?? 0.18) * 100));
-  setVal('expense-escalation-input', Math.round((s.expenseEscalationRate ?? 0.10) * 100));
+  setVal('price-increase-input', Math.round((s.annualPriceIncrease ?? 0.20) * 100));
+  setVal('discount-rate-input', Math.round((s.discountRate ?? 0.28) * 100));
+  setVal('expense-escalation-input', Math.round((s.expenseEscalationRate ?? 0.15) * 100));
   setVal('tariff-source-date', s.tariffSourceDate);
   setVal('tariff-source-checked-at', s.tariffSourceCheckedAt);
   setVal('tariff-evidence-status', s.evidence?.tariffSource?.status);

@@ -2755,13 +2755,13 @@
         <div class="step5-subbody">
           <div class="step5-tariff-quick-grid">
             <div>
-              <div class="text-caption-helper">Yıllık Fiyat Artışı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Elektrik tarifesinin yılda kaç yüzde artacağı tahmini. Türkiye ortalaması son 5 yılda %30–80 arasında değişti; %12 muhafazakâr bir projeksiyondur.</span></span></div>
-              <input class="input-form-row" type="number" id="price-increase-input" value="12" min="-50" max="200" step="1"
+              <div class="text-caption-helper">Yıllık Fiyat Artışı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Elektrik tarifesinin yılda kaç yüzde artacağı tahmini. %20, TL kur kaybı ve enerji maliyeti artışını yansıtan ılımlı/gerçekçi uzun vadeli projeksiyondur. Kısa vadeli %30–80 tarihsel değerler 25 yıllık modele doğrudan uygulanamaz.</span></span></div>
+              <input class="input-form-row" type="number" id="price-increase-input" value="20" min="-50" max="200" step="1"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
-              <div class="text-caption-helper">İskonto Oranı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Paranın zaman değerini yansıtan oran; NPV hesabında kullanılır. Türkiye için tipik aralık %15–25.</span></span></div>
-              <input class="input-form-row" type="number" id="discount-rate-input" value="18" min="0" max="100" step="1"
+              <div class="text-caption-helper">İskonto Oranı (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Paranın zaman değerini yansıtan oran; NPV hesabında kullanılır. TL mevduat faizi normalleşmede %25–30 aralığında; uzun vadeli fırsat maliyeti için %28 gerçekçi bir baz değerdir.</span></span></div>
+              <input class="input-form-row" type="number" id="discount-rate-input" value="28" min="0" max="100" step="1"
                 data-input-action="updateTariffAssumptions"/>
             </div>
             <div>
@@ -2796,8 +2796,8 @@
               <div class="step5-inline-note">Bu alanlar hesap sonucunu değil, <strong>sonuç ekranındaki güven seviyesini</strong> etkiler. İlk görüşmede açmanıza gerek yoktur; müşteri teklifine hazırlanırken doldurun.</div>
               <div class="step5-tariff-quick-grid">
                 <div>
-                  <div class="text-caption-helper">Gider Eskalasyonu (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">O&M, sigorta ve işletme giderlerinin yıllık artış oranı. Genellikle fiyat artışının %80–90'ı civarındadır.</span></span></div>
-                  <input class="input-form-row" type="number" id="expense-escalation-input" value="10" min="-50" max="200" step="1"
+                  <div class="text-caption-helper">Gider Eskalasyonu (%) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">O&M, sigorta ve işletme giderlerinin yıllık artış oranı. Türkiye işçilik ve hizmet enflasyonunu yansıtır; elektrik fiyat artışından bağımsız %15 gerçekçi alt sınırdır.</span></span></div>
+                  <input class="input-form-row" type="number" id="expense-escalation-input" value="15" min="-50" max="200" step="1"
                     data-input-action="updateTariffAssumptions"/>
                 </div>
                 <div>
@@ -3396,11 +3396,6 @@
     <h1 class="step-heading-title">Sonuçlarınız Hazır</h1>
     <p class="step-heading-sub">Sistemin yaklaşık üretimini, faturanıza etkisini ve yatırım tarafını kolay okunur şekilde aşağıda görebilirsiniz.</p>
   </div>
-  <div class="result-context-strip">
-    <div><strong id="result-scenario-label">On-Grid</strong> <span id="result-scenario-frame">Grid-connected savings and proposal readiness</span></div>
-    <div id="result-engine-source">Hesap özeti hazırlanıyor</div>
-  </div>
-  <div id="result-alert-stack" class="result-alert-stack"></div>
   <!-- Faz B: Sonuç ekranı disclaimer — false confidence engelleyici -->
   <div class="result-estimate-banner" role="note" aria-live="polite">
     <svg class="result-estimate-banner__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
@@ -3767,29 +3762,7 @@
     </table>
   </div>
 
-  <!-- Engineer report -->
-  <div class="eng-report-wrap">
-    <div class="eng-report-header" id="eng-report-toggle" data-click-action="toggleEngReport">
-      <div class="eng-report-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
-        <span class="eng-report-title-text">
-          <span data-i18n="report.engineeringReportTitle">Uzman Detayları</span>
-          <span class="eng-report-subtitle" data-i18n="report.engineeringReportSubtitle">İsterseniz yöntemin ayrıntıları ve teknik varsayımlar burada yer alır.</span>
-        </span>
-        <span class="u-22" data-i18n="report.engineeringReportBadge">İsteğe bağlı</span>
-      </div>
-      <svg class="eng-chevron" id="eng-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="eng-report-body" id="eng-report-body"></div>
-  </div>
-
-  <div class="result-actions-note ui-callout ui-callout--warn">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-    <div>
-      <strong data-i18n="report.actionsNoteTitle">Çıktılar ne için?</strong>
-      <span data-i18n="report.actionsNote">İlk PDF müşteriye sunulabilecek sade özet içindir. Teknik PDF ve veri çıktıları ise proje ekibi veya ileri seviye kontrol amaçlıdır.</span>
-    </div>
-  </div>
+  <div id="eng-report-body" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;"></div>
   <div class="result-action-groups">
     <section class="action-group-card" data-testid="result-actions-customer">
       <div class="action-group-head">
