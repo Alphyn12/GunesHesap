@@ -109,16 +109,16 @@ def main():
             fin_title = page.locator("#step-7 .fin-box .card-title").inner_text()
             helper = page.locator("#step-7 .fin-box .result-helper").inner_text()
             tech_title = page.locator("#step-7 .card-title").filter(has_text="Kolay Okunan Sistem Özeti").first.inner_text()
-            eng_title = page.locator("#step-7 #eng-report-toggle [data-i18n='report.engineeringReportTitle']").inner_text()
-            action_note = page.locator("#step-7 .result-actions-note span").inner_text()
+            expert_details_count = page.locator("#step-7 #eng-report-toggle").count()
+            actions_note_count = page.locator("#step-7 .result-actions-note").count()
             browser.close()
 
         assert "Sonuçlarınız Hazır" in heading
         assert "Yatırım Özeti" in fin_title
         assert "kurulum bütçesini" in helper
         assert "Kolay Okunan Sistem Özeti" in tech_title
-        assert "Uzman Detayları" in eng_title
-        assert "müşteri özeti" in action_note
+        assert expert_details_count == 0
+        assert actions_note_count == 0
         assert not page_errors, page_errors
         assert not console_errors, console_errors
     finally:

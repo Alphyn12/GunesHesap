@@ -425,10 +425,13 @@ export function renderResults() {
   const paybackPct = Math.min(((r.grossSimplePaybackYear || 25) / 15) * 100, 100);
   document.getElementById('payback-bar').style.width = paybackPct + '%';
 
-  document.getElementById('eng-report-body').innerHTML = '';
-  document.getElementById('eng-report-body').classList.remove('open');
-  document.getElementById('eng-report-toggle').classList.remove('open');
-  document.getElementById('eng-chevron').classList.remove('open');
+  const engReportBody = document.getElementById('eng-report-body');
+  if (engReportBody) {
+    engReportBody.innerHTML = '';
+    engReportBody.classList.remove('open');
+  }
+  document.getElementById('eng-report-toggle')?.classList.remove('open');
+  document.getElementById('eng-chevron')?.classList.remove('open');
 
   const tbody = document.getElementById('tech-table-body');
   tbody.innerHTML = '';
@@ -499,7 +502,8 @@ export function renderResults() {
   renderOffgridL2Results(r.offgridL2Results, state);
   renderNMResults(r.nmMetrics, state.netMeteringEnabled);
   renderOnGridResultLayers(state, r);
-  renderWarningsAndAudit(state, r);
+  document.getElementById('audit-panel-card')?.remove();
+  updateTurkeyMapDot(state.lat, state.lon, state.cityName);
   renderBomResults(r.costBreakdown?.bom);
 
   // Faz B: Fatura analizi sonuçları
@@ -1045,58 +1049,6 @@ function renderNMResults(nm, enabled) {
   document.getElementById('nm-self-consumption').textContent = `${nm.selfConsumptionPct}%`;
 }
 
-function onGridConfidenceAssessment(state, r) {
-  const missing = [];
-  // Core data blockers
-  if (!Array.isArray(state.hourlyConsumption8760) || state.hourlyConsumption8760.length !== 8760) missing.push(i18n.t('onGridResult.missingHourly'));
-  if (state.exportSettlementMode === 'auto' && !state.settlementDate) missing.push(i18n.t('onGridResult.missingSettlementDate'));
-  if (!state.roofGeometry) missing.push(i18n.t('onGridResult.missingRoofGeometry'));
-  if (!state.hasSignedCustomerBillData && state.evidence?.customerBill?.status !== 'verified') missing.push(i18n.t('onGridResult.missingBillEvidence'));
-  if (!state.tariffSourceCheckedAt) missing.push(i18n.t('onGridResult.missingTariffCheck'));
-
-  // Shadow quality
-  const shadowQuality = r.shadowQuality || state.shadingQuality || 'user-estimate';
-  if (shadowQuality === 'unknown') missing.push(i18n.t('onGridResult.missingShading'));
-  else if (!state.osmShadowEnabled && shadowQuality !== 'site-verified' && shadowQuality !== 'map-assisted') missing.push(i18n.t('onGridResult.missingShading'));
-
-  // Cost confidence
-  const costSourceType = r.costSourceType || state.costSourceType || 'catalog';
-  if (costSourceType !== 'bom-verified') missing.push(i18n.t('onGridResult.missingCostOverride'));
-
-  // Tariff source quality
-  const tariffSourceType = r.tariffSourceType || state.tariffSourceType || 'manual';
-  const tariffIsBlocker = tariffSourceType !== 'official';
-  if (tariffIsBlocker) missing.push(i18n.t('warnings.manualTariff'));
-
-  let score = 100 - missing.length * 10;
-  if (r.usedFallback) score -= 25;
-  if (r.authoritativeEngineSource?.pvlibBacked) score += 5;
-  // Graduated deductions for soft-warnings (don't add to missing list)
-  if ((r.hourlyProfileSource || state.hourlyProfileSource) === 'synthetic') score -= 5;
-  const productionProfileSource = r.productionProfileSource || 'monthly-derived-synthetic-pv';
-  const hasHourlyPvProfile = productionProfileSource === 'backend-pvlib-hourly'
-    || productionProfileSource === 'pvgis-seriescalc-hourly'
-    || productionProfileSource === 'user-hourly-pv-normalized-to-authoritative-annual';
-  if (!hasHourlyPvProfile) score -= 5;
-  if (shadowQuality === 'user-estimate') score -= 5;
-  score = Math.max(0, Math.min(100, score));
-
-  // quoteCandidate requires: no fallback, score ≥ 82, ≤1 missing, bom-verified cost, official/manual tariff, shadow ≠ unknown
-  const isQuoteCandidate = !r.usedFallback && score >= 82 && missing.length <= 1
-    && costSourceType === 'bom-verified'
-    && tariffSourceType === 'official'
-    && hasHourlyPvProfile
-    && shadowQuality !== 'unknown'
-    && shadowQuality !== 'user-estimate';
-
-  const level = r.usedFallback || score < 55
-    ? 'rough'
-    : isQuoteCandidate
-      ? 'quoteCandidate'
-      : 'engineering';
-  return { score, level, missing, shadowQuality, costSourceType, tariffSourceType };
-}
-
 function renderOnGridResultLayers(state, r) {
   const wrap = document.getElementById('on-grid-result-layers');
   if (!wrap) return;
@@ -1105,23 +1057,12 @@ function renderOnGridResultLayers(state, r) {
     wrap.innerHTML = '';
     return;
   }
-  const assessment = onGridConfidenceAssessment(state, r);
-  const levelLabels = {
-    rough: i18n.t('onGridResult.roughEstimate'),
-    engineering: i18n.t('onGridResult.engineeringEstimate'),
-    quoteCandidate: i18n.t('onGridResult.quoteReadyCandidate')
-  };
   const roofAreaTotal = (Number(state.roofArea) || 0) + (state.multiRoof ? (state.roofSections || []).reduce((s, sec) => s + (Number(sec.area) || 0), 0) : 0);
   const panelSpec = resolvePanelSpec(state, state.panelType);
   const panelArea = (panelSpec.areaM2 || 0) * (Number(r.panelCount) || 0);
   const roofUsePct = roofAreaTotal > 0 ? Math.min(100, panelArea / roofAreaTotal * 100) : 0;
   const comp = r.compensationSummary || {};
   const exportText = `${Math.round(r.nmMetrics?.paidGridExport || 0).toLocaleString(localeTag())} / ${Math.round(r.nmMetrics?.annualGridExport || 0).toLocaleString(localeTag())} kWh`;
-  const readinessStatus = statusLabel(r.quoteReadiness?.status || 'not-quote-ready');
-  const blockers = localizeMessageList(r.quoteReadiness?.blockers || []).slice(0, 4);
-  const missingHtml = assessment.missing.length
-    ? assessment.missing.map(item => `<li>${escapeHtml(item)}</li>`).join('')
-    : `<li>${escapeHtml(i18n.t('onGridResult.noMajorMissingData'))}</li>`;
   const multiRoofNote = state.multiRoof && Array.isArray(r.sectionResults) && r.sectionResults.length > 1
     ? `${r.sectionResults.length} ${i18n.t('onGridResult.roofSurfaces')}`
     : i18n.t('onGridResult.singleRoof');
@@ -1155,7 +1096,7 @@ function renderOnGridResultLayers(state, r) {
     : 'data-source-warn';
 
   // Shadow quality display
-  const shadowQuality = assessment.shadowQuality;
+  const shadowQuality = r.shadowQuality || state.shadingQuality || 'user-estimate';
   const shadowLabels = {
     'site-verified': i18n.t('onGridFlow.shadingSite'),
     'map-assisted': i18n.t('onGridFlow.shadingMap'),
@@ -1191,18 +1132,8 @@ function renderOnGridResultLayers(state, r) {
       })()
     : `${settlementIntervalLabels[settlementIntervalRaw] || settlementIntervalRaw}${comp.annualExportCapKwh ? ` / yıllık ${Math.round(comp.annualExportCapKwh).toLocaleString(localeTag())} kWh sınır` : ''}`;
 
-  // Tariff source display
-  const tariffSourceType = assessment.tariffSourceType;
-  const tariffSourceLabels = {
-    'official': i18n.t('onGridFlow.tariffSourceOfficial'),
-    'manual': i18n.t('onGridFlow.tariffSourceManual'),
-    'estimate': i18n.t('onGridFlow.tariffSourceEstimate')
-  };
-  const tariffSourceText = tariffSourceLabels[tariffSourceType] || tariffSourceType;
-  const tariffSourceClass = tariffSourceType === 'official' ? 'data-source-good' : 'data-source-warn';
-
   // Cost source display
-  const costSourceType = assessment.costSourceType;
+  const costSourceType = r.costSourceType || state.costSourceType || 'catalog';
   const costSourceLabels = {
     'bom-verified': i18n.t('onGridFlow.costSourceBom'),
     'manual': i18n.t('onGridFlow.costSourceManual'),
@@ -1210,39 +1141,6 @@ function renderOnGridResultLayers(state, r) {
   };
   const costSourceText = costSourceLabels[costSourceType] || costSourceType;
   const costSourceClass = costSourceType === 'bom-verified' ? 'data-source-good' : costSourceType === 'manual' ? 'data-source-ok' : 'data-source-warn';
-
-  // Engine parity — intentionalDifference=true only when backend pvlib was used
-  const engineMode = r.calculationMode || r.authoritativeEngineMode || '—';
-  const engineModeLabels = {
-    'python-pvlib-backed': 'Doğrulanmış pvlib backend hesabı',
-    'python-backend': 'Backend destekli tahmin (otoriter değil)',
-    'browser-pvgis': 'PVGIS canlı verisiyle standart hesap',
-    'pvgis-live': 'PVGIS canlı verisiyle standart hesap',
-    'pvlib-service': 'pvlib servis çıktısı (hava kaynağı doğrulanmalı)',
-    'local-fallback': 'Yerel tahmin modeli',
-    'fallback-psh': 'Yerel tahmin modeli'
-  };
-  const engineModeText = engineModeLabels[engineMode] || engineMode;
-  const parityData = r.engineParity || null;
-  const parityIsReal = parityData?.intentionalDifference === true;
-  let engineParityHtml = '';
-  let parityRowClass = 'data-source-ok';
-  let parityRowText = '';
-  if (!parityData || !parityIsReal) {
-    // No backend comparison — do NOT show 0% or any numeric diff
-    parityRowClass = 'data-source-warn';
-    parityRowText = i18n.t('onGridResult.parityUnavailable');
-    engineParityHtml = `<div class="on-grid-explain text-sm-78 text-muted">${escapeHtml(i18n.t('engine.comparisonUnavailableHint'))}</div>`;
-  } else {
-    // Real backend comparison available — use deltaPct (correct field name)
-    const diff = typeof parityData.deltaPct === 'number' ? parityData.deltaPct : 0;
-    const diffAbs = Math.abs(diff);
-    parityRowClass = diffAbs > 10 ? 'data-source-warn' : 'data-source-good';
-    parityRowText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}% (${Math.round(parityData.deltaKwh || 0).toLocaleString(localeTag())} kWh)`;
-    if (diffAbs > 10) {
-      engineParityHtml = `<div class="on-grid-explain"><span class="data-source-warn">${escapeHtml(i18n.t('onGridResult.engineDiff'))}: ${parityRowText} — ${escapeHtml(i18n.t('onGridResult.engineDiffWarning'))}</span></div>`;
-    }
-  }
 
   setVisible(wrap, true);
   wrap.innerHTML = `
@@ -1284,32 +1182,6 @@ function renderOnGridResultLayers(state, r) {
         <div class="on-grid-result-metric"><strong><span class="${costSourceClass}">${escapeHtml(costSourceText)}</span></strong><span>${escapeHtml(i18n.t('onGridResult.costConfidenceLabel'))}</span></div>
       </div>
     </section>
-    <section class="on-grid-result-card">
-      <h3>${escapeHtml(i18n.t('onGridResult.confidenceTitle'))}</h3>
-      <p class="result-helper">Bu bölüm, sonucun hangi veri kalitesiyle üretildiğini ve teklif aşamasında ne kadar sağlam olduğunu anlatır.</p>
-      <div class="confidence-pill">${escapeHtml(levelLabels[assessment.level])} · ${assessment.score}/100</div>
-      <p class="on-grid-explain on-grid-question"><strong>${escapeHtml(i18n.t('onGridResult.dataSourceQuestion'))}</strong></p>
-      <div class="on-grid-data-source-table">
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.engine'))}</span><span>${escapeHtml(engineModeText)}</span></div>
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.profileSourceLabel'))}</span><span class="${profileSourceClass}">${escapeHtml(profileSourceText)}</span></div>
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.productionSourceLabel'))}</span><span class="${productionProfileClass}">${escapeHtml(productionProfileText)}</span></div>
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.tariffSourceLabel'))}</span><span class="${tariffSourceClass}">${escapeHtml(tariffSourceText)}</span></div>
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.shadowQualityLabel'))}</span><span class="${shadowClass}">${escapeHtml(shadowText)}</span></div>
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.costConfidenceLabel'))}</span><span class="${costSourceClass}">${escapeHtml(costSourceText)}</span></div>
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.settlementBasisLabel'))}</span><span class="${r.settlementProvisional ? 'data-source-warn' : 'data-source-good'}">${escapeHtml(settlementBasisText)}</span></div>
-        <div class="on-grid-ds-row"><span>${escapeHtml(i18n.t('onGridResult.parityLabel'))}</span><span class="${parityRowClass}">${escapeHtml(parityRowText || i18n.t('onGridResult.parityUnavailable'))}</span></div>
-      </div>
-      ${engineParityHtml}
-      <p class="on-grid-explain on-grid-question"><strong>${escapeHtml(i18n.t('onGridResult.missingDataQuestion'))}</strong></p>
-      <ul class="on-grid-missing-list">${missingHtml}</ul>
-    </section>
-    <section class="on-grid-result-card">
-      <h3>${escapeHtml(i18n.t('onGridResult.commercialTitle'))}</h3>
-      <p class="result-helper">Bir sonraki adımda teklif veya uygulama sürecine geçmek için hangi hazırlıkların gerektiğini burada görürsünüz.</p>
-      <div class="confidence-pill">${escapeHtml(readinessStatus)}</div>
-      <div class="on-grid-explain">${escapeHtml(state.scenarioContext?.nextAction || i18n.t('onGridResult.commercialNextAction'))}</div>
-      <ul class="on-grid-missing-list">${blockers.length ? blockers.map(item => `<li>${escapeHtml(item)}</li>`).join('') : `<li>${escapeHtml(i18n.t('onGridResult.noCommercialBlockers'))}</li>`}</ul>
-    </section>
   `;
 }
 
@@ -1348,6 +1220,10 @@ function renderBomResults(bom) {
 }
 
 function renderWarningsAndAudit(state, r) {
+  document.getElementById('audit-panel-card')?.remove();
+  updateTurkeyMapDot(state.lat, state.lon, state.cityName);
+  return;
+
   const techCard = document.getElementById('tech-table-body')?.closest('.card');
   if (!techCard) return;
 
@@ -1985,7 +1861,7 @@ export function downloadTechnicalPDF() {
 
   if (window.renderEngReport) window.renderEngReport();
   const body = document.getElementById('eng-report-body');
-  const reportText = body?.innerText?.trim();
+  const reportText = (body?.innerText || body?.textContent || '').trim();
   if (!reportText) {
     window.showToast?.(i18n.t('report.technicalContentMissing'), 'error');
     return;

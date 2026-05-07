@@ -240,7 +240,7 @@ def assert_on_grid_economics(page, *, expected_design_target, settlement_expecte
     assert summary["nmMetrics"].get("importOffsetEnergy", 0) >= 0, summary
     assert summary["nmMetrics"].get("paidGridExport", 0) >= 0, summary
     assert summary["compensationSummary"].get("compensatedConsumptionEnergy", 0) >= 0, summary
-    assert page.locator("#on-grid-result-layers .on-grid-result-card").count() == 4
+    assert page.locator("#on-grid-result-layers .on-grid-result-card").count() == 2
     result_text = page.locator("#on-grid-result-layers").inner_text()
     assert "Mahsuplaşma" in result_text or "Settlement" in result_text, result_text
 
@@ -270,11 +270,11 @@ def desktop_backend_flow(browser, base_url):
         expected_design_target="bill-offset",
         settlement_expected={"provisional": False, "missing_blocker": False},
     )
-    engine_text = page.locator("#result-engine-source").inner_text()
-    assert "pvlib-backed" in engine_text or "Canlı güneş verisiyle desteklenen hesaplama kullanıldı" in engine_text
     assert int(page.locator("#kpi-energy").inner_text().replace(".", "").replace(",", "")) > 0
-    assert page.locator("#audit-panel-card").count() == 1
-    assert page.locator("#on-grid-result-layers .on-grid-result-card").count() == 4
+    assert page.locator("#result-engine-source").count() == 0
+    assert page.locator("#result-alert-stack").count() == 0
+    assert page.locator("#audit-panel-card").count() == 0
+    assert page.locator("#on-grid-result-layers .on-grid-result-card").count() == 2
     assert_no_overflow(page, "desktop results")
 
     page.evaluate(
@@ -341,9 +341,9 @@ def backend_unavailable_fallback_flow(browser, base_url):
         expected_design_target="fill-roof",
         settlement_expected={"provisional": False, "missing_blocker": False},
     )
-    fallback_text = page.locator("#result-engine-source").inner_text()
-    assert len(fallback_text.strip()) > 10
-    assert page.locator("#on-grid-result-layers .on-grid-result-card").count() == 4
+    assert page.locator("#result-engine-source").count() == 0
+    assert page.locator("#result-alert-stack").count() == 0
+    assert page.locator("#on-grid-result-layers .on-grid-result-card").count() == 2
     assert_no_overflow(page, "mobile fallback results")
     assert not page_errors, page_errors
     ctx.close()

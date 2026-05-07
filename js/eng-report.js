@@ -33,6 +33,7 @@ export function toggleEngReport() {
   const body    = document.getElementById('eng-report-body');
   const header  = document.getElementById('eng-report-toggle');
   const chevron = document.getElementById('eng-chevron');
+  if (!body || !header || !chevron) return;
   const isOpen  = body.classList.contains('open');
   body.classList.toggle('open', !isOpen);
   header.classList.toggle('open', !isOpen);
@@ -47,6 +48,7 @@ export function renderEngReport() {
   const p = resolvePanelSpec(state, state.panelType);
   const layout = calculateSystemLayout(state, state.panelType);
   const body = document.getElementById('eng-report-body');
+  if (!body) return;
   const lcoeValue = r.lcoe != null ? Number.parseFloat(r.lcoe) : null;
   const activeLocale = localeTag();
   const fmt  = v => Math.round(v).toLocaleString(activeLocale);
