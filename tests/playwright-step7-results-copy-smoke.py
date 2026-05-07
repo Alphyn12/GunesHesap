@@ -111,6 +111,8 @@ def main():
             tech_title = page.locator("#step-7 .card-title").filter(has_text="Kolay Okunan Sistem Özeti").first.inner_text()
             expert_details_count = page.locator("#step-7 #eng-report-toggle").count()
             actions_note_count = page.locator("#step-7 .result-actions-note").count()
+            action_text = page.locator("#step-7 [data-testid='result-actions']").inner_text()
+            legacy_json_button_count = page.locator("#step-7 [data-testid='export-proposal-json'], #step-7 [data-testid='export-crm-json']").count()
             browser.close()
 
         assert "Sonuçlarınız Hazır" in heading
@@ -119,6 +121,10 @@ def main():
         assert "Kolay Okunan Sistem Özeti" in tech_title
         assert expert_details_count == 0
         assert actions_note_count == 0
+        assert "Teklif Al" in action_text
+        assert "Teklif JSON" not in action_text
+        assert "CRM JSON" not in action_text
+        assert legacy_json_button_count == 0
         assert not page_errors, page_errors
         assert not console_errors, console_errors
     finally:

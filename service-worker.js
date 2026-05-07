@@ -1,5 +1,5 @@
-// v49: Self-host Inter + Space Grotesk fonts (P3); add font woff2 files to precache.
-const CACHE_NAME = 'solarRota-v49';
+// v50: prevent HTML fallbacks from being served as JS/CSS module assets.
+const CACHE_NAME = 'solarRota-v50';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -133,6 +133,23 @@ function apiOfflineResponse() {
   );
 }
 
+function isHtmlRequest(request) {
+  const accept = request.headers.get('accept') || '';
+  return request.mode === 'navigate' || accept.includes('text/html');
+}
+
+function isCodeOrStyleAsset(url, request) {
+  return ['script', 'style', 'worker'].includes(request.destination)
+    || /\.(?:m?js|css)$/i.test(url.pathname);
+}
+
+function assetUnavailableResponse(url) {
+  return new Response(
+    `Static asset unavailable: ${url.pathname}`,
+    { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } }
+  );
+}
+
 // ── Yardımcı: Network First — timeout ile ──────────────────────────────────
 function networkFirstWithTimeout(request, timeoutMs = 10000) {
   return new Promise((resolve, reject) => {
@@ -184,14 +201,26 @@ function networkFirstWithTimeout(request, timeoutMs = 10000) {
 
 // ── Yardımcı: Cache First ───────────────────────────────────────────────────
 function cacheFirst(request) {
+  const url = new URL(request.url);
   return caches.match(request).then((cached) => {
     if (cached) {
-      return cached;
+      const cachedType = cached.headers.get('content-type') || '';
+      if (isCodeOrStyleAsset(url, request) && cachedType.includes('text/html')) {
+        caches.open(CACHE_NAME).then((cache) => cache.delete(request));
+      } else {
+        return cached;
+      }
     }
 
-    // Cache'de yok → ağdan al ve cache'e yaz
+    const shouldUseHtmlFallback = isHtmlRequest(request);
+
     return fetch(request)
       .then((networkResponse) => {
+        const responseType = networkResponse.headers.get('content-type') || '';
+        if (isCodeOrStyleAsset(url, request) && responseType.includes('text/html')) {
+          return assetUnavailableResponse(url);
+        }
+
         if (networkResponse.ok && request.method === 'GET') {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -201,6 +230,10 @@ function cacheFirst(request) {
         return networkResponse;
       })
       .catch(() => {
+        if (!shouldUseHtmlFallback) {
+          return assetUnavailableResponse(url);
+        }
+
         // Hem cache hem ağ yok → offline fallback
         return caches.match('/index.html').then((fallback) => {
           return fallback || new Response(

@@ -11,18 +11,17 @@
 <meta name="theme-color" content="#F59E0B"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css" integrity="sha384-NZLkVuBRMEeB4VeZz27WwTRvlhec30biQ8Xx7zG7JJnkvEKRg5qi6BNbEXo9ydwv" crossorigin="anonymous"/>
-<link rel="stylesheet" href="css/components.css"/>
-<link rel="stylesheet" href="css/redesign.css"/>
-<link rel="stylesheet" href="css/mobile.css"/>
-<link rel="stylesheet" href="css/landing.css"/>
+<link rel="stylesheet" href="/css/components.css"/>
+<link rel="stylesheet" href="/css/redesign.css"/>
+<link rel="stylesheet" href="/css/mobile.css"/>
+<link rel="stylesheet" href="/css/landing.css"/>
 <!-- Fontlar öz-barındırılıyor: css/components.css @font-face blokları, assets/fonts/*.woff2 -->
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js" integrity="sha384-JP5UPxIO2Tm2o79Fb0tGYMa44jkWar53aBoCbd8ah0+LcCDoohTIYr+zIXyfGIJN" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
   integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
-<script src="js/analytics-init.js"></script>
-<script defer src="/_vercel/insights/script.js"></script>
+<script src="/js/analytics-init.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="common.skipToMain">Ana içeriğe geç</a>
@@ -3764,11 +3763,11 @@
 
   <div id="eng-report-body" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;"></div>
   <div class="result-action-groups">
-    <section class="action-group-card" data-testid="result-actions-customer">
+    <section class="action-group-card" data-testid="result-actions">
       <div class="action-group-head">
-        <div class="action-group-kicker" data-i18n="report.customerOutputsKicker">Müşteri Çıktıları</div>
-        <div class="action-group-title" data-i18n="report.customerOutputsTitle">Paylaşılabilir ve sunulabilir özetler</div>
-        <div class="action-group-copy" data-i18n="report.customerOutputsCopy">İlk görüşme, karar özeti ve teknik eki müşteriye veya karar vericiye göndermek için kullanın.</div>
+        <div class="action-group-kicker" data-i18n="report.outputsAndQuoteKicker">Çıktılar ve Teklif</div>
+        <div class="action-group-title" data-i18n="report.outputsAndQuoteTitle">Rapor, paylaşım ve teklif işlemleri</div>
+        <div class="action-group-copy" data-i18n="report.outputsAndQuoteCopy">Müşteri özeti, teknik ek, kayıt, karşılaştırma ve yeni hesaplama işlemleri için kullanın.</div>
       </div>
       <div class="action-btns">
         <button type="button" class="btn btn-primary" data-testid="download-proposal-pdf" data-click-action="downloadPDF">
@@ -3783,22 +3782,9 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       <span data-i18n="report.shareResults">Sonuç Özetini Paylaş</span>
         </button>
-      </div>
-    </section>
-    <section class="action-group-card" data-testid="result-actions-ops">
-      <div class="action-group-head">
-        <div class="action-group-kicker" data-i18n="report.opsOutputsKicker">İç Ekip ve Veri</div>
-        <div class="action-group-title" data-i18n="report.opsOutputsTitle">Kayıt, entegrasyon ve tekrar çalışma</div>
-        <div class="action-group-copy" data-i18n="report.opsOutputsCopy">CRM aktarımı, veri handoff, teklif karşılaştırması ve yeni varyasyon denemeleri için kullanın.</div>
-      </div>
-      <div class="action-btns">
-        <button type="button" class="btn btn-secondary" data-testid="export-proposal-json" data-click-action="exportProposalHandoff">
+        <button type="button" class="btn btn-primary" data-testid="get-quote" data-click-action="exportProposalHandoff">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span data-i18n="report.exportProposalJson">Proposal JSON</span>
-        </button>
-        <button type="button" class="btn btn-secondary" data-testid="export-crm-json" data-click-action="exportCrmLead">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5M8 17h8"/></svg>
-      <span data-i18n="report.exportCrmJson">CRM JSON</span>
+      <span data-i18n="report.getQuote">Teklif Al</span>
         </button>
         <button type="button" class="btn btn-success" data-testid="save-calculation" data-click-action="saveCurrentCalculation">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -4056,7 +4042,7 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js"></script>
+<script type="module" src="/js/app.js"></script>
 
 <!-- ═══════════════════════════════════════════════════════════
      Landing ↔ Uygulama Geçişi
@@ -4064,6 +4050,6 @@
      window.goToStep ve window.selectScenario hazır olmadan tıklanırsa
      hash'e route edip motoru beklerler. Hesaplama logic'i bozulmaz.
      ═══════════════════════════════════════════════════════════ -->
-<script type="module" src="js/landing-bootstrap.js"></script>
+<script type="module" src="/js/landing-bootstrap.js"></script>
 </body>
 </html>

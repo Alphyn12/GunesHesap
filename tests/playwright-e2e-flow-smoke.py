@@ -299,11 +299,8 @@ def desktop_backend_flow(browser, base_url):
     page.click('[data-testid="share-results"]')
     page.wait_for_function("window.__sharedUrl?.includes('#')")
     with page.expect_download() as proposal_download:
-        page.click('[data-testid="export-proposal-json"]')
+        page.click('[data-testid="get-quote"]')
     assert proposal_download.value.suggested_filename.startswith("solar-rota-proposal-handoff-")
-    with page.expect_download() as crm_download:
-        page.click('[data-testid="export-crm-json"]')
-    assert crm_download.value.suggested_filename.startswith("solar-rota-crm-lead-")
 
     page.click('[data-testid="save-calculation"]')
     page.click('[data-testid="open-settings"]')

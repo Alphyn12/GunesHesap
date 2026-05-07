@@ -116,6 +116,7 @@ async def fetch_pvgis_via_proxy(
         timeout=timeout,
         follow_redirects=False,  # SSRF: redirect zincirine körü körüne uyulmuyor
         verify=True,             # SSRF: SSL sertifika doğrulama zorunlu
+        trust_env=False,          # PVGIS proxy: bozuk HTTP(S)_PROXY env ayarlarına takılma
     ) as client:
         for endpoint in _PVGIS_ENDPOINTS:
             if time.monotonic() >= deadline:

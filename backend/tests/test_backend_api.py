@@ -722,10 +722,11 @@ def test_pvgis_proxy_missing_required_params():
 def test_pvgis_proxy_success():
     """Successful PVGIS upstream → ok=True, proxy-success, energy/poa/monthly populated."""
     cm = _mock_httpx_client(status_code=200, body=VALID_PVGIS_UPSTREAM)
-    with patch("httpx.AsyncClient", return_value=cm):
+    with patch("httpx.AsyncClient", return_value=cm) as async_client:
         resp = client.get("/api/pvgis-proxy?lat=39&lon=32&peakpower=5&loss=14&angle=30&aspect=0")
     assert resp.status_code == 200
     data = resp.json()
+    assert async_client.call_args.kwargs["trust_env"] is False
     assert data["ok"] is True
     assert data["fetchStatus"] == "proxy-success"
     assert data["rawEnergy"] == 1250.0
