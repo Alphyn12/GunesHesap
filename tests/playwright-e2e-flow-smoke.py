@@ -298,9 +298,10 @@ def desktop_backend_flow(browser, base_url):
     assert page.evaluate("window.__pdfSaved").startswith("solar-rota-")
     page.click('[data-testid="share-results"]')
     page.wait_for_function("window.__sharedUrl?.includes('#')")
-    with page.expect_download() as proposal_download:
-        page.click('[data-testid="get-quote"]')
-    assert proposal_download.value.suggested_filename.startswith("solar-rota-proposal-handoff-")
+    # "Teklif Al" artık JSON indir yerine iletişim formu modal'ını açıyor
+    page.click('[data-testid="get-quote"]')
+    assert page.locator("#quote-modal").evaluate("el => getComputedStyle(el).display") == "flex"
+    page.click('#quote-modal button[aria-label="Kapat"]')
 
     page.click('[data-testid="save-calculation"]')
     page.click('[data-testid="open-settings"]')

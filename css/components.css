@@ -2053,6 +2053,75 @@ body>main{z-index:auto}
 .constrained-400-100 { max-width: 400px; width: 100%; }
 .error-toast-callout { display: none; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
 
+/* ── Quote Modal (Step 7 "Teklif Al" iletişim formu) ──────────────────────── */
+.quote-modal-card { max-width: 640px; }
+.quote-form { padding: 20px 24px 24px; }
+.quote-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin-bottom: 18px; }
+.quote-form-grid--full { grid-column: 1 / -1; }
+
+/* tel/email input'ları global text/number selector'ından düşüyor — burada açıkça stil ver */
+.quote-form input,
+.quote-form select {
+  width: 100%;
+  background: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 1rem;
+  padding: 10px 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition);
+  box-sizing: border-box;
+}
+.quote-form input:focus,
+.quote-form select:focus { border-color: var(--primary); }
+.quote-form input::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+.quote-form input[type="checkbox"] {
+  width: auto;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.quote-form input[aria-invalid="true"],
+.quote-form select[aria-invalid="true"] { border-color: var(--danger, #EF4444); }
+.form-error { color: var(--danger, #EF4444); font-size: 0.78rem; margin-top: 4px; min-height: 1.1em; }
+.form-error:empty { display: none; }
+.form-error-consent { margin-left: 28px; margin-top: 0; }
+
+.quote-consent-block { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; margin-top: 6px; border-top: 1px solid var(--border); }
+.quote-checkbox-row { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); cursor: pointer; }
+.quote-checkbox-row input[type="checkbox"] { margin-top: 3px; min-width: 18px; min-height: 18px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+.quote-checkbox-text { flex: 1; }
+.quote-legal-link { background: none; border: none; padding: 0; color: var(--primary); text-decoration: underline; cursor: pointer; font-size: inherit; font-family: inherit; line-height: inherit; }
+.quote-legal-link:hover { color: #FCD34D; }
+.quote-legal-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 2px; }
+
+.quote-submit-btn { width: 100%; margin-top: 18px; padding: 14px 24px; font-size: 1rem; letter-spacing: 0.05em; justify-content: center; }
+.quote-submit-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Legal text sub-modal (KVKK / Açık Rıza ortak) ────────────────────────── */
+.modal-overlay-sub { z-index: 600; }
+.legal-modal-card { max-width: 720px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+.legal-modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; font-size: 0.92rem; line-height: 1.65; color: var(--text); }
+.legal-modal-body p { margin-bottom: 12px; }
+.legal-modal-body p:last-child { margin-bottom: 0; }
+.legal-modal-body h3 { font-size: 1rem; margin: 14px 0 8px; color: var(--primary); }
+.legal-modal-body h3:first-child { margin-top: 0; }
+.legal-modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+/* Mobil — tek kolon, daha büyük dokunma hedefleri (iOS 16px font ile zoom önleme) */
+@media (max-width: 640px) {
+  .quote-modal-card { max-height: 95vh; }
+  .quote-form-grid { grid-template-columns: 1fr; }
+  .quote-form input,
+  .quote-form select { font-size: 16px; min-height: 44px; }
+  .quote-checkbox-row input[type="checkbox"] { min-width: 22px; min-height: 22px; }
+  .quote-submit-btn { padding: 16px 24px; }
+}
+
 /* ── F1.C.5c batch 2 (auto-generated unique classes u-0..u-2u) ─────
    105 tek-kullanımlık inline style pattern bireysel class olarak çıkarıldı.
    F1.D refactoring sırasında mantıklı semantik isimlere yeniden adlandırılabilir;

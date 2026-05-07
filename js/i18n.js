@@ -193,6 +193,7 @@ export const i18n = {
     window.syncHeaderHeightVar?.();
     window.syncMapLayerButton?.();
     window.syncRoofDrawToolbarLabels?.();
+    window.refreshLegalModalIfOpen?.();
     if (window.state?.results) {
       window.renderResults?.();
       window.renderEngReport?.();

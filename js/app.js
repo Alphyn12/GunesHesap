@@ -18,7 +18,7 @@ import {
   getPanelCatalogForType
 } from './panel-catalog.js';
 import { showToast, animateCounter, launchConfetti, resetConfetti, renderPRGauge } from './ui-charts.js';
-import { renderResults, renderMonthlyChart, downloadPDF, downloadTechnicalPDF, shareResults, loadFromHash, exportProposalHandoff, exportCrmLead } from './ui-render.js';
+import { renderResults, renderMonthlyChart, downloadPDF, downloadTechnicalPDF, shareResults, loadFromHash, exportCrmLead } from './ui-render.js';
 import { toggleEngReport, renderEngReport } from './eng-report.js';
 import { runCalculation, isCalculationInProgress } from './calculation-service.js';
 import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta, getTiltCoeff, finalizeCalculationUI } from './calc-engine.js';
@@ -33,6 +33,7 @@ import { renderSunPath } from './sun-path.js';
 import { renderScenarioAnalysis, onScenarioCustomChange } from './scenarios.js';
 import { toggleTaxBlock, onTaxToggle, updateTaxInput } from './tax.js';
 import { openComparison, closeComparison, runComparison } from './comparison.js';
+import { openQuoteModal, closeQuoteModal, openLegalModal, closeLegalModal, submitQuoteForm } from './quote-modal.js';
 import { saveCurrentCalculation, openDashboard, closeDashboard, updateDashboard, compareDashboardSelected, deleteSavedRecord, clearAllSaved } from './dashboard.js';
 import { showHeatmapCard, toggleHeatmapAnimation, setHeatmapMonth } from './heatmap.js';
 import { i18n, switchLanguage } from './i18n.js';
@@ -4227,6 +4228,12 @@ registerActions({
   closeDashboard,
   toggleHeatmapAnimation,
   setHeatmapMonth,
+  // Step 7 "Teklif Al" iletişim formu modal'ı + KVKK/Açık Rıza sub-modal
+  openQuoteModal,
+  closeQuoteModal,
+  openLegalModal,
+  closeLegalModal,
+  submitQuoteForm,
 });
 
 // F1.B.2 tariff core grubu: 37 inline change/input.
@@ -4453,7 +4460,8 @@ registerActions({
   goToLanding: () => window.goToLanding?.(),
   lpTourPrev: () => window.lpTourPrev?.(),
   lpTourNext: () => window.lpTourNext?.(),
-  exportProposalHandoff,
+  // exportProposalHandoff — UI butonu artık openQuoteModal'a yönlendiriyor;
+  // fonksiyon ui-render.js'te window.exportProposalHandoff olarak debug için kalır.
   exportCrmLead,
   clearRoofDrawing: () => window.clearRoofDrawing?.(),
   // Hourly profile season

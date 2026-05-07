@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 from zipfile import BadZipFile
@@ -14,10 +15,13 @@ from backend.models.engine_contracts import (
     EngineRequest,
     EngineResponse,
     HealthResponse,
+    LeadSubmitRequest,
+    LeadSubmitResponse,
     PanelThermalRequest,
     PanelThermalResponse,
 )
 from backend.services.financial_service import calculate_financial_proposal
+from backend.services.lead_service import persist_lead
 from backend.services.offgrid_field_import_service import analyze_field_import
 from backend.services.pvgis_proxy import fetch_pvgis_via_proxy, validate_pvgis_params
 
@@ -176,3 +180,25 @@ async def pvgis_proxy(
     if errors:
         raise HTTPException(status_code=422, detail={"errors": errors})
     return await fetch_pvgis_via_proxy(lat, lon, peakpower, loss, angle, aspect, include_hourly=includeHourly)
+
+
+@protected_router.post("/api/lead/submit", response_model=LeadSubmitResponse)
+@limiter.limit(LIMITS["lead_submit"])
+def lead_submit(request: Request, body: LeadSubmitRequest) -> LeadSubmitResponse:
+    """Step 7 'Teklif Al' iletişim formu submit endpoint'i.
+
+    Pydantic validatörleri zorunlu alanları, telefon formatını, e-posta formatını
+    ve 3 consent checkbox'ını doğrular. JSONL dosyasına append yazılır ve UUID döner.
+    """
+    try:
+        lead_id = persist_lead(body)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError:
+        logger.exception("[lead-submit] persistence failed")
+        raise HTTPException(status_code=500, detail="lead submit failed")
+    return LeadSubmitResponse(
+        ok=True,
+        leadId=lead_id,
+        receivedAt=datetime.now(timezone.utc).isoformat(),
+    )

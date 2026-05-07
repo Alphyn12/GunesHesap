@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -235,3 +236,54 @@ class PanelThermalResponse(FlexibleModel):
     hottestScenario: Dict[str, Any] = Field(default_factory=dict)
     stringSizing: Dict[str, Any] = Field(default_factory=dict)
     realisticPeakPower: Dict[str, Any] = Field(default_factory=dict)
+
+
+# ── Lead Submit (Step 7 "Teklif Al" iletişim formu) ─────────────────────────
+# Form spam'ine karşı extra="forbid"; tüm consent alanları True olmak zorunda.
+
+_PHONE_TR_PATTERN = re.compile(r"^\+?9?0?\s?\(?5\d{2}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$")
+_EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+class LeadSubmitRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    firstName: str = Field(..., min_length=1, max_length=80)
+    lastName: str = Field(..., min_length=1, max_length=80)
+    phone: str = Field(..., min_length=10, max_length=20)
+    email: str = Field(..., min_length=5, max_length=120)
+    address: Optional[str] = Field(default=None, max_length=400)
+    contactTime: Optional[Literal["morning", "noon", "evening"]] = None
+    consentMarketing: bool
+    consentDataProcessing: bool
+    consentThirdParty: bool
+    proposalSnapshot: Optional[Dict[str, Any]] = None
+    locale: Literal["tr", "en", "de"] = "tr"
+    submittedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        if not _PHONE_TR_PATTERN.match(value):
+            raise ValueError("phone must match Turkish mobile format (e.g. +90 5XX XXX XX XX)")
+        return value
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        if not _EMAIL_PATTERN.match(value):
+            raise ValueError("email format is invalid")
+        return value.lower()
+
+    @field_validator("consentMarketing", "consentDataProcessing", "consentThirdParty")
+    @classmethod
+    def validate_consent_required(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("all consent checkboxes must be accepted")
+        return value
+
+
+class LeadSubmitResponse(BaseModel):
+    ok: bool = True
+    leadId: str
+    receivedAt: str

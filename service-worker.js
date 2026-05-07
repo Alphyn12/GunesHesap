@@ -1,5 +1,5 @@
 // v50: prevent HTML fallbacks from being served as JS/CSS module assets.
-const CACHE_NAME = 'solarRota-v50';
+const CACHE_NAME = 'solarRota-v54';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -46,6 +46,7 @@ const STATIC_ASSETS = [
   '/js/pv-engine-contracts.js',
   '/js/pvlib-bridge.js',
   '/js/proposal-governance.js',
+  '/js/quote-modal.js',
   '/js/roof-geometry.js',
   '/js/satellite-enhance.js',
   '/js/scenarios.js',

@@ -29,6 +29,7 @@ _DEFAULTS: dict[str, str] = {
     "pvgis_proxy":    "5/minute",
     "field_import":   "5/minute",
     "panel_thermal":  "30/minute",
+    "lead_submit":    "5/minute",
 }
 
 # Tüm limitleri test/geliştirme için etkisiz hale getiren yüksek değer

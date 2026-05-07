@@ -3782,8 +3782,8 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       <span data-i18n="report.shareResults">Sonuç Özetini Paylaş</span>
         </button>
-        <button type="button" class="btn btn-primary" data-testid="get-quote" data-click-action="exportProposalHandoff">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <button type="button" class="btn btn-primary" data-testid="get-quote" data-click-action="openQuoteModal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span data-i18n="report.getQuote">Teklif Al</span>
         </button>
         <button type="button" class="btn btn-success" data-testid="save-calculation" data-click-action="saveCurrentCalculation">
@@ -4039,6 +4039,107 @@
       </div>
     </div>
     <div class="p-6" id="dashboard-body"></div>
+  </div>
+</div>
+
+<!-- TEKLİF AL — İLETİŞİM FORMU MODAL -->
+<div class="modal-overlay-base" id="quote-modal">
+  <div class="modal-content-card quote-modal-card" role="dialog" aria-modal="true" aria-labelledby="quote-modal-title">
+    <div class="modal-header-base">
+      <h2 class="kpi-display-primary" id="quote-modal-title">
+        <svg class="icon-align-middle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span data-i18n="quoteForm.title">İletişim Bilgileriniz</span>
+      </h2>
+      <button type="button" class="btn-icon-modal-close" data-click-action="closeQuoteModal" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
+    </div>
+    <form class="quote-form" id="quote-form" novalidate>
+      <div class="quote-form-grid">
+        <div class="form-group">
+          <label for="quote-first-name" data-i18n="quoteForm.firstName">Adı</label>
+          <input type="text" id="quote-first-name" name="firstName" required autocomplete="given-name" maxlength="80" data-i18n-placeholder="quoteForm.firstNamePlaceholder" placeholder="Adınız" />
+          <div class="form-error" data-error-for="firstName" aria-live="polite"></div>
+        </div>
+        <div class="form-group">
+          <label for="quote-last-name" data-i18n="quoteForm.lastName">Soyadı</label>
+          <input type="text" id="quote-last-name" name="lastName" required autocomplete="family-name" maxlength="80" data-i18n-placeholder="quoteForm.lastNamePlaceholder" placeholder="Soyadınız" />
+          <div class="form-error" data-error-for="lastName" aria-live="polite"></div>
+        </div>
+        <div class="form-group">
+          <label for="quote-phone" data-i18n="quoteForm.phone">Telefon</label>
+          <input type="tel" id="quote-phone" name="phone" required autocomplete="tel" inputmode="tel" maxlength="20" data-i18n-placeholder="quoteForm.phonePlaceholder" placeholder="+90 5XX XXX XX XX" />
+          <div class="form-error" data-error-for="phone" aria-live="polite"></div>
+        </div>
+        <div class="form-group">
+          <label for="quote-email" data-i18n="quoteForm.email">E-posta</label>
+          <input type="email" id="quote-email" name="email" required autocomplete="email" inputmode="email" maxlength="120" data-i18n-placeholder="quoteForm.emailPlaceholder" placeholder="ornek@eposta.com" />
+          <div class="form-error" data-error-for="email" aria-live="polite"></div>
+        </div>
+        <div class="form-group quote-form-grid--full">
+          <label for="quote-address" data-i18n="quoteForm.address">Adres</label>
+          <input type="text" id="quote-address" name="address" autocomplete="street-address" maxlength="400" data-i18n-placeholder="quoteForm.addressPlaceholder" placeholder="İl / İlçe / Mahalle" />
+          <div class="form-error" data-error-for="address" aria-live="polite"></div>
+        </div>
+        <div class="form-group quote-form-grid--full">
+          <label for="quote-contact-time" data-i18n="quoteForm.contactTime">İletişim zamanı</label>
+          <select id="quote-contact-time" name="contactTime">
+            <option value="" data-i18n="quoteForm.contactTimeAny">Fark etmez</option>
+            <option value="morning" data-i18n="quoteForm.contactTimeMorning">Sabah</option>
+            <option value="noon" data-i18n="quoteForm.contactTimeNoon">Öğle</option>
+            <option value="evening" data-i18n="quoteForm.contactTimeEvening">Akşam</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="quote-consent-block">
+        <label class="quote-checkbox-row">
+          <input type="checkbox" id="quote-consent-marketing" name="consentMarketing" required data-testid="consent-marketing" />
+          <span class="quote-checkbox-text">
+            <span data-i18n="quoteForm.consentMarketing">Ticari İletişim ve Ticari Elektronik İletiler Hakkında Yönetmelik kapsamında tarafıma elektronik ileti gönderilmesine onay veriyorum.</span>
+            <button type="button" class="quote-legal-link" data-click-action="openLegalModal" data-arg="marketingNotice" data-i18n="quoteForm.legalMarketingLink">KVKK Aydınlatma Metni</button>
+            <span data-i18n="quoteForm.legalReviewSuffix">'ni inceleyebilirsiniz.</span>
+          </span>
+        </label>
+        <div class="form-error form-error-consent" data-error-for="consentMarketing" aria-live="polite"></div>
+
+        <label class="quote-checkbox-row">
+          <input type="checkbox" id="quote-consent-data" name="consentDataProcessing" required data-testid="consent-data" />
+          <span class="quote-checkbox-text">
+            <span data-i18n="quoteForm.consentDataProcessingPrefix">Simülatör uygulamasında paylaşmış olduğum verilerimin Solar Rota tarafından işlenmesine</span>
+            <button type="button" class="quote-legal-link" data-click-action="openLegalModal" data-arg="dataProcessing" data-i18n="quoteForm.legalConsentLink">Açık Rıza Beyanı</button>
+            <span data-i18n="quoteForm.consentDataProcessingSuffix">ile onay veriyorum.</span>
+          </span>
+        </label>
+        <div class="form-error form-error-consent" data-error-for="consentDataProcessing" aria-live="polite"></div>
+
+        <label class="quote-checkbox-row">
+          <input type="checkbox" id="quote-consent-third" name="consentThirdParty" required data-testid="consent-third" />
+          <span class="quote-checkbox-text">
+            <span data-i18n="quoteForm.consentThirdPartyPrefix">Simülatör uygulamasında paylaşmış olduğum verilerimin GES kurulum teklifi alabilmek amacıyla Solar Rota tarafından 3. şahıslara aktarılmasına</span>
+            <button type="button" class="quote-legal-link" data-click-action="openLegalModal" data-arg="thirdParty" data-i18n="quoteForm.legalConsentLink">Açık Rıza Beyanı</button>
+            <span data-i18n="quoteForm.consentThirdPartySuffix">ile onay veriyorum.</span>
+          </span>
+        </label>
+        <div class="form-error form-error-consent" data-error-for="consentThirdParty" aria-live="polite"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary quote-submit-btn" data-click-action="submitQuoteForm" data-testid="quote-submit">
+        <span class="quote-submit-label" data-i18n="quoteForm.submitButton">GÖNDER</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- TEKLİF AL — HUKUKİ METİN SUB-MODAL (KVKK Aydınlatma + Açık Rıza ortak) -->
+<div class="modal-overlay-base modal-overlay-sub" id="legal-text-modal">
+  <div class="modal-content-card legal-modal-card" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title">
+    <div class="modal-header-base">
+      <h2 class="kpi-display-primary" id="legal-modal-title" data-i18n="legalText.titleFallback">Hukuki Metin</h2>
+      <button type="button" class="btn-icon-modal-close" data-click-action="closeLegalModal" aria-label="Kapat" title="Kapat" data-i18n-title="common.close" data-i18n-aria-label="common.close">✕</button>
+    </div>
+    <div class="legal-modal-body" id="legal-modal-body" tabindex="0"></div>
+    <div class="legal-modal-footer">
+      <button type="button" class="btn btn-primary" data-click-action="closeLegalModal" data-i18n="common.close">Kapat</button>
+    </div>
   </div>
 </div>
 

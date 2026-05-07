@@ -7,7 +7,8 @@ export const BACKEND_CONFIG = {
   pvlibCompatPath: '/api/pvlib/calculate',
   financialPath: '/api/financial/proposal',
   pvgisProxyPath: '/api/pvgis-proxy',
-  panelThermalCheckPath: '/api/panel/thermal-check'
+  panelThermalCheckPath: '/api/panel/thermal-check',
+  leadSubmitPath: '/api/lead/submit'
 };
 
 function cleanBaseUrl(value) {
