@@ -116,8 +116,8 @@ def main():
             browser.close()
 
         assert "Sonuçlarınız Hazır" in heading
-        assert "Yatırım Özeti" in fin_title
-        assert "kurulum bütçesini" in helper
+        assert "Yatırım Kararı" in fin_title
+        assert "bugünkü değer" in helper
         assert "Kolay Okunan Sistem Özeti" in tech_title
         assert expert_details_count == 0
         assert actions_note_count == 0

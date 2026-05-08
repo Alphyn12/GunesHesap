@@ -833,6 +833,7 @@ export function computeFinancialTable({
   const grossSimplePaybackYear = totalCost > 0 && firstYearGrossSavings > 0 ? totalCost / firstYearGrossSavings : 0;
   const netSimplePaybackYear = totalCost > 0 && firstYearNetCashFlow > 0 ? totalCost / firstYearNetCashFlow : 0;
   const roi = totalCost > 0 ? ((totalNetCashFlow - totalCost) / totalCost) * 100 : 0;
+  const discountedReturnPct = totalCost > 0 ? (projectNPV / totalCost) * 100 : 0;
 
   return {
     rows,
@@ -845,6 +846,11 @@ export function computeFinancialTable({
     totalExpenses25y,
     discountedCashFlow,
     projectNPV,
+    nominalNetCashFlow25y: totalNetCashFlow,
+    nominalTotalReturnPct: roi,
+    discountedCashFlow25y: discountedCashFlow,
+    discountedNetGain25y: projectNPV,
+    discountedReturnPct,
     cumulativeSavings,
     roi
   };

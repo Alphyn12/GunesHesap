@@ -395,10 +395,11 @@ export function calculateNMMetrics(annualEnergy, systemPower, dailyConsumption, 
 
 function suppressGridExportRevenue(nmMetrics, reason = 'Off-grid senaryoda fazla PV finansal gelire dönüşmez.') {
   if (!nmMetrics) return nmMetrics;
+  const annualGridExport = Math.round(nmMetrics.annualGridExport || 0);
   return {
     ...nmMetrics,
     paidGridExport: 0,
-    unpaidGridExport: Math.round(nmMetrics.annualGridExport || 0),
+    unpaidGridExport: annualGridExport,
     annualExportRevenue: 0,
     systemType: reason,
     settlementMode: 'off-grid-no-export-revenue',
@@ -406,6 +407,27 @@ function suppressGridExportRevenue(nmMetrics, reason = 'Off-grid senaryoda fazla
       ...(nmMetrics.exportPolicy || {}),
       interval: 'off-grid-disabled',
       requestedInterval: 'off-grid-disabled',
+      annualSellableExportCapKwh: 0,
+      paidBatteryExportAllowed: false
+    }
+  };
+}
+
+export function suppressOnGridExportRevenue(nmMetrics, reason = 'Şebeke satışı kapalı — fazla üretim geliri 0 TL') {
+  if (!nmMetrics) return nmMetrics;
+  const annualGridExport = Math.round(nmMetrics.annualGridExport || 0);
+  return {
+    ...nmMetrics,
+    paidGridExport: 0,
+    unpaidGridExport: annualGridExport,
+    compensableSurplus: 0,
+    annualExportRevenue: 0,
+    systemType: reason,
+    settlementMode: 'export-disabled',
+    exportPolicy: {
+      ...(nmMetrics.exportPolicy || {}),
+      interval: 'export-disabled',
+      requestedInterval: nmMetrics.exportPolicy?.requestedInterval || nmMetrics.exportPolicy?.interval || null,
       annualSellableExportCapKwh: 0,
       paidBatteryExportAllowed: false
     }
@@ -1311,7 +1333,7 @@ export async function runCalculation() {
   if (state.scenarioKey === 'off-grid') {
     nmMetrics = suppressGridExportRevenue(nmMetrics);
   } else if (!state.netMeteringEnabled) {
-    nmMetrics = { ...nmMetrics, annualExportRevenue: 0, systemType: 'Şebeke satışı kapalı — fazla üretim geliri 0 TL' };
+    nmMetrics = suppressOnGridExportRevenue(nmMetrics);
   }
 
   const selfConsumptionRatio = nmMetrics.selfConsumptionRatio;
@@ -1329,6 +1351,9 @@ export async function runCalculation() {
       : nmMetrics.selfConsumedEnergy;
   const grossAnnualSavingsPreDegradation = compensatedValueEnergy * effectiveSavingsTariff
     + (state.netMeteringEnabled ? nmMetrics.paidGridExport * exportRate : 0);
+  const directSelfConsumptionValue = (nmMetrics.directSelfConsumedEnergy || 0) * effectiveSavingsTariff;
+  const importOffsetValue = (state.netMeteringEnabled ? (nmMetrics.importOffsetEnergy || 0) : 0) * effectiveSavingsTariff;
+  const exportRevenueValue = state.netMeteringEnabled ? (nmMetrics.paidGridExport || 0) * exportRate : 0;
   const annualSavings = grossAnnualSavingsPreDegradation;
   const co2Savings = adjustedEnergy * 0.442 / 1000;
   const trees = Math.round(co2Savings * 1000 / 21);
@@ -1390,6 +1415,23 @@ export async function runCalculation() {
   const irr = economicSummary.irr;
   const lcoe = economicSummary.lcoe;
   const compensatedLcoe = economicSummary.compensatedLcoe;
+  const nominalNetCashFlow25y = economicSummary.nominalNetCashFlow25y || 0;
+  const nominalTotalReturnPct = economicSummary.nominalTotalReturnPct ?? roi;
+  const discountedCashFlow25y = economicSummary.discountedCashFlow25y ?? economicSummary.discountedCashFlow;
+  const discountedNetGain25y = economicSummary.discountedNetGain25y ?? npvTotal;
+  const discountedReturnPct = economicSummary.discountedReturnPct || 0;
+  const irrNumeric = Number(irr);
+  const financialVerdict = !Number.isFinite(irrNumeric)
+    ? (npvTotal >= 0 ? 'positive-npv' : 'cautious-npv')
+    : (npvTotal >= 0 && irrNumeric >= discountRate * 100
+      ? 'positive'
+      : (npvTotal < 0 && nominalTotalReturnPct > 0 ? 'nominal-positive-discounted-negative' : 'cautious'));
+  const financialVerdictTone = npvTotal >= 0 && (!Number.isFinite(irrNumeric) || irrNumeric >= discountRate * 100)
+    ? 'good'
+    : (npvTotal < 0 ? 'warn' : 'neutral');
+  const financialMismatchExplanation = npvTotal < 0 && nominalTotalReturnPct > 0
+    ? 'nominal-positive-discounted-negative'
+    : null;
 
   const ysp  = systemPower > 0 ? (adjustedEnergy / systemPower).toFixed(0) : 0;
   const cf   = systemPower > 0 ? ((adjustedEnergy / (systemPower * 8760)) * 100).toFixed(1) : 0;
@@ -1419,6 +1461,9 @@ export async function runCalculation() {
     annualSavings: Math.round(displayAnnualSavings), totalCost: Math.round(totalCost),
     grossAnnualSavingsPreDegradation: Math.round(grossAnnualSavingsPreDegradation),
     grossAnnualSavingsEnergyKwh: Math.round(compensatedValueEnergy || 0),
+    directSelfConsumptionValue: Math.round(directSelfConsumptionValue),
+    importOffsetValue: Math.round(importOffsetValue),
+    exportRevenueValue: Math.round(exportRevenueValue),
     firstYearGrossSavings: Math.round(firstYearGrossSavings),
     firstYearNetCashFlow: Math.round(firstYearNetCashFlow),
     paybackYear, simplePaybackYear: economicSummary.simplePaybackYear,
@@ -1427,6 +1472,14 @@ export async function runCalculation() {
     netSimplePaybackYear: netSimplePaybackYear ? Number(netSimplePaybackYear.toFixed(2)) : 0,
     discountedPaybackYear,
     npvTotal: Math.round(npvTotal), discountedCashFlow: Math.round(economicSummary.discountedCashFlow), roi: roi.toFixed(1),
+    nominalNetCashFlow25y: Math.round(nominalNetCashFlow25y),
+    nominalTotalReturnPct: Number(nominalTotalReturnPct).toFixed(1),
+    discountedCashFlow25y: Math.round(discountedCashFlow25y),
+    discountedNetGain25y: Math.round(discountedNetGain25y),
+    discountedReturnPct: Number(discountedReturnPct).toFixed(1),
+    financialVerdict,
+    financialVerdictTone,
+    financialMismatchExplanation,
     co2Savings: co2Savings.toFixed(2), trees, monthlyData,
     tempLoss: (tempLoss * 100).toFixed(2), pr: (pr * 100).toFixed(1),
     temperatureAdjustment: authoritativeTempAdjustment,

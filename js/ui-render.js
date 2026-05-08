@@ -398,8 +398,9 @@ export function renderResults() {
   }
   const finRoiEl = document.getElementById('fin-roi');
   if (finRoiEl) {
-    finRoiEl.textContent = r.roi + '%';
-    setSignedFinancialClass(finRoiEl, r.roi);
+    const nominalReturn = r.nominalTotalReturnPct ?? r.roi;
+    finRoiEl.textContent = nominalReturn + '%';
+    setSignedFinancialClass(finRoiEl, nominalReturn);
   }
   // ROI etiketi: childNodes[0].nodeValue yerine dedikli span (tooltip yapısı değişse bile sağlam).
   const finRoiLabelText = document.querySelector('#fin-roi-label .fin-label-text');
@@ -1049,6 +1050,66 @@ function renderNMResults(nm, enabled) {
   document.getElementById('nm-self-consumption').textContent = `${nm.selfConsumptionPct}%`;
 }
 
+function percentText(value, digits = 1) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return '—';
+  return `${numeric.toFixed(digits)}%`;
+}
+
+function resultMetricCell({ eyebrow = '', value = '—', label = '', note = '', tone = 'neutral', wide = false } = {}) {
+  return `
+    <article class="result-metric-cell result-metric-cell--${escapeHtml(tone)}${wide ? ' result-metric-cell--wide' : ''}">
+      ${eyebrow ? `<div class="result-metric-eyebrow">${escapeHtml(eyebrow)}</div>` : ''}
+      <strong>${escapeHtml(String(value))}</strong>
+      <span>${escapeHtml(label)}</span>
+      ${note ? `<p>${escapeHtml(note)}</p>` : ''}
+    </article>
+  `;
+}
+
+function resultChip(label, value, tone = 'neutral') {
+  return `
+    <span class="result-chip result-chip--${escapeHtml(tone)}">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(String(value))}</strong>
+    </span>
+  `;
+}
+
+function resultSection(title, cells, className = '') {
+  return `
+    <div class="result-section ${escapeHtml(className)}">
+      <div class="result-section-title">${escapeHtml(title)}</div>
+      <div class="result-section-grid">${cells.join('')}</div>
+    </div>
+  `;
+}
+
+function financialDecisionCopy(r = {}) {
+  const npv = Number(r.npvTotal);
+  const irr = Number(r.irr);
+  const discountPct = Number(r.discountRate || 0) * 100;
+  if (Number.isFinite(npv) && npv >= 0 && (!Number.isFinite(irr) || irr >= discountPct)) {
+    return {
+      tone: 'good',
+      title: i18n.t('onGridResult.verdictPositiveTitle'),
+      body: i18n.t('onGridResult.verdictPositiveBody')
+    };
+  }
+  if (Number.isFinite(npv) && npv < 0 && Number(r.nominalTotalReturnPct ?? r.roi) > 0) {
+    return {
+      tone: 'warn',
+      title: i18n.t('onGridResult.verdictMixedTitle'),
+      body: i18n.t('onGridResult.verdictMixedBody')
+    };
+  }
+  return {
+    tone: npv >= 0 ? 'neutral' : 'warn',
+    title: i18n.t('onGridResult.verdictCautiousTitle'),
+    body: i18n.t('onGridResult.verdictCautiousBody')
+  };
+}
+
 function renderOnGridResultLayers(state, r) {
   const wrap = document.getElementById('on-grid-result-layers');
   if (!wrap) return;
@@ -1062,7 +1123,10 @@ function renderOnGridResultLayers(state, r) {
   const panelArea = (panelSpec.areaM2 || 0) * (Number(r.panelCount) || 0);
   const roofUsePct = roofAreaTotal > 0 ? Math.min(100, panelArea / roofAreaTotal * 100) : 0;
   const comp = r.compensationSummary || {};
-  const exportText = `${Math.round(r.nmMetrics?.paidGridExport || 0).toLocaleString(localeTag())} / ${Math.round(r.nmMetrics?.annualGridExport || 0).toLocaleString(localeTag())} kWh`;
+  const netMeteringActive = !!state.netMeteringEnabled && state.scenarioKey === 'on-grid';
+  const paidExportKwh = netMeteringActive ? Math.round(r.nmMetrics?.paidGridExport ?? comp.paidExportKwh ?? 0) : 0;
+  const totalExportKwh = Math.round(r.nmMetrics?.annualGridExport ?? r.hourlySummary?.gridExport ?? 0);
+  const unpaidExportKwh = Math.max(0, totalExportKwh - paidExportKwh);
   const multiRoofNote = state.multiRoof && Array.isArray(r.sectionResults) && r.sectionResults.length > 1
     ? `${r.sectionResults.length} ${i18n.t('onGridResult.roofSurfaces')}`
     : i18n.t('onGridResult.singleRoof');
@@ -1119,7 +1183,9 @@ function renderOnGridResultLayers(state, r) {
     annual: 'Yıllık dengeleme',
     yearly: 'Yıllık dengeleme'
   };
-  const settlementBasisText = r.settlementProvisional
+  const settlementBasisText = !netMeteringActive
+    ? i18n.t('onGridResult.exportDisabledLabel')
+    : r.settlementProvisional
     ? (() => {
         const importOffsetKwh = r.compensationSummary?.importOffsetKwh ?? 0;
         const effectiveImport = (r.tariffModel?.importRate ?? 0) + (r.tariffModel?.distributionFee ?? 0);
@@ -1141,45 +1207,111 @@ function renderOnGridResultLayers(state, r) {
   };
   const costSourceText = costSourceLabels[costSourceType] || costSourceType;
   const costSourceClass = costSourceType === 'bom-verified' ? 'data-source-good' : costSourceType === 'manual' ? 'data-source-ok' : 'data-source-warn';
+  const costSourceTone = costSourceType === 'bom-verified' ? 'good' : costSourceType === 'manual' ? 'neutral' : 'warn';
+  const profileSourceTone = profileSourceKey === 'hourly-uploaded' ? 'good' : profileSourceKey === 'monthly-derived' ? 'neutral' : 'warn';
+  const productionTone = productionProfileClass === 'data-source-good' ? 'good' : 'warn';
+  const shadowTone = shadowQuality === 'site-verified' ? 'good' : shadowQuality === 'map-assisted' ? 'neutral' : 'warn';
+  const decision = financialDecisionCopy(r);
+  const nominalReturn = r.nominalTotalReturnPct ?? r.roi;
+  const discountedReturn = r.discountedReturnPct;
+  const npvTone = Number(r.npvTotal) >= 0 ? 'good' : 'bad';
+  const irrTone = Number(r.irr) >= (Number(r.discountRate || 0) * 100) ? 'good' : 'warn';
+  const directUseValue = Number(r.directSelfConsumptionValue);
+  const offsetValue = netMeteringActive ? Number(r.importOffsetValue) : 0;
+  const exportValue = netMeteringActive ? Number(r.exportRevenueValue ?? r.nmMetrics?.annualExportRevenue ?? 0) : 0;
+  const mismatch = r.financialMismatchExplanation === 'nominal-positive-discounted-negative'
+    || (Number(r.npvTotal) < 0 && Number(nominalReturn) > 0);
+  const energyFlow = [
+    { label: i18n.t('onGridResult.flowProduction'), value: `${Number(r.annualEnergy || 0).toLocaleString(localeTag())} kWh` },
+    { label: i18n.t('onGridResult.flowDirectUse'), value: `${Math.round(comp.directSelfConsumptionKwh || 0).toLocaleString(localeTag())} kWh` },
+    { label: i18n.t('onGridResult.flowOffset'), value: `${Math.round(comp.importOffsetKwh || 0).toLocaleString(localeTag())} kWh` },
+    { label: i18n.t('onGridResult.flowSurplus'), value: `${totalExportKwh.toLocaleString(localeTag())} kWh` }
+  ];
 
   setVisible(wrap, true);
   wrap.innerHTML = `
-    <section class="on-grid-result-card">
-      <h3>${escapeHtml(i18n.t('onGridResult.technicalTitle'))}</h3>
-      <p class="result-helper">Bu alan sistemin boyutunu, ne kadar elektrik üreteceğini ve tüketiminizle nasıl örtüştüğünü hızlıca görmeniz içindir.</p>
-      <div class="on-grid-result-metrics">
-        <div class="on-grid-result-metric"><strong>${Number(r.systemPower || 0).toFixed(2)} kWp</strong><span>${escapeHtml(i18n.t('onGridResult.installedPower'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${Number(r.panelCount || 0).toLocaleString(localeTag())}</strong><span>${escapeHtml(i18n.t('onGridResult.panelCount'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${Number(r.annualEnergy || 0).toLocaleString(localeTag())} kWh</strong><span>${escapeHtml(i18n.t('onGridResult.annualProduction'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${r.nmMetrics?.selfConsumptionPct || 0}%</strong><span>${escapeHtml(i18n.t('onGridResult.selfConsumption'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${Math.round(comp.directSelfConsumptionKwh || 0).toLocaleString(localeTag())} kWh</strong><span>${escapeHtml(i18n.t('onGridResult.directSelfConsumption'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${Math.round(comp.importOffsetKwh || 0).toLocaleString(localeTag())} kWh</strong><span>${escapeHtml(i18n.t('onGridResult.monthlyOffset'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${exportText}</strong><span>${escapeHtml(i18n.t('onGridResult.exportableEnergy'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${roofUsePct.toFixed(1)}%</strong><span>${escapeHtml(i18n.t('onGridResult.roofUse'))} · ${escapeHtml(multiRoofNote)}</span></div>
-        <div class="on-grid-result-metric"><strong>${r.ysp} kWh/kWp</strong><span>${escapeHtml(i18n.t('onGridResult.specificYield'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${escapeHtml(usageProfileText)}</strong><span>${escapeHtml(i18n.t('onGridResult.loadProfile'))}</span></div>
-        <div class="on-grid-result-metric"><strong><span class="${profileSourceClass}">${escapeHtml(profileSourceText)}</span></strong><span>${escapeHtml(i18n.t('onGridResult.profileSourceLabel'))}</span></div>
-        <div class="on-grid-result-metric"><strong><span class="${productionProfileClass}">${escapeHtml(productionProfileText)}</span></strong><span>${escapeHtml(i18n.t('onGridResult.productionSourceLabel'))}</span></div>
-        <div class="on-grid-result-metric"><strong><span class="${shadowClass}">${escapeHtml(shadowText)}</span></strong><span>${escapeHtml(i18n.t('onGridResult.shadowQualityLabel'))}</span></div>
+    <section class="on-grid-result-card result-panel result-panel--technical">
+      <div class="result-panel-header">
+        <div>
+          <h3>${escapeHtml(i18n.t('onGridResult.technicalTitle'))}</h3>
+          <p class="result-helper">${escapeHtml(i18n.t('onGridResult.technicalHelper'))}</p>
+        </div>
+        <div class="result-chip-row">
+          ${resultChip(i18n.t('onGridResult.profileSourceLabel'), profileSourceText, profileSourceTone)}
+          ${resultChip(i18n.t('onGridResult.productionSourceLabel'), productionProfileText, productionTone)}
+        </div>
       </div>
+      <div class="energy-flow-strip">
+        ${energyFlow.map((item, idx) => `
+          <div class="energy-flow-step">
+            <span>${escapeHtml(item.label)}</span>
+            <strong>${escapeHtml(item.value)}</strong>
+          </div>
+          ${idx < energyFlow.length - 1 ? '<div class="energy-flow-arrow">→</div>' : ''}
+        `).join('')}
+      </div>
+      ${resultSection(i18n.t('onGridResult.sectionInstallation'), [
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.installedPower'), value: `${Number(r.systemPower || 0).toFixed(2)} kWp`, label: `${Number(r.panelCount || 0).toLocaleString(localeTag())} ${i18n.t('units.panelUnit')}`, tone: 'accent' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.roofUse'), value: `${roofUsePct.toFixed(1)}%`, label: multiRoofNote, tone: 'neutral' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.shadowQualityLabel'), value: shadowText, label: i18n.t('onGridResult.dataQualityLabel'), tone: shadowTone, wide: true })
+      ])}
+      ${resultSection(i18n.t('onGridResult.sectionProduction'), [
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.annualProduction'), value: `${Number(r.annualEnergy || 0).toLocaleString(localeTag())} kWh`, label: i18n.t('onGridResult.annualProductionNote'), tone: 'accent' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.specificYield'), value: `${r.ysp} kWh/kWp`, label: i18n.t('onGridResult.specificYieldNote'), tone: 'info' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.loadProfile'), value: usageProfileText, label: i18n.t('onGridResult.loadProfileNote'), tone: 'neutral', wide: true })
+      ])}
+      ${resultSection(i18n.t('onGridResult.sectionEnergyMatch'), [
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.selfConsumption'), value: `${r.nmMetrics?.selfConsumptionPct || 0}%`, label: i18n.t('onGridResult.selfConsumptionNote'), tone: 'good' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.directSelfConsumption'), value: `${Math.round(comp.directSelfConsumptionKwh || 0).toLocaleString(localeTag())} kWh`, label: i18n.t('onGridResult.directSelfConsumptionNote'), tone: 'good' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.monthlyOffset'), value: `${Math.round(comp.importOffsetKwh || 0).toLocaleString(localeTag())} kWh`, label: i18n.t('onGridResult.monthlyOffsetNote'), tone: 'neutral' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.totalSurplus'), value: `${totalExportKwh.toLocaleString(localeTag())} kWh`, label: `${i18n.t('onGridResult.paidSurplus')}: ${paidExportKwh.toLocaleString(localeTag())} kWh`, note: `${i18n.t('onGridResult.unpaidSurplus')}: ${unpaidExportKwh.toLocaleString(localeTag())} kWh`, tone: paidExportKwh > 0 ? 'good' : 'warn', wide: true })
+      ])}
       ${shadowDoubleCountWarning ? `<div class="on-grid-explain"><span class="data-source-warn">${escapeHtml(shadowDoubleCountWarning)}</span></div>` : ''}
     </section>
-    <section class="on-grid-result-card">
-      <h3>${escapeHtml(i18n.t('onGridResult.economicTitle'))}</h3>
-      <p class="result-helper">Burada yatırım bütçesi, yıllık fayda ve geri ödeme tarafı sade bir dille özetlenir.</p>
-      <div class="on-grid-result-metrics">
-        <div class="on-grid-result-metric"><strong>${money(r.totalCost)}</strong><span>${escapeHtml(i18n.t('onGridResult.totalCost'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${money(r.financialCostBasis || r.totalCost)}</strong><span>${escapeHtml(i18n.t('onGridResult.financialBasis'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${money(r.annualSavings)}</strong><span>${escapeHtml(i18n.t('onGridResult.annualSavings'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${money(r.firstYearNetCashFlow ?? 0)}</strong><span>${escapeHtml(i18n.t('onGridResult.firstYearNetCashFlow'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${escapeHtml(formatPaybackYears(r.grossSimplePaybackYear))}</strong><span>${escapeHtml(i18n.t('finance.grossSimplePayback'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${money(r.npvTotal)}</strong><span>${escapeHtml(i18n.t('onGridResult.netGainPotential'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${r.irr === 'N/A' ? 'N/A' : r.irr + '%'}</strong><span>${escapeHtml(i18n.t('onGridResult.averageAnnualReturn'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${moneyRate(r.compensatedLcoe || r.lcoe, 'kWh')}</strong><span>${escapeHtml(i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${r.roi}%</strong><span>${escapeHtml(i18n.t('onGridResult.roiLabel'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${escapeHtml(settlementBasisText)}</strong><span>${escapeHtml(i18n.t('onGridResult.settlementBasisLabel'))}</span></div>
-        <div class="on-grid-result-metric"><strong>${escapeHtml(tariffModeText)}</strong><span>${escapeHtml(i18n.t('onGridResult.pricingModeLabel'))}</span></div>
-        <div class="on-grid-result-metric"><strong><span class="${costSourceClass}">${escapeHtml(costSourceText)}</span></strong><span>${escapeHtml(i18n.t('onGridResult.costConfidenceLabel'))}</span></div>
+    <section class="on-grid-result-card result-panel result-panel--finance">
+      <div class="result-panel-header">
+        <div>
+          <h3>${escapeHtml(i18n.t('onGridResult.economicTitle'))}</h3>
+          <p class="result-helper">${escapeHtml(i18n.t('onGridResult.economicHelper'))}</p>
+        </div>
+        <div class="result-chip-row">
+          ${resultChip(i18n.t('onGridResult.pricingModeLabel'), tariffModeText, 'neutral')}
+          ${resultChip(i18n.t('onGridResult.costConfidenceLabel'), costSourceText, costSourceTone)}
+        </div>
+      </div>
+      <div class="financial-verdict financial-verdict--${escapeHtml(decision.tone)}">
+        <div>
+          <strong>${escapeHtml(decision.title)}</strong>
+          <span>${escapeHtml(decision.body)}</span>
+        </div>
+        <b>${escapeHtml(money(r.npvTotal))}</b>
+      </div>
+      ${mismatch ? `<div class="financial-explain">${escapeHtml(i18n.t('onGridResult.nominalVsDiscountedWarning'))}</div>` : ''}
+      ${resultSection(i18n.t('onGridResult.sectionBudget'), [
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.totalCost'), value: money(r.totalCost), label: i18n.t('onGridResult.totalCostNote'), tone: 'accent' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.financialBasis'), value: money(r.financialCostBasis || r.totalCost), label: i18n.t('onGridResult.financialBasisNote'), tone: 'neutral' })
+      ])}
+      ${resultSection(i18n.t('onGridResult.sectionYearOne'), [
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.annualSavings'), value: money(r.annualSavings), label: i18n.t('onGridResult.annualSavingsNote'), tone: 'good' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.directUseValue'), value: money(Number.isFinite(directUseValue) ? directUseValue : 0), label: i18n.t('onGridResult.directUseValueNote'), tone: 'good' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.offsetValue'), value: money(Number.isFinite(offsetValue) ? offsetValue : 0), label: i18n.t('onGridResult.offsetValueNote'), tone: offsetValue > 0 ? 'good' : 'neutral' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.exportValue'), value: money(Number.isFinite(exportValue) ? exportValue : 0), label: netMeteringActive ? i18n.t('onGridResult.exportValueNote') : i18n.t('onGridResult.exportValueDisabledNote'), tone: exportValue > 0 ? 'good' : 'warn' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.firstYearNetCashFlow'), value: money(r.firstYearNetCashFlow ?? 0), label: i18n.t('onGridResult.firstYearNetCashFlowNote'), tone: Number(r.firstYearNetCashFlow) >= 0 ? 'good' : 'bad', wide: true })
+      ])}
+      ${resultSection(i18n.t('onGridResult.sectionPayback'), [
+        resultMetricCell({ eyebrow: i18n.t('finance.grossSimplePayback'), value: formatPaybackYears(r.grossSimplePaybackYear), label: i18n.t('onGridResult.simplePaybackNote'), tone: 'accent' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.discountedPaybackLabel'), value: formatPaybackYears(r.discountedPaybackYear), label: i18n.t('onGridResult.discountedPaybackNote'), tone: Number(r.discountedPaybackYear) > 0 ? 'neutral' : 'warn' })
+      ])}
+      ${resultSection(i18n.t('onGridResult.sectionLongTerm'), [
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.netGainPotential'), value: money(r.npvTotal), label: `${i18n.t('onGridResult.discountedReturnLabel')}: ${percentText(discountedReturn)}`, tone: npvTone }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.roiLabel'), value: percentText(nominalReturn), label: i18n.t('onGridResult.nominalReturnNote'), tone: Number(nominalReturn) >= 0 ? 'good' : 'bad' }),
+        resultMetricCell({ eyebrow: i18n.t('onGridResult.averageAnnualReturn'), value: r.irr === 'N/A' ? 'N/A' : `${r.irr}%`, label: `${i18n.t('onGridResult.discountRateLabel')}: ${percentText(Number(r.discountRate || 0) * 100, 0)}`, tone: irrTone }),
+        resultMetricCell({ eyebrow: i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel'), value: moneyRate(r.compensatedLcoe || r.lcoe, 'kWh'), label: i18n.t('onGridResult.lcoeNoteShort'), tone: 'neutral' })
+      ])}
+      <div class="assumption-strip">
+        ${resultChip(i18n.t('onGridResult.priceIncreaseLabel'), percentText(Number(r.annualPriceIncrease || 0) * 100, 0), 'neutral')}
+        ${resultChip(i18n.t('onGridResult.discountRateLabel'), percentText(Number(r.discountRate || 0) * 100, 0), 'neutral')}
+        ${resultChip(i18n.t('onGridResult.settlementBasisLabel'), settlementBasisText, 'neutral')}
       </div>
     </section>
   `;
@@ -1740,9 +1872,9 @@ export function downloadPDF() {
     [pdfSafeText(i18n.t('finance.grossSimplePayback')), formatPaybackYears(r.grossSimplePaybackYear, yearUnit)],
     [pdfSafeText(i18n.t('report.discountedPayback')), formatPaybackYears(r.discountedPaybackYear, yearUnit)],
     [pdfSafeText(`NPV (25 ${yearUnit})`), money(r.npvTotal)],
-    ['IRR', r.irr + '%'],
+    [pdfSafeText(i18n.t('onGridResult.averageAnnualReturn')), r.irr + '%'],
     [pdfSafeText(i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel')), moneyRate(r.compensatedLcoe || r.lcoe, 'kWh')],
-    ['ROI', r.roi + '%'],
+    [pdfSafeText(i18n.t('onGridResult.roiLabel')), `${r.nominalTotalReturnPct ?? r.roi}%`],
     [pdfSafeText(i18n.t('report.co2Savings')), r.co2Savings + ` ${i18n.t('units.tonsCo2PerYear')}`],
   ];
   if (state.scenarioKey === 'off-grid' && r.offgridL2Results) {

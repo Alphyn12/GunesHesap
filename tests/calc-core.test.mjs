@@ -14,6 +14,7 @@ import {
   simulateHourlyEnergy
 } from '../js/calc-core.js';
 import { DEFAULT_TARIFFS, PANEL_TYPES } from '../js/data.js';
+import { suppressOnGridExportRevenue } from '../js/calc-engine.js';
 
 function nearly(actual, expected, tolerance = 1e-6) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
@@ -383,6 +384,54 @@ assert.equal(feeFinancial.rows[0].effectiveImportRate, '7.00', 'row.effectiveImp
 assert.equal(feeFinancial.rows[0].rateBasis, 'import-plus-distribution-fee');
 assert.equal(Number(feeFinancial.grossSimplePaybackYear.toFixed(2)), 2.86);
 assert.equal(feeFinancial.cumulativeNetPaybackYear, feeFinancial.simplePaybackYear);
+
+const mixedBasisFinancial = computeFinancialTable({
+  annualEnergy: 1000,
+  hourlySummary: {
+    annualProduction: 1000,
+    annualLoad: 1000,
+    selfConsumption: 1000,
+    gridExport: 0,
+    paidGridExport: 0,
+    gridImport: 0
+  },
+  batterySummary: null,
+  totalCost: 55197,
+  tariffModel: buildTariffModel({
+    tariff: 55197 / 13.3 / 1000,
+    annualPriceIncrease: 0.20,
+    discountRate: 0.28,
+    exportTariff: 0
+  }),
+  panel: { firstYearDeg: 0, degradation: 0 },
+  annualOMCost: 0,
+  annualInsurance: 0,
+  inverterLifetime: 0,
+  inverterReplaceCost: 0,
+  netMeteringEnabled: false,
+  exportRateOverride: 0
+});
+assert.equal(Number(mixedBasisFinancial.grossSimplePaybackYear.toFixed(1)), 13.3);
+assert.ok(mixedBasisFinancial.projectNPV < 0, 'discounted NPV should be negative with a high discount rate');
+assert.ok(mixedBasisFinancial.nominalTotalReturnPct > 0, 'nominal 25y return can remain positive');
+assert.equal(mixedBasisFinancial.discountedNetGain25y, mixedBasisFinancial.projectNPV);
+assert.equal(mixedBasisFinancial.nominalTotalReturnPct, mixedBasisFinancial.roi);
+assert.ok(mixedBasisFinancial.discountedReturnPct < 0);
+
+const disabledExportMetrics = suppressOnGridExportRevenue({
+  annualGridExport: 1004,
+  paidGridExport: 1004,
+  unpaidGridExport: 0,
+  compensableSurplus: 1004,
+  annualExportRevenue: 2234,
+  exportPolicy: { interval: 'hourly', annualSellableExportCapKwh: 1524 }
+});
+assert.equal(disabledExportMetrics.paidGridExport, 0);
+assert.equal(disabledExportMetrics.unpaidGridExport, 1004);
+assert.equal(disabledExportMetrics.compensableSurplus, 0);
+assert.equal(disabledExportMetrics.annualExportRevenue, 0);
+assert.equal(disabledExportMetrics.settlementMode, 'export-disabled');
+assert.equal(disabledExportMetrics.exportPolicy.interval, 'export-disabled');
 
 // tariffSourceType is passed through
 const tariffOfficial = buildTariffModel({ tariff: 5, tariffSourceType: 'official', annualPriceIncrease: 0, discountRate: 0 });

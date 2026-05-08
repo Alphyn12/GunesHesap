@@ -3412,7 +3412,7 @@
       </div>
       <div class="kpi-value"><span id="kpi-energy">0</span></div>
       <div class="kpi-unit">kWh / yıl</div>
-      <div class="kpi-label">Yılda Üreteceği Elektrik <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Kurulacak sistemin bir yılda yaklaşık ne kadar elektrik üreteceğini gösterir.</span></span></div>
+      <div class="kpi-label">Yıllık Enerji Üretimi <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Kurulacak sistemin bir yılda yaklaşık ne kadar elektrik üreteceğini gösterir.</span></span></div>
       <div class="u-1p" id="kpi-energy-band"></div>
     </div>
     <div class="kpi-card kpi-color-success">
@@ -3421,7 +3421,7 @@
       </div>
       <div class="kpi-value text-emerald"><span id="kpi-savings">0</span></div>
       <div class="kpi-unit">TL / yıl</div>
-      <div class="kpi-label">Faturaya Yıllık Etkisi <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Üretilen elektriğin faturanızda oluşturduğu yaklaşık yıllık tasarruf etkisidir.</span></span></div>
+      <div class="kpi-label">Yıl 1 Net Fayda <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">İlk yıl için beklenen fatura etkisini ve temel işletme etkilerini özetler.</span></span></div>
     </div>
     <div class="kpi-card kpi-color-info">
       <div class="kpi-icon-wrap">
@@ -3429,7 +3429,7 @@
       </div>
       <div class="kpi-value text-cyan"><span id="kpi-power">0</span></div>
       <div class="kpi-unit">toplam sistem gücü</div>
-      <div class="kpi-label">Sistemin Büyüklüğü</div>
+      <div class="kpi-label">Sistem Gücü</div>
       <div class="kpi-sub" id="kpi-panels-sub"></div>
     </div>
     <div class="kpi-card kpi-color-success-light">
@@ -3438,7 +3438,7 @@
       </div>
       <div class="kpi-value u-1q"><span id="kpi-co2">0</span></div>
       <div class="kpi-unit">ton CO₂ / yıl</div>
-      <div class="kpi-label">Çevresel Katkı</div>
+      <div class="kpi-label">Karbon Tasarrufu</div>
       <div class="kpi-sub" id="kpi-tree-sub"></div>
     </div>
   </div>
@@ -3446,8 +3446,8 @@
   <div class="on-grid-result-layers is-hidden" id="on-grid-result-layers"></div>
 
   <div class="fin-box">
-    <div class="card-title mb-2">Yatırım Özeti</div>
-    <div class="result-helper">Bu bölüm sistemin yaklaşık kurulum bütçesini ve zaman içinde kendini nasıl geri ödeyebileceğini sade biçimde özetler.</div>
+    <div class="card-title mb-2">Yatırım Kararı</div>
+    <div class="result-helper">Bu bölüm bütçe, geri ödeme, bugünkü değer ve nominal getiriyi ayrı gösterir.</div>
     <div class="fin-row">
       <span class="fin-label">Tahmini kurulum bütçesi</span>
       <span class="fin-val highlight" id="fin-cost">-</span>
@@ -3464,15 +3464,15 @@
       <span class="fin-val" id="fin-discounted-payback">-</span>
     </div>
     <div class="fin-row">
-      <span class="fin-label">25 yılda net kazanç potansiyeli <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Bugünkü değerle bakıldığında, projenin uzun vadede artıda mı ekside mi kalacağını gösterir.</span></span></span>
+      <span class="fin-label">Bugünkü değerle net kazanç (NPV, 25 yıl) <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Bugünkü değerle bakıldığında, projenin uzun vadede artıda mı ekside mi kalacağını gösterir.</span></span></span>
       <span class="fin-val positive" id="fin-total">-</span>
     </div>
     <div class="fin-row">
-      <span class="fin-label" id="fin-roi-label"><span class="fin-label-text" data-fin-label="roi">25 yıllık birikimli ROI (nominal) </span><span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Bu oran yıllık getiri değildir; 25 yıl boyunca biriken nominal net nakit akışının başlangıç yatırımına oranını gösterir.</span></span></span>
+      <span class="fin-label" id="fin-roi-label"><span class="fin-label-text" data-fin-label="roi">Nominal toplam getiri (25 yıl) </span><span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Bu oran yıllık getiri değildir; 25 yıl boyunca biriken nominal net nakit akışının başlangıç yatırımına oranını gösterir.</span></span></span>
       <span class="fin-val positive" id="fin-roi">-</span>
     </div>
     <div class="fin-row">
-      <span class="fin-label">Ortalama yıllık yatırım verimi <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Yatırımın yıllık ortalama performansını yüzde olarak düşünmek için kullanılır.</span></span></span>
+      <span class="fin-label">IRR / yıllık iç getiri <span class="tooltip-wrap"><span class="tooltip-icon chip-xs-pad">?</span><span class="tooltip-box">Yatırımın nakit akışlarına göre yıllıklaştırılmış iç getiri oranıdır.</span></span></span>
       <span class="fin-val positive" id="fin-irr">-</span>
     </div>
     <div class="fin-row">
