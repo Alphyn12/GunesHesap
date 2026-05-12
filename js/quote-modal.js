@@ -8,7 +8,7 @@
 //   • Network hatasında localStorage queue'ye yazar (online'da retry)
 //   • KVKK Aydınlatma + Açık Rıza için ortak sub-modal (i18n placeholder metin)
 // ═══════════════════════════════════════════════════════════
-import { BACKEND_CONFIG, buildBackendUrl, buildAuthHeaders } from './backend-config.js';
+import { BACKEND_CONFIG } from './backend-config.js';
 
 const QUEUE_KEY = 'solarrota_lead_queue_v1';
 const QUEUE_TTL_MS = 24 * 60 * 60 * 1000; // KVKK uyumu için 24 saat sınırı
@@ -155,7 +155,6 @@ function validateAll(values) {
   else if (!PHONE_RE.test(values.phone)) errors.phone = 'phoneInvalid';
   if (!values.email) errors.email = 'emailRequired';
   else if (!EMAIL_RE.test(values.email)) errors.email = 'emailInvalid';
-  if (!values.consentMarketing) errors.consentMarketing = 'consentRequired';
   if (!values.consentDataProcessing) errors.consentDataProcessing = 'consentRequired';
   if (!values.consentThirdParty) errors.consentThirdParty = 'consentRequired';
   return errors;
@@ -204,13 +203,30 @@ function bindFieldValidationOnce() {
 // ── Payload oluşturma ────────────────────────────────────────────────────────
 function buildProposalSnapshot() {
   const r = window.state?.results;
+  const s = window.state;
   if (!r) return null;
   return {
     annualEnergy: Number(r.annualEnergy) || null,
     systemPower: Number(r.systemPower) || null,
     totalCost: Number(r.totalCost) || null,
-    scenarioKey: window.state?.scenarioKey || null,
-    cityName: window.state?.cityName || null,
+    scenarioKey: s?.scenarioKey || null,
+    cityName: s?.cityName || null,
+    roofArea: s?.roofArea != null ? Number(s.roofArea) || null : null,
+    tilt: s?.tilt != null ? Number(s.tilt) : null,
+    azimuth: s?.azimuth != null ? Number(s.azimuth) : null,
+    azimuthName: s?.azimuthName || null,
+    panelType: s?.panelType || null,
+    inverterType: s?.inverterType || null,
+    annualConsumptionKwh: s?.annualConsumptionKwh ? Number(s.annualConsumptionKwh) || null : null,
+    monthlyBillAmount: s?.onGridMonthlyBillEstimate ? Number(s.onGridMonthlyBillEstimate) || null : null,
+    designMode: s?.designTarget || null,
+    batteryEnabled: !!(s?.batteryEnabled),
+    expertModules: {
+      evCharging: !!(s?.evEnabled),
+      heatingCooling: !!(s?.heatPumpEnabled),
+      batteryBackup: !!(s?.batteryEnabled),
+      generatorIntegration: false,
+    },
   };
 }
 
@@ -236,13 +252,11 @@ function buildLeadPayload(values) {
 
 // ── Backend gönderimi ────────────────────────────────────────────────────────
 async function postLeadToBackend(payload) {
-  const url = buildBackendUrl(BACKEND_CONFIG.leadSubmitPath);
-  const response = await fetch(url, {
+  const response = await fetch(BACKEND_CONFIG.leadSubmitProxyPath, {
     method: 'POST',
-    headers: buildAuthHeaders(),
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
-    // 10sn timeout — AbortController ile
-    signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined,
+    signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined,
   });
   if (!response.ok) {
     const errBody = await response.json().catch(() => ({}));
@@ -348,11 +362,11 @@ export async function submitQuoteForm(_arg, _el, event) {
   } catch (err) {
     if (err?.status >= 400 && err?.status < 500) {
       // Sunucu validasyon hatası — kullanıcıya göster, kuyruğa atma
-      const detail = err.body?.detail;
-      const detailMsg = Array.isArray(detail)
-        ? detail.map(d => d?.msg || d).filter(Boolean).join('; ')
-        : (typeof detail === 'string' ? detail : '');
-      window.showToast?.(detailMsg || t('quoteForm.errorToast', 'Form gönderilemedi.'), 'error');
+      const errorCode = err.body?.error || '';
+      const msg = errorCode === 'rate_limited'
+        ? t('quoteForm.rateLimitedToast', 'Çok sık istek gönderildi. Lütfen kısa süre bekleyin.')
+        : t('quoteForm.errorToast', 'Form gönderilemedi. Lütfen bilgileri kontrol edin.');
+      window.showToast?.(msg, 'error');
     } else {
       // Network / 5xx — kuyruğa al, kullanıcıya bilgi ver
       persistToLocalQueue(payload);

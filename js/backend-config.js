@@ -8,7 +8,8 @@ export const BACKEND_CONFIG = {
   financialPath: '/api/financial/proposal',
   pvgisProxyPath: '/api/pvgis-proxy',
   panelThermalCheckPath: '/api/panel/thermal-check',
-  leadSubmitPath: '/api/lead/submit'
+  leadSubmitPath: '/api/lead/submit',       // legacy: local Python backend (geliştirme)
+  leadSubmitProxyPath: '/api/lead-submit',  // production: Vercel Function proxy → Admin Panel
 };
 
 function cleanBaseUrl(value) {
