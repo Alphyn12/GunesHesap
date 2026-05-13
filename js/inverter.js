@@ -3,7 +3,7 @@
 // Solar Rota v2.0
 // ═══════════════════════════════════════════════════════════
 import { INVERTER_TYPES } from './data.js';
-import { convertTry } from './exchange-rate.js';
+import { COST_ASSUMPTIONS, DEFAULT_COST_PROFILE, normalizeCostProfile } from './assumptions/index.js';
 
 const inverterDescriptions = {
   string:    'Merkezi mimari. Tek yönlü ve düzenli kurulum yüzeylerinde yatırım/performans dengesi güçlüdür.',
@@ -11,24 +11,43 @@ const inverterDescriptions = {
   optimizer: 'Panel bazında optimizasyon ile merkezi inverteri birleştirir. Karma yüzeyli projelerde kontrollü orta yol sunar.'
 };
 
+const COST_PROFILE_LABELS = {
+  economy: 'Ekonomik',
+  standard: 'Standart',
+  premium: 'Premium'
+};
+
+function formatTry(value) {
+  return `${Math.round(Number(value || 0)).toLocaleString('tr-TR')} ₺`;
+}
+
+function inverterAssumptionPriceCopy(key, profileKey) {
+  const profile = normalizeCostProfile(profileKey || DEFAULT_COST_PROFILE);
+  const assumption = COST_ASSUMPTIONS.inverterAssumptions?.[key] || COST_ASSUMPTIONS.inverterAssumptions?.string;
+  const values = assumption?.profiles?.[profile] || assumption?.profiles?.standard || {};
+  const label = COST_PROFILE_LABELS[profile] || 'Standart';
+  if (assumption?.pricingModel === 'perPanelPlusFixed') {
+    const fixed = Number(values.fixedGateway || 0) + Number(values.monitoring || 0);
+    return {
+      text: `${label} profil: ${formatTry(values.perPanel)}/panel + ${formatTry(fixed)} sabit`,
+      meta: `${COST_ASSUMPTIONS.version} · ${assumption.sourceDate || COST_ASSUMPTIONS.sourceDate || '—'}`
+    };
+  }
+  return {
+    text: `${label} profil: ${formatTry(values.base)}/kWp`,
+    meta: `${COST_ASSUMPTIONS.version} · ${assumption?.sourceDate || COST_ASSUMPTIONS.sourceDate || '—'}`
+  };
+}
+
 export function buildInverterCards() {
   const wrap = document.getElementById('inverter-cards-wrap');
   if (!wrap) return;
 
   const state = window.state;
   const selected = state.inverterType || 'string';
-  const cur = state?.displayCurrency || 'TRY';
-  const rate = state?.usdToTry || 40;
 
   wrap.innerHTML = Object.entries(INVERTER_TYPES).map(([key, inv]) => {
-    const lt10Raw = inv.pricePerKWp?.lt10;
-    const hasLt10Price = Number.isFinite(Number(lt10Raw));
-    const price10 = hasLt10Price ? convertTry(lt10Raw, cur, rate) : null;
-    const priceStr = !hasLt10Price
-      ? '—'
-      : cur === 'USD'
-        ? `$${price10.toLocaleString('en-US', { maximumFractionDigits: 0 })}/kWp`
-        : `${Math.round(price10).toLocaleString('tr-TR')} ₺/kWp`;
+    const assumptionPrice = inverterAssumptionPriceCopy(key, state.costProfile);
     const shadeClass = inv.shadeTolerance >= 0.85 ? 'inverter-shade-good'
       : inv.shadeTolerance >= 0.70 ? 'inverter-shade-warn'
       : 'inverter-shade-bad';
@@ -62,10 +81,11 @@ export function buildInverterCards() {
           <span>${inv.warranty || inv.lifetime} yıl</span>
         </div>
         <div class="inverter-stat">
-          <span class="inverter-stat-label">Tipik maliyet (≤10 kWp)</span>
-          <span>${priceStr}</span>
+          <span class="inverter-stat-label">Varsayım maliyeti</span>
+          <span>${assumptionPrice.text}</span>
         </div>
       </div>
+      <div class="equipment-card-note"><strong>Fiyat kaynağı:</strong> ${assumptionPrice.meta}</div>
       <div class="equipment-card-note"><strong>En uygun:</strong> ${inv.bestFor || inverterDescriptions[key]}</div>
       <div class="equipment-card-note equipment-card-note-muted"><strong>Teknik vurgu:</strong> ${(inv.technicalHighlights || []).join(' • ')}</div>
       <div class="inverter-card-pros">

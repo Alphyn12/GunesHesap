@@ -15,6 +15,7 @@ import {
   manualVatRatesFromUi,
   normalizeAssumptionUiState
 } from '../js/assumption-ui-state.js';
+import { callPanelThermalCheck } from '../js/pvlib-bridge.js';
 
 const indexHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const cost = JSON.parse(await readFile(new URL('../shared/assumptions/cost-assumptions-tr-2026-q2.json', import.meta.url), 'utf8'));
@@ -58,6 +59,40 @@ assert.ok(economy.solarCost >= 220000 && economy.solarCost <= 320000, `economy c
 assert.ok(standard.solarCost >= 280000 && standard.solarCost <= 420000, `standard capex ${standard.solarCost}`);
 assert.ok(premium.solarCost > standard.solarCost);
 assert.ok(premium.solarCost >= 380000);
+
+const hjtStep4 = estimateSolarCapex({
+  systemPowerKwp: 1.38,
+  panel: { ...PANEL_TYPES.hjt, key: 'hjt' },
+  panelCount: 3,
+  inverterTypeKey: 'string',
+  costProfile: 'standard',
+  vatProfile: 'standard'
+});
+assert.equal(Math.round(hjtStep4.panelPricePerWatt * 10) / 10, 21.0);
+assert.equal(Math.round(hjtStep4.panelCost), 28980);
+assert.equal(Math.round(hjtStep4.inverterCost), 9384);
+assert.equal(Math.round(hjtStep4.panelCost + hjtStep4.inverterCost), 38364);
+
+const hjtEconomy = estimateSolarCapex({
+  systemPowerKwp: 1.38,
+  panel: { ...PANEL_TYPES.hjt, key: 'hjt' },
+  panelCount: 3,
+  inverterTypeKey: 'string',
+  costProfile: 'economy',
+  vatProfile: 'standard'
+});
+const hjtPremium = estimateSolarCapex({
+  systemPowerKwp: 1.38,
+  panel: { ...PANEL_TYPES.hjt, key: 'hjt' },
+  panelCount: 3,
+  inverterTypeKey: 'string',
+  costProfile: 'premium',
+  vatProfile: 'standard'
+});
+assert.ok(hjtEconomy.panelCost < hjtStep4.panelCost);
+assert.ok(hjtPremium.panelCost > hjtStep4.panelCost);
+assert.ok(hjtEconomy.inverterCost < hjtStep4.inverterCost);
+assert.ok(hjtPremium.inverterCost > hjtStep4.inverterCost);
 
 const partial = estimateSolarCapex({
   systemPowerKwp: 10,
@@ -193,5 +228,22 @@ const customFinanceRequest = buildPvEngineRequest({
 assert.equal(customFinanceRequest.tariff.financialProfile, 'custom');
 assert.equal(customFinanceRequest.tariff.discountRate, 0.29);
 assert.deepEqual(customFinanceRequest.tariff.tariffIncreaseCurve, [{ fromYear: 1, toYear: 25, rate: 0.19 }]);
+
+const previousLocation = globalThis.location;
+Object.defineProperty(globalThis, 'location', {
+  value: new URL('https://solarrota.example/'),
+  configurable: true
+});
+const thermalBlocked = await callPanelThermalCheck({}, {
+  endpoint: 'http://127.0.0.1:8000/api/panel/thermal-check',
+  fetchImpl: () => { throw new Error('fetch should not be called for production loopback thermal check'); }
+});
+assert.equal(thermalBlocked.ok, false);
+assert.equal(thermalBlocked.status, 0);
+if (previousLocation === undefined) {
+  delete globalThis.location;
+} else {
+  Object.defineProperty(globalThis, 'location', { value: previousLocation, configurable: true });
+}
 
 console.log('assumption model tests passed');

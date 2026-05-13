@@ -50,8 +50,29 @@ export function callPvlibService(state = {}, options = {}) {
   return callPythonEngineeringBackend(state, { ...options, endpoint });
 }
 
+function isLoopbackEndpoint(endpoint) {
+  try {
+    const url = new URL(endpoint, typeof location !== 'undefined' ? location.href : 'http://localhost/');
+    return ['127.0.0.1', 'localhost', '::1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function isBrowserOnLoopback() {
+  if (typeof location === 'undefined') return true;
+  return ['127.0.0.1', 'localhost', '::1'].includes(location.hostname);
+}
+
 export async function callPanelThermalCheck(payload, { endpoint = buildBackendUrl(BACKEND_CONFIG.panelThermalCheckPath), fetchImpl = globalThis.fetch, timeoutMs = BACKEND_CONFIG.connectTimeoutMs } = {}) {
   if (typeof fetchImpl !== 'function') throw new Error('fetch unavailable');
+  if (isLoopbackEndpoint(endpoint) && !isBrowserOnLoopback()) {
+    return {
+      ok: false,
+      status: 0,
+      error: 'Local thermal backend is disabled outside localhost; browser fallback used.'
+    };
+  }
   const res = await fetchWithTimeout(fetchImpl, endpoint, {
     method: 'POST',
     headers: buildAuthHeaders(),   // X-Api-Key + X-Timestamp (key tanımlıysa)

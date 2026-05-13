@@ -22,7 +22,7 @@ import { renderResults, renderMonthlyChart, downloadPDF, downloadTechnicalPDF, s
 import { toggleEngReport, renderEngReport } from './eng-report.js';
 import { runCalculation, isCalculationInProgress } from './calculation-service.js';
 import { calculateBatteryMetrics, calculateNMMetrics, refreshCalculationStageMeta, getTiltCoeff, finalizeCalculationUI } from './calc-engine.js';
-import { calculateSystemLayout, resolvePanelSpec } from './calc-core.js';
+import { calculateSystemLayout, estimateSolarCapex, resolvePanelSpec } from './calc-core.js';
 import { renderHourlyProfile, setHourlySeason } from './hourly-profile.js';
 import { toggleBillBlock, onBillToggle, onBillInput, billQuickFill, billClear, import8760Csv } from './bill-analysis.js';
 import { buildInverterCards, selectInverter } from './inverter.js';
@@ -64,6 +64,8 @@ import {
   DEFAULT_FINANCIAL_PROFILE,
   DEFAULT_PANEL_FORM_FACTOR,
   DEFAULT_VAT_PROFILE,
+  COST_ASSUMPTIONS,
+  getPanelPriceBand,
   resolveFinancialAssumptions
 } from './assumptions/index.js';
 import {
@@ -134,16 +136,16 @@ function dispatchAction(eventType, e) {
 function setElementVisible(el, visible, display = '') {
   if (!el) return;
   el.classList.toggle('is-hidden', !visible);
+  el.dataset.displayWhenVisible = display || '';
   if (visible) {
     el.removeAttribute('hidden');
-    el.style.display = display;
   } else {
-    el.style.display = 'none';
+    el.setAttribute('hidden', '');
   }
 }
 
 function isElementVisible(el) {
-  return !!el && !el.classList.contains('is-hidden') && el.style.display !== 'none';
+  return !!el && !el.hidden && !el.classList.contains('is-hidden') && getComputedStyle(el).display !== 'none';
 }
 
 window.setElementVisible = setElementVisible;
@@ -2561,8 +2563,14 @@ function readAssumptionControls() {
 }
 
 function updateAssumptionControls() {
+  const beforeCostProfile = window.state.costProfile;
+  const beforePanelFormFactor = window.state.panelFormFactor;
   readAssumptionControls();
   syncAssumptionControlsFromState();
+  if (beforeCostProfile !== window.state.costProfile || beforePanelFormFactor !== window.state.panelFormFactor) {
+    buildPanelCards();
+    buildInverterCards();
+  }
   updatePanelPreview();
   persistState();
   scheduleAssumptionRecalculation();
@@ -3302,6 +3310,7 @@ function renderSimplePanelCards(wrap) {
     const efficiencyText = Number.isFinite(Number(p.efficiency)) ? `${(Number(p.efficiency) * 100).toFixed(1)}%` : '—';
     const tempCoeffText = Number.isFinite(Number(p.tempCoeff)) ? `${(Number(p.tempCoeff) * 100).toFixed(2)}%/°C` : '—';
     const warrantyText = `${Number(p.warranty) || 0} yıl ürün / ${Number(p.powerWarranty) || 0} yıl performans`;
+    const priceAssumption = panelAssumptionPriceCopy(techKey);
     const card = document.createElement('div');
     card.className = 'panel-card panel-type-card' + (isSelected ? ' selected' : '');
     card.id = `panel-type-card-${techKey}`;
@@ -3332,10 +3341,11 @@ function renderSimplePanelCards(wrap) {
       <div class="panel-card-stats">
         <div class="panel-stat"><span class="panel-stat-label">Tipik kullanım</span><span>${escapeHtml(p.bestFor)}</span></div>
         <div class="panel-stat"><span class="panel-stat-label">Sıcaklık katsayısı</span><span>${escapeHtml(tempCoeffText)}</span></div>
-        <div class="panel-stat"><span class="panel-stat-label">Ortalama fiyat</span><span>${Number(p.pricePerWatt || 0).toFixed(1)} ₺/W</span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Varsayım fiyatı</span><span>${escapeHtml(priceAssumption.text)}</span></div>
         <div class="panel-stat"><span class="panel-stat-label">Garanti</span><span>${escapeHtml(warrantyText)}</span></div>
       </div>
       <div class="panel-card-scenario" id="panel-type-card-scenario-${techKey}"></div>
+      <div class="equipment-card-note"><strong>Fiyat kaynağı:</strong> ${escapeHtml(priceAssumption.meta)}</div>
       <div class="equipment-card-note equipment-card-note-muted"><strong>Dikkat:</strong> ${escapeHtml(p.watchFor)}</div>`;
 
     const activateCard = () => {
@@ -3384,6 +3394,7 @@ function buildPanelCards() {
   visibleCatalog.forEach(entry => {
     const techKey = normalizePanelTypeKey(entry.technologyProfileId);
     const p = PANEL_TYPES[techKey];
+    const priceAssumption = panelAssumptionPriceCopy(techKey);
     const card = document.createElement('div');
     card.className = 'panel-card panel-catalog-card' + (entry.id === window.state.panelCatalogId ? ' selected' : '');
     card.id = `panel-card-${entry.id}`;
@@ -3421,10 +3432,11 @@ function buildPanelCards() {
         <div class="panel-stat"><span class="panel-stat-label">Ağırlık / yapı</span><span>${entry.weight} · ${entry.construction}</span></div>
         <div class="panel-stat"><span class="panel-stat-label">Ürün / performans</span><span>${entry.warrantyText}</span></div>
         <div class="panel-stat"><span class="panel-stat-label">Kaynak tipi</span><span>${entry.sourceType}</span></div>
-        <div class="panel-stat"><span class="panel-stat-label">Fiyat bandı</span><span>${entry.priceBand}</span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Varsayım fiyatı</span><span>${escapeHtml(priceAssumption.text)}</span></div>
       </div>
       <div class="panel-card-scenario" id="panel-card-scenario-${entry.id}"></div>
       <div class="equipment-card-note"><strong>En uygun:</strong> ${entry.idealFor}</div>
+      <div class="equipment-card-note"><strong>Fiyat kaynağı:</strong> ${escapeHtml(priceAssumption.meta)}</div>
       <div class="equipment-card-note equipment-card-note-muted"><strong>Dikkat:</strong> ${entry.watchFor}</div>
       <div class="panel-catalog-footer">
         <div class="panel-catalog-source">${entry.sourceLabel}</div>
@@ -3473,6 +3485,27 @@ function formatPreviewCurrency(tryAmount, withCurrency = true) {
   return cur === 'USD' ? `$${formatted}` : `${formatted} ₺`;
 }
 
+const COST_PROFILE_LABELS = {
+  economy: 'Ekonomik',
+  standard: 'Standart',
+  premium: 'Premium'
+};
+
+function formatTryPerWatt(value) {
+  return `${Number(value || 0).toFixed(1)} TL/W`;
+}
+
+function panelAssumptionPriceCopy(panelKey) {
+  const profile = window.state.costProfile || DEFAULT_COST_PROFILE;
+  const band = getPanelPriceBand(panelKey, profile);
+  const label = COST_PROFILE_LABELS[profile] || 'Standart';
+  return {
+    selected: band.selected,
+    text: `${label} profil: ${formatTryPerWatt(band.low)}-${formatTryPerWatt(band.high)}, baz ${formatTryPerWatt(band.base)}`,
+    meta: `${COST_ASSUMPTIONS.version} · ${band.sourceDate || COST_ASSUMPTIONS.sourceDate || '—'}`
+  };
+}
+
 function computeEquipmentPreviewMetrics() {
   window.state.panelType = normalizePanelTypeKey(window.state.panelType);
   if (getPanelSelectionMode() !== 'advanced') window.state.panelCatalogId = null;
@@ -3496,10 +3529,17 @@ function computeEquipmentPreviewMetrics() {
   normalizeBatterySelection();
   const systemPower = layout.systemPower;
   const roofCapacitySystemPower = roofCapacityLayout.systemPower;
-  const inverter = INVERTER_TYPES[window.state.inverterType] || INVERTER_TYPES.string;
-  const inverterUnitTry = systemPower < 10 ? inverter.pricePerKWp.lt10 : systemPower < 50 ? inverter.pricePerKWp.lt50 : inverter.pricePerKWp.gt50;
-  const panelCostTry = totalPanelCount * panel.wattPeak * panel.pricePerWatt;
-  const inverterCostTry = systemPower > 0 ? Math.round(systemPower * inverterUnitTry) : 0;
+  const equipmentCapex = estimateSolarCapex({
+    systemPowerKwp: systemPower,
+    panel,
+    panelCount: totalPanelCount,
+    inverterTypeKey: window.state.inverterType || 'string',
+    costProfile: window.state.costProfile || DEFAULT_COST_PROFILE,
+    vatProfile: window.state.vatProfile || DEFAULT_VAT_PROFILE,
+    manualCostMode: 'none'
+  });
+  const panelCostTry = Math.round(equipmentCapex.panelCost);
+  const inverterCostTry = Math.round(equipmentCapex.inverterCost);
   const batteryCostTry = window.state.batteryEnabled ? estimateBatteryPreviewCostTry(window.state.battery) : 0;
   return {
     panel,
@@ -3515,6 +3555,10 @@ function computeEquipmentPreviewMetrics() {
     roofCapacitySystemPower,
     panelCostTry,
     inverterCostTry,
+    panelPricePerWatt: equipmentCapex.panelPricePerWatt,
+    inverterPricingModel: equipmentCapex.inverterPricingModel,
+    inverterUnitTry: equipmentCapex.invUnit,
+    costAssumptionVersion: equipmentCapex.costAssumptionVersion,
     batteryCostTry,
     totalEquipmentCostTry: panelCostTry + inverterCostTry + batteryCostTry
   };
@@ -3535,6 +3579,10 @@ function updatePanelPreview() {
     roofCapacitySystemPower,
     panelCostTry,
     inverterCostTry,
+    panelPricePerWatt,
+    inverterPricingModel,
+    inverterUnitTry,
+    costAssumptionVersion,
     batteryCostTry,
     totalEquipmentCostTry
   } = computeEquipmentPreviewMetrics();
@@ -3564,9 +3612,12 @@ function updatePanelPreview() {
   if (summaryInverterCost) summaryInverterCost.textContent = formatPreviewCurrency(inverterCostTry);
   if (summaryBatteryCost) summaryBatteryCost.textContent = window.state.batteryEnabled ? formatPreviewCurrency(batteryCostTry) : 'Kapalı';
   if (summaryCostNote) {
+    const inverterNote = inverterPricingModel === 'perPanelPlusFixed'
+      ? 'panel başı + gateway/izleme'
+      : `${Math.round(Number(inverterUnitTry || 0)).toLocaleString('tr-TR')} TL/kWp`;
     summaryCostNote.textContent = window.state.batteryEnabled
-      ? 'Toplam ekipman tahmini: panel + inverter + batarya depolama'
-      : 'Toplam ekipman tahmini: panel + inverter';
+      ? `Toplam ekipman tahmini: panel (${formatTryPerWatt(panelPricePerWatt)}) + inverter (${inverterNote}) + batarya depolama · ${costAssumptionVersion}`
+      : `Toplam ekipman tahmini: panel (${formatTryPerWatt(panelPricePerWatt)}) + inverter (${inverterNote}) · ${costAssumptionVersion}`;
   }
 
   const preview = document.getElementById('panel-count-preview');
