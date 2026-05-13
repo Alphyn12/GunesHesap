@@ -1277,6 +1277,7 @@ function renderOnGridResultLayers(state, r) {
         <div class="result-chip-row">
           ${resultChip(i18n.t('onGridResult.pricingModeLabel'), tariffModeText, 'neutral')}
           ${resultChip(i18n.t('onGridResult.costConfidenceLabel'), costSourceText, costSourceTone)}
+          ${resultChip('Finans modeli', r.financialModelLabel || 'Nominal TL model', 'neutral')}
         </div>
       </div>
       <div class="financial-verdict financial-verdict--${escapeHtml(decision.tone)}">
@@ -1309,7 +1310,7 @@ function renderOnGridResultLayers(state, r) {
         resultMetricCell({ eyebrow: i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel'), value: moneyRate(r.compensatedLcoe || r.lcoe, 'kWh'), label: i18n.t('onGridResult.lcoeNoteShort'), tone: 'neutral' })
       ])}
       <div class="assumption-strip">
-        ${resultChip(i18n.t('onGridResult.priceIncreaseLabel'), percentText(Number(r.annualPriceIncrease || 0) * 100, 0), 'neutral')}
+        ${resultChip(i18n.t('onGridResult.priceIncreaseLabel'), r.tariffIncreaseCurve ? `${percentText(Number(r.tariffIncreaseCurve[0]?.rate || 0) * 100, 0)} eğri` : percentText(Number(r.annualPriceIncrease || 0) * 100, 0), 'neutral')}
         ${resultChip(i18n.t('onGridResult.discountRateLabel'), percentText(Number(r.discountRate || 0) * 100, 0), 'neutral')}
         ${resultChip(i18n.t('onGridResult.settlementBasisLabel'), settlementBasisText, 'neutral')}
       </div>

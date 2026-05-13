@@ -604,25 +604,20 @@ def test_backend_on_grid_financial_uses_distribution_fee_once():
     assert payload["financial"]["financialBasis"] == "grid-import-tariff-plus-distribution-fee"
 
 
-def test_fix6_kdv_split_panel_zero_nonpanel_twenty():
-    """FIX-6: Solar panels carry 0% KDV (Law 7456/2023), other components 20%."""
-    from backend.services.financial_service import _frontend_default_capex
+def test_2026_q2_vat_profile_uses_standard_safe_fallback():
+    """2026-Q2: VAT is profile-driven; standard profile is not hard-coded panel-zero."""
+    from backend.services.financial_service import _frontend_default_capex_breakdown
     from backend.models.engine_contracts import EngineRequest
 
     request_data = sample_request()
     req = EngineRequest(**request_data)
-    capex = _frontend_default_capex(req, 12.9)
+    breakdown = _frontend_default_capex_breakdown(req, 12.9)
 
-    panel_cost = 12.9 * 1000 * 18.5  # mono
-    non_panel = 12.9 * 6500 + 12.9 * 2200 + 12.9 * 600 + 12.9 * 900 + 12.9 * 1800 + 5000
-    expected = panel_cost * 1.00 + non_panel * 1.20
-    assert abs(capex - expected) < 1, (
-        f"FIX-6: capex {capex:.0f} != expected {expected:.0f} "
-        f"(panel 0% KDV + non-panel 20% KDV)"
-    )
-    # Must be less than old 20%-flat capex
-    old_capex_flat = (panel_cost + non_panel) * 1.20
-    assert capex < old_capex_flat, "FIX-6: New capex (panel 0%) must be lower than flat-20% capex"
+    assert breakdown["costAssumptionVersion"] == "TR-2026-Q2-COST-v1"
+    assert breakdown["vatProfile"] == "standard"
+    assert breakdown["panelKdvRate"] == 0.10
+    assert breakdown["nonPanelKdvRate"] == 0.20
+    assert breakdown["kdv"] > 0
 
 
 def test_contract_cable_loss_is_not_hidden_backend_default():

@@ -59,6 +59,13 @@ import { runDatasheetSizing, attachDatasheetSizingHandlers } from './datasheet-s
 import { buildHourlyProfileEvidence, validateHourlyProfile8760 } from './consumption-evidence.js';
 import { initStorageCrypto, isEncryptionAvailable } from './storage-crypto.js';
 import { preloadEncryptedState } from './storage.js';
+import {
+  DEFAULT_COST_PROFILE,
+  DEFAULT_FINANCIAL_PROFILE,
+  DEFAULT_PANEL_FORM_FACTOR,
+  DEFAULT_VAT_PROFILE,
+  resolveFinancialAssumptions
+} from './assumptions/index.js';
 
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
@@ -368,6 +375,13 @@ window.state = {
   panelCatalogTechFilter: 'all',
   panelCatalogSegmentFilter: 'all',
   inverterType: 'string',
+  costProfile: DEFAULT_COST_PROFILE,
+  panelFormFactor: DEFAULT_PANEL_FORM_FACTOR,
+  financialProfile: DEFAULT_FINANCIAL_PROFILE,
+  vatProfile: DEFAULT_VAT_PROFILE,
+  manualCostMode: 'none',
+  manualCostOverrides: null,
+  manualVatRates: null,
   results: null,
   enginePreference: 'pvgis-hybrid-js',
   backendEngineAvailable: null,
@@ -423,8 +437,8 @@ window.state = {
   contractedTariff: DEFAULT_RESIDENTIAL_TARIFF,
   skttTariff: DEFAULT_RESIDENTIAL_TARIFF,
   exportTariff: 2.27,
-  annualPriceIncrease: 0.20,
-  discountRate: 0.28,
+  customTariffIncreaseCurve: null,
+  customDiscountRate: null,
   tariffIncludesTax: true,
   tariffSourceDate: DEFAULT_TARIFF_SOURCE_DATE,
   tariffSourceCheckedAt: currentLocalDateIso(),
@@ -594,8 +608,28 @@ function applyApril2026TariffProfile(targetState = window.state, type = targetSt
 }
 
 const persistedProposal = !window.location.hash ? loadProposalState() : null;
+let assumptionMigrationNoticePending = false;
+function migrateLegacyAssumptions(state = {}, persistedState = {}) {
+  const legacyAnnual = persistedState.annualPriceIncrease;
+  const legacyDiscount = persistedState.discountRate;
+  const hasLegacyAnnual = legacyAnnual !== undefined && legacyAnnual !== null && legacyAnnual !== '';
+  const hasLegacyDiscount = legacyDiscount !== undefined && legacyDiscount !== null && legacyDiscount !== '';
+  if (!hasLegacyAnnual && !hasLegacyDiscount) return false;
+  state.financialProfile = 'custom';
+  if (hasLegacyAnnual && !Array.isArray(state.customTariffIncreaseCurve)) {
+    const rate = Math.max(-0.5, Math.min(2, Number(legacyAnnual) || 0));
+    state.customTariffIncreaseCurve = [{ fromYear: 1, toYear: 25, rate }];
+  }
+  if (hasLegacyDiscount && state.customDiscountRate == null) {
+    state.customDiscountRate = Math.max(0, Number(legacyDiscount) || 0);
+  }
+  delete state.annualPriceIncrease;
+  delete state.discountRate;
+  return true;
+}
 if (persistedProposal?.state) {
   Object.assign(window.state, persistedProposal.state, { results: null, step: 1 });
+  assumptionMigrationNoticePending = migrateLegacyAssumptions(window.state, persistedProposal.state);
   if (window.state.enginePreference === 'auto' && window.GUNESHESAP_ENABLE_BACKEND_AUTO !== true) {
     window.state.enginePreference = 'pvgis-hybrid-js';
   }
@@ -1040,6 +1074,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   enhanceTooltipAccessibility();
+  if (assumptionMigrationNoticePending) {
+    showToast('Maliyet ve finans varsayımları yeni 2026-Q2 modeline taşındı. Eski özel tarife/iskonto değerleriniz custom profil olarak korundu.', 'info');
+  }
 
   // i18n başlat
   i18n.init().catch(() => {});
@@ -2464,8 +2501,25 @@ function updateTariffAssumptions() {
   s.sellableExportCapKwh = readNumber('sellable-export-cap-input', s.sellableExportCapKwh ?? 0);
   s.usdToTry = readNumber('usd-try-input', s.usdToTry || 38.5);
   s.displayCurrency = document.getElementById('display-currency')?.value || s.displayCurrency || 'TRY';
-  s.annualPriceIncrease = readNumber('price-increase-input', 20) / 100;
-  s.discountRate = readNumber('discount-rate-input', 28) / 100;
+  const financialDefaults = resolveFinancialAssumptions(s);
+  const priceIncreaseEl = document.getElementById('price-increase-input');
+  const discountRateEl = document.getElementById('discount-rate-input');
+  if (priceIncreaseEl && priceIncreaseEl.value !== '') {
+    const fallbackPct = (financialDefaults.tariffIncreaseCurve?.[0]?.rate ?? 0) * 100;
+    const enteredPct = readNumber('price-increase-input', fallbackPct);
+    if (s.financialProfile === 'custom' || Math.round(enteredPct) !== Math.round(fallbackPct)) {
+      s.financialProfile = 'custom';
+      s.customTariffIncreaseCurve = [{ fromYear: 1, toYear: 25, rate: enteredPct / 100 }];
+    }
+  }
+  if (discountRateEl && discountRateEl.value !== '') {
+    const fallbackPct = financialDefaults.discountRate * 100;
+    const enteredPct = readNumber('discount-rate-input', fallbackPct);
+    if (s.financialProfile === 'custom' || Math.round(enteredPct) !== Math.round(fallbackPct)) {
+      s.financialProfile = 'custom';
+      s.customDiscountRate = enteredPct / 100;
+    }
+  }
   s.expenseEscalationRate = readNumber('expense-escalation-input', 15) / 100;
   s.tariffIncludesTax = document.getElementById('tariff-tax-included')?.checked ?? true;
   s.hasSignedCustomerBillData = document.getElementById('quote-bill-verified')?.checked ?? false;
@@ -2665,8 +2719,9 @@ function syncEnterpriseInputsFromState() {
   setVal('previous-year-consumption-input', s.previousYearConsumptionKwh ?? 0);
   setVal('current-year-consumption-input', s.currentYearConsumptionKwh ?? 0);
   setVal('sellable-export-cap-input', s.sellableExportCapKwh ?? 0);
-  setVal('price-increase-input', Math.round((s.annualPriceIncrease ?? 0.20) * 100));
-  setVal('discount-rate-input', Math.round((s.discountRate ?? 0.28) * 100));
+  const financialAssumptions = resolveFinancialAssumptions(s);
+  setVal('price-increase-input', Math.round((financialAssumptions.tariffIncreaseCurve?.[0]?.rate ?? 0) * 100));
+  setVal('discount-rate-input', Math.round((financialAssumptions.discountRate ?? 0) * 100));
   setVal('expense-escalation-input', Math.round((s.expenseEscalationRate ?? 0.15) * 100));
   setVal('tariff-source-date', s.tariffSourceDate);
   setVal('tariff-source-checked-at', s.tariffSourceCheckedAt);

@@ -26,6 +26,7 @@ const NUMBER_LIMITS = {
   sellableExportCapKwh: [0, 100000000],
   annualPriceIncrease: [-0.5, 2],
   discountRate: [0, 2],
+  customDiscountRate: [0, 2],
   expenseEscalationRate: [-0.5, 2],
   dailyConsumption: [0, 100000],
   offgridCriticalFraction: [0.1, 1],
@@ -57,6 +58,11 @@ const STRING_LIMITS = {
   panelCatalogId: 80,
   panelCatalogTechFilter: 40,
   panelCatalogSegmentFilter: 40,
+  costProfile: 20,
+  panelFormFactor: 40,
+  financialProfile: 20,
+  vatProfile: 20,
+  manualCostMode: 30,
   tariffType: 40,
   tariffMode: 40,
   tariffRegime: 40,
@@ -97,19 +103,24 @@ const OBJECT_KEYS = new Set([
   'roofGeometry', 'osmShadow', 'financing',
   'maintenanceContract', 'gridApplicationChecklist', 'proposalApproval', 'evidence',
   'userIdentity', 'scenarioContext', 'engineContext', 'exchangeRate',
-  'satelliteEnhancement', 'offgridFieldImports'
+  'satelliteEnhancement', 'offgridFieldImports', 'manualCostOverrides', 'manualVatRates'
 ]);
 
 const ARRAY_KEYS = new Set([
   'roofSections', 'monthlyConsumption', 'hourlyConsumption8760', 'hourlyProduction8760',
   'offgridDevices', 'offgridPvHourly8760', 'offgridCriticalLoad8760', 'criticalLoad8760',
   'glareTargets', 'proposalRevisions',
-  'auditLog'
+  'auditLog', 'customTariffIncreaseCurve'
 ]);
 
 const ENUM_VALUES = {
   panelType: new Set(['mono', 'poly', 'bifacial', 'mono_perc', 'n_type_topcon', 'bifacial_topcon', 'hjt']),
   panelSelectionMode: new Set(['basic', 'advanced']),
+  costProfile: new Set(['economy', 'standard', 'premium']),
+  panelFormFactor: new Set(['compactResidential', 'largeFormatCommercial']),
+  financialProfile: new Set(['conservative', 'base', 'optimistic', 'custom']),
+  vatProfile: new Set(['standard', 'incentive', 'manual']),
+  manualCostMode: new Set(['none', 'partialManualOverride', 'fullManualBom']),
   tariffType: new Set(['residential', 'commercial', 'industrial', 'agriculture', 'custom']),
   tariffMode: new Set(['auto', 'custom', 'pst', 'sktt', 'contract']),
   tariffRegime: new Set(['auto', 'pst', 'sktt', 'contract']),

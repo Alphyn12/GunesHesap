@@ -140,10 +140,26 @@ class TariffInput(FlexibleModel):
     tariffInputMode: str = "net-plus-fee"
     distributionFeeTryKwh: float = 0
     contractedPowerKw: float = 0
-    annualPriceIncrease: float = 0.12
-    discountRate: float = 0.18
+    annualPriceIncrease: float = 0
+    tariffIncreaseCurve: List[Dict[str, Any]] = Field(default_factory=list)
+    financialProfile: str = "base"
+    financialModelLabel: str = "Nominal TL model"
+    financialAssumptionVersion: Optional[str] = None
+    discountRate: float = 0
     sourceDate: Optional[str] = None
     sourceCheckedAt: Optional[str] = None
+
+
+class AssumptionsInput(FlexibleModel):
+    costProfile: str = "standard"
+    panelFormFactor: str = "compactResidential"
+    vatProfile: str = "standard"
+    manualCostMode: str = "none"
+    manualCostOverrides: Optional[Dict[str, Any]] = None
+    manualVatRates: Optional[Dict[str, Any]] = None
+    financialProfile: str = "base"
+    costAssumptionVersion: Optional[str] = None
+    financialAssumptionVersion: Optional[str] = None
 
 
 class GovernanceInput(FlexibleModel):
@@ -170,6 +186,7 @@ class EngineRequest(FlexibleModel):
     system: SystemInput = Field(default_factory=SystemInput)
     load: LoadInput = Field(default_factory=LoadInput)
     offgrid: Optional[OffgridInput] = None
+    assumptions: AssumptionsInput = Field(default_factory=AssumptionsInput)
     tariff: TariffInput = Field(default_factory=TariffInput)
     governance: GovernanceInput = Field(default_factory=GovernanceInput)
     parity: ParityInput = Field(default_factory=ParityInput)

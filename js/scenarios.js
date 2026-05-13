@@ -137,8 +137,11 @@ function computeSensitivityNpv(r, state, overrides = {}) {
       ? (r.tariffModel?.contractedRate ?? r.tariff) * overrides.tariffMultiplier
       : (r.tariffModel?.contractedRate ?? r.tariff),
     exportTariff: r.tariffModel?.exportRate ?? r.tariff,
-    // Faz-4 Fix-17: Monte Carlo can override tariff growth rate per sample
-    annualPriceIncrease: overrides._annualPriceIncrease ?? (state.annualPriceIncrease ?? 0.12),
+    // Faz-4 Fix-17: Monte Carlo can override tariff growth via a custom curve per sample.
+    ...(overrides._annualPriceIncrease != null ? {
+      financialProfile: 'custom',
+      customTariffIncreaseCurve: [{ fromYear: 1, toYear: 25, rate: overrides._annualPriceIncrease }]
+    } : {}),
     discountRate: r.discountRate
   });
   const financialTariffModel = state.scenarioKey === 'off-grid' && r.financialSavingsRate
@@ -249,7 +252,7 @@ function computeMonteCarloBands(r, state, iterations = 500) {
       const tariffGrowth = 0.10 + rng() * 0.30;          // [0.10, 0.40]
       const npv = computeSensitivityNpv(r, state, {
         energyMultiplier: energyMult,
-        // Override tariff growth via state-level clone inside the helper
+        // Override tariff growth via a temporary custom curve inside the helper
         _annualPriceIncrease: tariffGrowth
       });
       npvs.push(npv);
@@ -276,7 +279,8 @@ function computeScenario(r, inflationRate, state) {
     skttTariff: r.tariffModel?.skttRate ?? r.tariff,
     contractedTariff: r.tariffModel?.contractedRate ?? r.tariff,
     exportTariff: r.tariffModel?.exportRate ?? r.tariff,
-    annualPriceIncrease: inflationRate,
+    financialProfile: 'custom',
+    customTariffIncreaseCurve: [{ fromYear: 1, toYear: 25, rate: inflationRate }],
     discountRate: r.discountRate
   });
   const financialTariffModel = state.scenarioKey === 'off-grid' && r.financialSavingsRate

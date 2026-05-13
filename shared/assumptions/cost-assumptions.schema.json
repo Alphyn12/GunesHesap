@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Solar Rota cost assumptions",
+  "type": "object",
+  "required": ["version", "market", "currency", "sourceDate", "panelPrices", "panelFormFactors", "inverterAssumptions", "bosAssumptions", "vatProfiles", "manualBomModes"],
+  "properties": {
+    "version": { "type": "string", "minLength": 1 },
+    "market": { "type": "string", "minLength": 1 },
+    "currency": { "type": "string", "enum": ["TRY"] },
+    "sourceDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "panelPrices": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/priceBand" }
+    },
+    "panelFormFactors": {
+      "type": "object",
+      "required": ["compactResidential", "largeFormatCommercial"],
+      "additionalProperties": { "$ref": "#/$defs/panelFormFactor" }
+    },
+    "inverterAssumptions": {
+      "type": "object",
+      "required": ["string", "micro", "optimizer"],
+      "additionalProperties": { "$ref": "#/$defs/inverterAssumption" }
+    },
+    "bosAssumptions": {
+      "type": "object",
+      "required": ["economy", "standard", "premium"],
+      "additionalProperties": { "$ref": "#/$defs/bosProfile" }
+    },
+    "vatProfiles": {
+      "type": "object",
+      "required": ["standard", "incentive", "manual"],
+      "additionalProperties": { "$ref": "#/$defs/vatProfile" }
+    },
+    "manualBomModes": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["none", "partialManualOverride", "fullManualBom"] },
+      "contains": { "const": "partialManualOverride" }
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "required": ["sourceDate", "sourceLabel", "confidence"],
+      "properties": {
+        "sourceDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "sourceLabel": { "type": "string", "minLength": 1 },
+        "confidence": { "type": "string", "enum": ["low", "low-medium", "medium", "medium-high", "high"] }
+      }
+    },
+    "priceBand": {
+      "allOf": [
+        { "$ref": "#/$defs/metadata" },
+        {
+          "type": "object",
+          "required": ["low", "base", "high"],
+          "properties": {
+            "low": { "type": "number", "minimum": 0 },
+            "base": { "type": "number", "minimum": 0 },
+            "high": { "type": "number", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "panelFormFactor": {
+      "allOf": [
+        { "$ref": "#/$defs/metadata" },
+        {
+          "type": "object",
+          "required": ["wattPeak", "powerRange", "dimensions", "areaM2", "weightKg"],
+          "properties": {
+            "wattPeak": { "type": "number", "minimum": 1 },
+            "powerRange": { "type": "string", "minLength": 1 },
+            "dimensions": { "type": "string", "minLength": 1 },
+            "areaM2": { "type": "number", "minimum": 0.1 },
+            "weightKg": { "type": "number", "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "inverterAssumption": {
+      "allOf": [
+        { "$ref": "#/$defs/metadata" },
+        {
+          "type": "object",
+          "required": ["pricingModel"],
+          "properties": {
+            "pricingModel": { "type": "string", "enum": ["perKwp", "perPanelPlusFixed"] },
+            "profiles": { "type": "object" }
+          }
+        }
+      ]
+    },
+    "bosProfile": {
+      "allOf": [
+        { "$ref": "#/$defs/metadata" },
+        {
+          "type": "object",
+          "required": ["mountingPerKwp", "dcCablePerKwp", "acElectricalPerKwp", "laborPerKwp", "engineeringPerKwp", "logisticsPerKwp"],
+          "properties": {
+            "mountingPerKwp": { "type": "number", "minimum": 0 },
+            "dcCablePerKwp": { "type": "number", "minimum": 0 },
+            "acElectricalPerKwp": { "type": "number", "minimum": 0 },
+            "laborPerKwp": { "type": "number", "minimum": 0 },
+            "engineeringPerKwp": { "type": "number", "minimum": 0 },
+            "logisticsPerKwp": { "type": "number", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "vatProfile": {
+      "allOf": [
+        { "$ref": "#/$defs/metadata" },
+        {
+          "type": "object",
+          "required": ["panelVatRate", "nonPanelVatRate"],
+          "properties": {
+            "panelVatRate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "nonPanelVatRate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "requiresManualRates": { "type": "boolean" }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -13,6 +13,7 @@ async function collectJsFiles(dir) {
         entry.name === '.git' ||
         entry.name === '.agents' ||
         entry.name === '.pytest_cache' ||
+        entry.name === '.pytest-tmp' ||
         entry.name.startsWith('pytest-cache-files-')
       ) continue;
       files.push(...await collectJsFiles(path));

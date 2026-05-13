@@ -1,0 +1,157 @@
+{
+  "version": "TR-2026-Q2-COST-v1",
+  "market": "Turkey",
+  "currency": "TRY",
+  "sourceDate": "2026-05-13",
+  "panelPrices": {
+    "mono_perc": {
+      "low": 10.5,
+      "base": 12.0,
+      "high": 13.5,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Turkey retail and supplier listings, 550 W mono PERC class",
+      "confidence": "medium-high"
+    },
+    "n_type_topcon": {
+      "low": 12.5,
+      "base": 14.0,
+      "high": 16.5,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Turkey retail and supplier listings, 580-600 W TOPCon class",
+      "confidence": "medium-high"
+    },
+    "bifacial_topcon": {
+      "low": 13.5,
+      "base": 16.0,
+      "high": 18.5,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Turkey retail and supplier listings, bifacial TOPCon class",
+      "confidence": "medium"
+    },
+    "hjt": {
+      "low": 18.0,
+      "base": 21.0,
+      "high": 25.0,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Premium HJT reference range; open Turkey price evidence is limited",
+      "confidence": "low-medium"
+    }
+  },
+  "panelFormFactors": {
+    "compactResidential": {
+      "wattPeak": 455,
+      "powerRange": "430-470 W",
+      "dimensions": "1762 x 1134 x 30 mm",
+      "areaM2": 1.998,
+      "weightKg": 21.0,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Compact residential module datasheets in local catalog",
+      "confidence": "high"
+    },
+    "largeFormatCommercial": {
+      "wattPeak": 585,
+      "powerRange": "550-600 W",
+      "dimensions": "2278 x 1134 x 35 mm",
+      "areaM2": 2.583,
+      "weightKg": 28.5,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Large-format 144 half-cell commercial module class",
+      "confidence": "medium-high"
+    }
+  },
+  "inverterAssumptions": {
+    "string": {
+      "pricingModel": "perKwp",
+      "profiles": {
+        "economy": { "low": 4500, "base": 4800, "high": 5000 },
+        "standard": { "low": 6000, "base": 6800, "high": 7600 },
+        "premium": { "low": 8500, "base": 9200, "high": 10000 }
+      },
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Turkey 2026 string inverter listings and turnkey quote ranges",
+      "confidence": "medium"
+    },
+    "micro": {
+      "pricingModel": "perPanelPlusFixed",
+      "profiles": {
+        "economy": { "perPanel": 3900, "fixedGateway": 12000, "monitoring": 3500 },
+        "standard": { "perPanel": 5200, "fixedGateway": 18000, "monitoring": 6000 },
+        "premium": { "perPanel": 6800, "fixedGateway": 26000, "monitoring": 9000 }
+      },
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Panel-level electronics modeled as per-module hardware plus gateway",
+      "confidence": "medium"
+    },
+    "optimizer": {
+      "pricingModel": "perPanelPlusFixed",
+      "profiles": {
+        "economy": { "perPanel": 1700, "fixedGateway": 30000, "monitoring": 4000 },
+        "standard": { "perPanel": 2400, "fixedGateway": 42000, "monitoring": 7000 },
+        "premium": { "perPanel": 3200, "fixedGateway": 58000, "monitoring": 10000 }
+      },
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Optimizer architecture modeled as per-module optimizer plus central inverter",
+      "confidence": "medium"
+    }
+  },
+  "bosAssumptions": {
+    "economy": {
+      "mountingPerKwp": 1400,
+      "dcCablePerKwp": 400,
+      "acElectricalPerKwp": 600,
+      "laborPerKwp": 1200,
+      "engineeringPerKwp": 800,
+      "logisticsPerKwp": 500,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Bare-material economy profile from peer review inputs plus minimum logistics/engineering",
+      "confidence": "low-medium"
+    },
+    "standard": {
+      "mountingPerKwp": 4000,
+      "dcCablePerKwp": 900,
+      "acElectricalPerKwp": 1600,
+      "laborPerKwp": 2600,
+      "engineeringPerKwp": 1800,
+      "logisticsPerKwp": 800,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Turkey 2026 standard turnkey residential roof profile",
+      "confidence": "medium"
+    },
+    "premium": {
+      "mountingPerKwp": 6000,
+      "dcCablePerKwp": 1400,
+      "acElectricalPerKwp": 2600,
+      "laborPerKwp": 4200,
+      "engineeringPerKwp": 3000,
+      "logisticsPerKwp": 1500,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Complex roof, premium workmanship and higher contingency profile",
+      "confidence": "medium"
+    }
+  },
+  "vatProfiles": {
+    "standard": {
+      "panelVatRate": 0.10,
+      "nonPanelVatRate": 0.20,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Default quote-safety VAT model; verify project-specific tax treatment",
+      "confidence": "medium"
+    },
+    "incentive": {
+      "panelVatRate": 0.00,
+      "nonPanelVatRate": 0.20,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Incentive/tax-exempt panel treatment when documented",
+      "confidence": "low-medium"
+    },
+    "manual": {
+      "panelVatRate": 0.10,
+      "nonPanelVatRate": 0.20,
+      "requiresManualRates": true,
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Manual VAT profile; falls back to standard if manual rates are missing",
+      "confidence": "medium"
+    }
+  },
+  "manualBomModes": ["none", "partialManualOverride", "fullManualBom"]
+}

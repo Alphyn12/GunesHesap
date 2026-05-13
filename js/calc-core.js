@@ -16,6 +16,18 @@ import {
 } from './turkey-regulation.js';
 import { hasMeaningfulMonthlyConsumption } from './consumption-evidence.js';
 import { getPanelCatalogById } from './panel-catalog.js';
+import {
+  COST_ASSUMPTIONS,
+  DEFAULT_COST_PROFILE,
+  DEFAULT_PANEL_FORM_FACTOR,
+  DEFAULT_VAT_PROFILE,
+  getPanelFormFactor,
+  getPanelPriceBand,
+  normalizeCostProfile,
+  resolveFinancialAssumptions,
+  resolveVatRates,
+  tariffIncreaseRateForYear
+} from './assumptions/index.js';
 
 export const METHODOLOGY_VERSION = 'GH-CALC-2026.04-v2.1';
 export const PVGIS_LOSS_PARAM = 0;
@@ -228,7 +240,27 @@ export function resolvePanelSpec(state = {}, panelType = state.panelType) {
     panel.catalogDisplayName = selectedCatalog.displayName;
   }
 
+  const formFactor = getPanelFormFactor(state.panelFormFactor || DEFAULT_PANEL_FORM_FACTOR);
+  if (formFactor.key === 'largeFormatCommercial' && state.panelSelectionMode !== 'advanced') {
+    const side = Math.sqrt(Number(formFactor.areaM2) || 0);
+    const parsedDimensions = parsePanelDimensionsMeters(formFactor.dimensions);
+    panel.wattPeak = Number(formFactor.wattPeak) || panel.wattPeak;
+    panel.powerRange = formFactor.powerRange || panel.powerRange;
+    panel.width = parsedDimensions?.width || side || panel.width;
+    panel.height = parsedDimensions?.height || side || panel.height;
+    panel.weightKg = Number(formFactor.weightKg) || panel.weightKg || null;
+    panel.formFactor = formFactor.key;
+    panel.dimensionsSource = 'assumption-form-factor';
+    panel.wattSource = 'assumption-form-factor';
+  } else {
+    panel.formFactor = formFactor.key;
+    panel.weightKg = panel.weightKg || Number(formFactor.weightKg) || null;
+  }
+
   panel.areaM2 = (Number(panel.width) || 0) * (Number(panel.height) || 0);
+  if (formFactor.key === 'largeFormatCommercial' && Number(formFactor.areaM2) > 0) {
+    panel.areaM2 = Number(formFactor.areaM2);
+  }
   return panel;
 }
 
@@ -254,39 +286,126 @@ export function estimateSolarCapex({
   panel = null,
   panelPricePerWatt = null,
   inverterTypeKey = 'string',
+  panelCount = 0,
+  costProfile = DEFAULT_COST_PROFILE,
+  vatProfile = DEFAULT_VAT_PROFILE,
+  manualVatRates = null,
+  manualCostMode = 'none',
+  manualCostOverrides = null,
+  manualBom = null,
   mountingPerKwp = 2200,
   dcCablePerKwp = 600,
   acElecPerKwp = 900,
   laborPerKwp = 1800,
+  engineeringPerKwp = null,
+  logisticsPerKwp = null,
   panelKdvRate = 0,
   nonPanelKdvRate = 0.20
 } = {}) {
   const systemPower = Math.max(0, Number(systemPowerKwp) || 0);
   const inverterType = INVERTER_TYPES[inverterTypeKey] || INVERTER_TYPES.string;
-  const inverterPrices = inverterType?.pricePerKWp || {};
-  const invUnit = systemPower < 10
-    ? Number(inverterPrices.lt10) || 0
-    : systemPower < 50
-      ? Number(inverterPrices.lt50) || 0
-      : Number(inverterPrices.gt50) || 0;
-  const panelUnitPrice = Math.max(0, Number(panelPricePerWatt ?? panel?.pricePerWatt) || 0);
+  const profile = normalizeCostProfile(costProfile);
+  const inverterAssumption = COST_ASSUMPTIONS.inverterAssumptions?.[inverterTypeKey] || COST_ASSUMPTIONS.inverterAssumptions?.string;
+  const inverterProfile = inverterAssumption?.profiles?.[profile] || inverterAssumption?.profiles?.standard || {};
+  const invUnit = inverterAssumption?.pricingModel === 'perPanelPlusFixed'
+    ? 0
+    : Number(inverterProfile.base) || Number(inverterProfile.high) || 0;
+  const panelBand = getPanelPriceBand(panel?.key || panel?.type || 'mono_perc', profile);
+  const panelUnitPrice = Math.max(0, Number(panelPricePerWatt ?? panelBand.selected ?? panel?.pricePerWatt) || 0);
   const permitCost = resolvePermitCost(systemPower);
-  const panelCost = systemPower * 1000 * panelUnitPrice;
-  const inverterCost = systemPower * invUnit;
-  const mountingCost = systemPower * (Number(mountingPerKwp) || 0);
-  const dcCableCost = systemPower * (Number(dcCablePerKwp) || 0);
-  const acElecCost = systemPower * (Number(acElecPerKwp) || 0);
-  const laborCost = systemPower * (Number(laborPerKwp) || 0);
-  const subtotal = panelCost + inverterCost + mountingCost + dcCableCost + acElecCost + laborCost + permitCost;
+  const bosProfile = COST_ASSUMPTIONS.bosAssumptions?.[profile] || COST_ASSUMPTIONS.bosAssumptions?.standard || {};
+  const resolvedMountingPerKwp = mountingPerKwp === 2200 ? Number(bosProfile.mountingPerKwp) || mountingPerKwp : mountingPerKwp;
+  const resolvedDcCablePerKwp = dcCablePerKwp === 600 ? Number(bosProfile.dcCablePerKwp) || dcCablePerKwp : dcCablePerKwp;
+  const resolvedAcElecPerKwp = acElecPerKwp === 900 ? Number(bosProfile.acElectricalPerKwp) || acElecPerKwp : acElecPerKwp;
+  const resolvedLaborPerKwp = laborPerKwp === 1800 ? Number(bosProfile.laborPerKwp) || laborPerKwp : laborPerKwp;
+  const resolvedEngineeringPerKwp = engineeringPerKwp == null ? Number(bosProfile.engineeringPerKwp) || 0 : Number(engineeringPerKwp) || 0;
+  const resolvedLogisticsPerKwp = logisticsPerKwp == null ? Number(bosProfile.logisticsPerKwp) || 0 : Number(logisticsPerKwp) || 0;
+  const panelCostBase = systemPower * 1000 * panelUnitPrice;
+  const panelCountResolved = Math.max(0, Number(panelCount) || Math.ceil(systemPower * 1000 / Math.max(1, Number(panel?.wattPeak) || 1)));
+  const inverterCostBase = inverterAssumption?.pricingModel === 'perPanelPlusFixed'
+    ? panelCountResolved * (Number(inverterProfile.perPanel) || 0)
+      + (Number(inverterProfile.fixedGateway) || 0)
+      + (Number(inverterProfile.monitoring) || 0)
+    : systemPower * invUnit;
+  const baseCosts = {
+    panelCost: panelCostBase,
+    inverterCost: inverterCostBase,
+    mountingCost: systemPower * (Number(resolvedMountingPerKwp) || 0),
+    dcCableCost: systemPower * (Number(resolvedDcCablePerKwp) || 0),
+    acElecCost: systemPower * (Number(resolvedAcElecPerKwp) || 0),
+    laborCost: systemPower * (Number(resolvedLaborPerKwp) || 0),
+    engineeringCost: systemPower * resolvedEngineeringPerKwp,
+    logisticsCost: systemPower * resolvedLogisticsPerKwp,
+    permitCost
+  };
+  const manual = manualCostOverrides || manualBom || {};
+  const readManual = (...keys) => {
+    for (const key of keys) {
+      const n = Number(manual?.[key]);
+      if (Number.isFinite(n) && n >= 0) return n;
+    }
+    return null;
+  };
+  let effectiveCosts = { ...baseCosts };
+  if (manualCostMode === 'partialManualOverride') {
+    effectiveCosts = {
+      panelCost: readManual('panelCost', 'panel') ?? baseCosts.panelCost,
+      inverterCost: readManual('inverterCost', 'inverter') ?? baseCosts.inverterCost,
+      mountingCost: readManual('mountingCost', 'mounting') ?? baseCosts.mountingCost,
+      dcCableCost: readManual('dcCableCost', 'dcCable') ?? baseCosts.dcCableCost,
+      acElecCost: readManual('acElecCost', 'acElec') ?? baseCosts.acElecCost,
+      laborCost: readManual('laborCost', 'labor') ?? baseCosts.laborCost,
+      engineeringCost: readManual('engineeringCost', 'engineering') ?? baseCosts.engineeringCost,
+      logisticsCost: readManual('logisticsCost', 'logistics') ?? baseCosts.logisticsCost,
+      permitCost: readManual('permitCost', 'permits') ?? baseCosts.permitCost
+    };
+  } else if (manualCostMode === 'fullManualBom') {
+    const total = readManual('totalCost', 'total', 'subtotal');
+    if (total !== null) {
+      effectiveCosts = {
+        panelCost: readManual('panelCost', 'panel') ?? 0,
+        inverterCost: readManual('inverterCost', 'inverter') ?? 0,
+        mountingCost: readManual('mountingCost', 'mounting') ?? 0,
+        dcCableCost: readManual('dcCableCost', 'dcCable') ?? 0,
+        acElecCost: readManual('acElecCost', 'acElec') ?? 0,
+        laborCost: readManual('laborCost', 'labor') ?? 0,
+        engineeringCost: readManual('engineeringCost', 'engineering') ?? 0,
+        logisticsCost: readManual('logisticsCost', 'logistics') ?? 0,
+        permitCost: readManual('permitCost', 'permits') ?? 0,
+        fullManualSubtotal: total
+      };
+    }
+  }
+  const panelCost = effectiveCosts.panelCost;
+  const inverterCost = effectiveCosts.inverterCost;
+  const mountingCost = effectiveCosts.mountingCost;
+  const dcCableCost = effectiveCosts.dcCableCost;
+  const acElecCost = effectiveCosts.acElecCost;
+  const laborCost = effectiveCosts.laborCost;
+  const engineeringCost = effectiveCosts.engineeringCost;
+  const logisticsCost = effectiveCosts.logisticsCost;
+  const subtotal = effectiveCosts.fullManualSubtotal ?? (
+    panelCost + inverterCost + mountingCost + dcCableCost + acElecCost + laborCost + engineeringCost + logisticsCost + permitCost
+  );
   const nonPanelSubtotal = subtotal - panelCost;
-  const solarKdv = panelCost * (Number(panelKdvRate) || 0) + nonPanelSubtotal * (Number(nonPanelKdvRate) || 0);
+  const vat = resolveVatRates({ vatProfile, manualVatRates });
+  const panelVat = panelKdvRate === 0 && vatProfile !== undefined ? vat.panelVatRate : Number(panelKdvRate) || 0;
+  const nonPanelVat = nonPanelKdvRate === 0.20 && vatProfile !== undefined ? vat.nonPanelVatRate : Number(nonPanelKdvRate) || 0;
+  const manualKdv = manualCostMode === 'fullManualBom' ? readManual('kdv', 'vat') : null;
+  const solarKdv = manualKdv !== null
+    ? manualKdv
+    : panelCost * panelVat + nonPanelSubtotal * nonPanelVat;
   const solarCost = subtotal + solarKdv;
   const kdvRate = subtotal > 0 ? solarKdv / subtotal : 0;
 
   return {
     inverterTypeKey,
     invUnit,
+    inverterPricingModel: inverterAssumption?.pricingModel || 'perKwp',
     panelPricePerWatt: panelUnitPrice,
+    costProfile: profile,
+    panelPriceBand: panelBand,
+    panelCount: panelCountResolved,
     permitCost,
     panelCost,
     inverterCost,
@@ -294,13 +413,46 @@ export function estimateSolarCapex({
     dcCableCost,
     acElecCost,
     laborCost,
+    engineeringCost,
+    logisticsCost,
     subtotal,
     nonPanelSubtotal,
     solarKdv,
     solarCost,
     kdvRate,
-    panelKdvRate: Number(panelKdvRate) || 0,
-    nonPanelKdvRate: Number(nonPanelKdvRate) || 0
+    panelKdvRate: panelVat,
+    nonPanelKdvRate: nonPanelVat,
+    vatProfile: vat.profile,
+    requestedVatProfile: vat.requestedProfile,
+    vatFallbackApplied: vat.fallbackApplied,
+    costAssumptionVersion: COST_ASSUMPTIONS.version,
+    manualCostMode
+  };
+}
+
+export function resolveBifacialGainAssumption(state = {}, panel = {}) {
+  const panelType = normalizePanelTypeKey(state.panelType || panel.key || '');
+  const eligiblePanel = (panelType === 'bifacial_topcon') && Number(panel.bifacialGain) > 0;
+  const mountingType = state.mountingType || state.roofType || 'rooftop';
+  const rearSideClearanceCm = Math.max(0, Number(state.rearSideClearanceCm) || 0);
+  const hasExplicitAlbedo = state.groundAlbedo !== undefined || state.roofSurfaceAlbedo !== undefined;
+  const albedo = Math.max(0.05, Math.min(0.50, Number(state.groundAlbedo ?? state.roofSurfaceAlbedo) || 0.20));
+  const allowed = !!state.enableBifacialGain
+    || mountingType === 'groundMounted'
+    || mountingType === 'ground-mount'
+    || rearSideClearanceCm >= 30
+    || hasExplicitAlbedo;
+  return {
+    eligiblePanel,
+    applied: eligiblePanel && allowed,
+    baseGain: eligiblePanel && allowed ? Number(panel.bifacialGain) * (albedo / 0.20) : 0,
+    enabledByUser: !!state.enableBifacialGain,
+    mountingType,
+    rearSideClearanceCm,
+    albedo: hasExplicitAlbedo ? albedo : null,
+    reason: eligiblePanel && allowed
+      ? 'explicit-bifacial-condition'
+      : 'disabled-by-default-unless-clearance-groundmount-or-albedo-is-provided'
   };
 }
 
@@ -711,7 +863,11 @@ export function buildTariffModel(state) {
     : effectiveRegime === 'contract'
       ? contractedRate
       : Math.max(0, Number(state.tariff) || 0);
-  const annualPriceIncrease = Math.max(-0.5, Number(state.annualPriceIncrease ?? 0.12));
+  const financialAssumptions = resolveFinancialAssumptions({
+    ...state,
+    financialProfile: state.financialProfile || (state.annualPriceIncrease !== undefined || state.discountRate !== undefined ? 'custom' : undefined)
+  });
+  const annualPriceIncrease = tariffIncreaseRateForYear(financialAssumptions.tariffIncreaseCurve, 1);
   const exportCompensationPolicy = buildExportCompensationPolicy({ ...state, annualConsumptionKwh });
 
   return {
@@ -727,7 +883,11 @@ export function buildTariffModel(state) {
     contractedRate,
     exportRate: Math.max(0, Number(state.exportTariff) || 0),
     annualPriceIncrease,
-    discountRate: Math.max(0, Number(state.discountRate ?? 0.18)),
+    tariffIncreaseCurve: financialAssumptions.tariffIncreaseCurve,
+    financialProfile: financialAssumptions.profile,
+    financialModelLabel: financialAssumptions.modelLabel,
+    financialAssumptionVersion: financialAssumptions.version,
+    discountRate: Math.max(0, Number(financialAssumptions.discountRate) || 0),
     expenseEscalationRate: Math.max(-0.5, Number(state.expenseEscalationRate ?? Math.min(0.25, annualPriceIncrease))),
     sourceDate: tariffSourceDate,
     sourceLabel: tariffSourceLabels[tariffSourceType] || tariffSourceLabels.estimate,
@@ -766,14 +926,22 @@ export function computeFinancialTable({
   const exportRate = exportRateOverride ?? tariffModel.exportRate;
   let cumulativeDiscounted = 0;
   let discountedPaybackYear = 0;
+  const tariffEscalationFactor = (year) => {
+    let factor = 1;
+    for (let y = 1; y < year; y++) {
+      factor *= 1 + tariffIncreaseRateForYear(tariffModel.tariffIncreaseCurve, y);
+    }
+    return factor;
+  };
 
   for (let year = 1; year <= 25; year++) {
     const degradedEnergy = annualEnergy * (1 - lidFactor) * Math.pow(1 - panel.degradation, year - 1);
-    const electricityPriceDisplay = tariffModel.importRate * Math.pow(1 + tariffModel.annualPriceIncrease, year - 1);
+    const tariffFactor = tariffModel.tariffIncreaseCurve ? tariffEscalationFactor(year) : Math.pow(1 + tariffModel.annualPriceIncrease, year - 1);
+    const electricityPriceDisplay = tariffModel.importRate * tariffFactor;
     // Distribution fee is included in savings (net-plus-fee mode). Off-grid sets distributionFee: 0.
     const effectiveImportRate = tariffModel.importRate + (tariffModel.distributionFee ?? 0);
-    const electricityPrice = effectiveImportRate * Math.pow(1 + tariffModel.annualPriceIncrease, year - 1);
-    const escalatedExportRate = exportRate * Math.pow(1 + tariffModel.annualPriceIncrease, year - 1);
+    const electricityPrice = effectiveImportRate * tariffFactor;
+    const escalatedExportRate = exportRate * tariffFactor;
     // Faz-3 Fix-13: Load growth shifts more solar output into self-consumption each year.
     // As load grows, the system covers a larger fraction of a larger consumption → selfRatio grows.
     // Capped at 1.0 (cannot self-consume more than is produced).
@@ -789,8 +957,7 @@ export function computeFinancialTable({
     // Optional avoided-cost credit for externally modeled generator displacement.
     // Main off-grid PV+BESS flow passes 0 here; generator fuel remains an expense.
     const netGenSavingsPerKwh = Math.max(0, generatorAlternativeCostPerKwh - generatorFuelCostPerKwh);
-    const yearGeneratorSavings = annualGeneratorKwh * netGenSavingsPerKwh
-      * Math.pow(1 + tariffModel.annualPriceIncrease, year - 1);
+    const yearGeneratorSavings = annualGeneratorKwh * netGenSavingsPerKwh * tariffFactor;
     const yearSavings = compensatedConsumptionE * electricityPrice + paidExportE * escalatedExportRate + yearGeneratorSavings;
     let yearExpenses = (annualOMCost + annualInsurance + annualGeneratorCost) * Math.pow(1 + (tariffModel.expenseEscalationRate || 0), year - 1);
     const invLife = Math.round(Number(inverterLifetime) || 0);
@@ -811,6 +978,7 @@ export function computeFinancialTable({
       effectiveImportRate: electricityPrice.toFixed(2),
       rateBasis: (tariffModel.distributionFee ?? 0) > 0 ? 'import-plus-distribution-fee' : 'import-rate',
       exportRate: escalatedExportRate.toFixed(2),
+      tariffIncreaseRate: tariffIncreaseRateForYear(tariffModel.tariffIncreaseCurve, Math.max(1, year - 1)),
       selfConsumptionKwh: Math.round(selfE),
       importOffsetKwh: Math.round(offsetE),
       compensatedConsumptionKwh: Math.round(compensatedConsumptionE),

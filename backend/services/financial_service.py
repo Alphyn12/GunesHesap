@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 from backend.engines.offgrid_engine import build_backend_offgrid_results
 from backend.engines.simple_engine import annual_load_kwh
 from backend.models.engine_contracts import EngineRequest, EngineResponse
+from backend.services.assumptions import load_cost_assumptions, load_financial_assumptions
 
 
 def _npv(cashflows: list[float], discount_rate: float) -> float:
@@ -46,6 +47,35 @@ def _irr(cashflows: list[float], guess_lo: float = -0.95, guess_hi: float = 10.0
             guess_lo = mid
             f_lo = f_mid
     return (guess_lo + guess_hi) / 2
+
+
+def _curve_rate(curve: list[dict], year: int) -> float:
+    for seg in curve or []:
+        if int(seg.get("fromYear", 1)) <= year <= int(seg.get("toYear", 25)):
+            return max(-0.5, min(2.0, float(seg.get("rate", 0) or 0)))
+    return 0.0
+
+
+def _tariff_factor(curve: list[dict], year: int) -> float:
+    factor = 1.0
+    for y in range(1, year):
+        factor *= 1 + _curve_rate(curve, y)
+    return factor
+
+
+def _financial_defaults(request: EngineRequest) -> dict:
+    assumptions = load_financial_assumptions()
+    profile_key = getattr(request.tariff, "financialProfile", None) or getattr(request.assumptions, "financialProfile", "base")
+    profile = assumptions.get("financialProfiles", {}).get(profile_key) or assumptions.get("financialProfiles", {}).get("base", {})
+    curve = list(getattr(request.tariff, "tariffIncreaseCurve", None) or profile.get("tariffIncreaseCurve") or [])
+    discount = float(getattr(request.tariff, "discountRate", 0) or profile.get("discountRate", 0) or 0)
+    return {
+        "version": assumptions.get("version"),
+        "profile": profile_key if profile else "base",
+        "modelLabel": assumptions.get("modelLabel", "Nominal TL model"),
+        "tariffIncreaseCurve": curve,
+        "discountRate": max(0.0, discount),
+    }
 
 
 def build_financial_payload(request: EngineRequest, production: dict, offgrid_results: dict | None = None) -> dict:
@@ -113,13 +143,15 @@ def build_financial_payload(request: EngineRequest, production: dict, offgrid_re
     annual_savings = self_consumed * financial_import_rate + paid_export * export_rate
 
     system_power_kwp = max(0, float(production.get("systemPowerKwp") or 0))
-    rough_capex = _frontend_default_capex(request, system_power_kwp)
+    capex_breakdown = _frontend_default_capex_breakdown(request, system_power_kwp)
+    rough_capex = capex_breakdown["total"]
     if request.system.batteryEnabled and request.system.battery:
         rough_capex += max(0, float(request.system.battery.get("capacity", 0) or 0)) * 8000
 
     simple_payback = rough_capex / annual_savings if annual_savings > 0 else None
-    discount_rate = max(0, request.tariff.discountRate or 0.18)
-    escalation = max(-0.5, request.tariff.annualPriceIncrease or 0.12)
+    financial_defaults = _financial_defaults(request)
+    discount_rate = financial_defaults["discountRate"]
+    tariff_curve = financial_defaults["tariffIncreaseCurve"]
     # O&M + sigorta ~%1.7/yıl base (JS engine ile tutarlı: omRate=1.2 + insuranceRate=0.5).
     # FIX-3 (O&M escalation): O&M costs escalate with general cost inflation, not
     # the tariff escalation rate. JS uses state.expenseEscalationRate (default 10%).
@@ -127,7 +159,7 @@ def build_financial_payload(request: EngineRequest, production: dict, offgrid_re
     expense_escalation = 0.10  # matches JS default state.expenseEscalationRate
     cashflows = [-rough_capex]
     for year in range(1, 26):
-        gross = annual_savings * ((1 + escalation) ** (year - 1))
+        gross = annual_savings * _tariff_factor(tariff_curve, year)
         om_this_year = base_annual_om_cost * ((1 + expense_escalation) ** (year - 1))
         cashflows.append(gross - round(om_this_year))
     project_npv = _npv(cashflows, discount_rate)
@@ -203,7 +235,13 @@ def build_financial_payload(request: EngineRequest, production: dict, offgrid_re
         "financialSavingsRateTryKwh": round(financial_import_rate, 4),
         "financialBasis": financial_basis,
         "roughCapexTry": round(rough_capex),
+        "costBreakdown": capex_breakdown,
         "capexModel": "frontend-default-cost-basis",
+        "costAssumptionVersion": capex_breakdown.get("costAssumptionVersion"),
+        "financialAssumptionVersion": financial_defaults["version"],
+        "financialProfile": financial_defaults["profile"],
+        "financialModelLabel": financial_defaults["modelLabel"],
+        "tariffIncreaseCurve": tariff_curve,
         "simplePaybackYears": round(simple_payback, 2) if simple_payback else None,
         "npv25Try": round(project_npv),
         "totalReturnPct": round(total_return_pct, 1),
@@ -254,42 +292,146 @@ def build_financial_payload(request: EngineRequest, production: dict, offgrid_re
     return {"financial": financial, "proposal": proposal}
 
 
-def _frontend_default_capex(request: EngineRequest, system_power_kwp: float) -> float:
+def _frontend_default_capex_breakdown(request: EngineRequest, system_power_kwp: float) -> dict:
     """Mirror the browser's default solar CapEx basis when no BOM is supplied.
 
     The frontend may still override this with itemized BOM/commercial inputs.
     Backend proposal financials are therefore labelled as a default-cost-basis
     estimate, not a replacement for browser governance/BOM totals.
     """
-    panel_price_per_watt = {
-        "mono_perc": 18.5,
-        "n_type_topcon": 21.5,
-        "bifacial_topcon": 23.5,
-        "hjt": 28.5,
-        "mono": 18.5,
-        "poly": 21.5,
-        "bifacial": 23.5,
-    }.get(request.system.panelType, 20.0)
-    inverter_price = {
-        "string": (7500, 6500, 5500),
-        "micro": (12000, 11000, 10000),
-        "optimizer": (9500, 8500, 7500),
-    }.get(request.system.inverterType, (7500, 6500, 5500))
-    inverter_per_kwp = inverter_price[0] if system_power_kwp < 10 else inverter_price[1] if system_power_kwp < 50 else inverter_price[2]
+    assumptions = load_cost_assumptions()
+    cost_profile = getattr(request.assumptions, "costProfile", "standard") or "standard"
+    if cost_profile not in ("economy", "standard", "premium"):
+        cost_profile = "standard"
+    panel_key = {
+        "mono": "mono_perc",
+        "poly": "n_type_topcon",
+        "bifacial": "bifacial_topcon",
+    }.get(request.system.panelType, request.system.panelType)
+    panel_band = assumptions.get("panelPrices", {}).get(panel_key) or assumptions.get("panelPrices", {}).get("mono_perc", {})
+    panel_price_per_watt = float(
+        panel_band.get("low" if cost_profile == "economy" else "high" if cost_profile == "premium" else "base", 12.0)
+    )
+    inverter_key = request.system.inverterType or "string"
+    inverter_assumption = assumptions.get("inverterAssumptions", {}).get(inverter_key) or assumptions.get("inverterAssumptions", {}).get("string", {})
+    inverter_profile = (inverter_assumption.get("profiles", {}).get(cost_profile)
+                        or inverter_assumption.get("profiles", {}).get("standard", {}))
+    panel_count = int(getattr(request.system, "authoritativePanelCount", 0) or 0)
+    if panel_count <= 0:
+        watt_peak = float(getattr(request.system, "panelWattPeak", 0) or 0) or 455
+        panel_count = max(1, round(system_power_kwp * 1000 / watt_peak))
+    if inverter_assumption.get("pricingModel") == "perPanelPlusFixed":
+        inverter_per_kwp = 0
+        inverter_cost = (
+            panel_count * float(inverter_profile.get("perPanel", 0) or 0)
+            + float(inverter_profile.get("fixedGateway", 0) or 0)
+            + float(inverter_profile.get("monitoring", 0) or 0)
+        )
+    else:
+        inverter_per_kwp = float(inverter_profile.get("base", 6800) or 6800)
+        inverter_cost = system_power_kwp * inverter_per_kwp
+    bos = assumptions.get("bosAssumptions", {}).get(cost_profile) or assumptions.get("bosAssumptions", {}).get("standard", {})
     permit_cost = 8000 if system_power_kwp < 5 else 6000 if system_power_kwp < 10 else 5000 if system_power_kwp < 20 else 4000
     panel_cost = system_power_kwp * 1000 * panel_price_per_watt
-    non_panel_cost = (
-        system_power_kwp * inverter_per_kwp
-        + system_power_kwp * 2200
-        + system_power_kwp * 600
-        + system_power_kwp * 900
-        + system_power_kwp * 1800
-        + permit_cost
+    mounting_cost = system_power_kwp * float(bos.get("mountingPerKwp", 0) or 0)
+    dc_cable_cost = system_power_kwp * float(bos.get("dcCablePerKwp", 0) or 0)
+    ac_elec_cost = system_power_kwp * float(bos.get("acElectricalPerKwp", 0) or 0)
+    labor_cost = system_power_kwp * float(bos.get("laborPerKwp", 0) or 0)
+    engineering_cost = system_power_kwp * float(bos.get("engineeringPerKwp", 0) or 0)
+    logistics_cost = system_power_kwp * float(bos.get("logisticsPerKwp", 0) or 0)
+    subtotal = (
+        panel_cost + inverter_cost + mounting_cost + dc_cable_cost + ac_elec_cost
+        + labor_cost + engineering_cost + logistics_cost + permit_cost
     )
-    # FIX-6 (backend parity): Law 7456/2023 reduced KDV on solar PV modules to 0%.
-    # Other components remain at 20%. Mirrors the updated frontend calc-engine.js logic.
-    kdv = panel_cost * 0.00 + non_panel_cost * 0.20
-    return max(1, panel_cost + non_panel_cost + kdv)
+    manual_mode = getattr(request.assumptions, "manualCostMode", "none") or "none"
+    manual = getattr(request.assumptions, "manualCostOverrides", None) or {}
+
+    def _manual_value(*keys: str) -> float | None:
+        for key in keys:
+            if key in manual:
+                value = float(manual.get(key) or 0)
+                if value >= 0:
+                    return value
+        return None
+
+    if manual_mode == "partialManualOverride":
+        panel_cost = _manual_value("panelCost", "panel") if _manual_value("panelCost", "panel") is not None else panel_cost
+        inverter_cost = _manual_value("inverterCost", "inverter") if _manual_value("inverterCost", "inverter") is not None else inverter_cost
+        mounting_cost = _manual_value("mountingCost", "mounting") if _manual_value("mountingCost", "mounting") is not None else mounting_cost
+        dc_cable_cost = _manual_value("dcCableCost", "dcCable") if _manual_value("dcCableCost", "dcCable") is not None else dc_cable_cost
+        ac_elec_cost = _manual_value("acElecCost", "acElec") if _manual_value("acElecCost", "acElec") is not None else ac_elec_cost
+        labor_cost = _manual_value("laborCost", "labor") if _manual_value("laborCost", "labor") is not None else labor_cost
+        engineering_cost = _manual_value("engineeringCost", "engineering") if _manual_value("engineeringCost", "engineering") is not None else engineering_cost
+        logistics_cost = _manual_value("logisticsCost", "logistics") if _manual_value("logisticsCost", "logistics") is not None else logistics_cost
+        permit_cost = _manual_value("permitCost", "permits") if _manual_value("permitCost", "permits") is not None else permit_cost
+        subtotal = (
+            panel_cost + inverter_cost + mounting_cost + dc_cable_cost + ac_elec_cost
+            + labor_cost + engineering_cost + logistics_cost + permit_cost
+        )
+    elif manual_mode == "fullManualBom":
+        manual_total = _manual_value("totalCost", "total", "subtotal")
+        if manual_total is not None:
+            panel_cost = _manual_value("panelCost", "panel") or 0
+            inverter_cost = _manual_value("inverterCost", "inverter") or 0
+            mounting_cost = _manual_value("mountingCost", "mounting") or 0
+            dc_cable_cost = _manual_value("dcCableCost", "dcCable") or 0
+            ac_elec_cost = _manual_value("acElecCost", "acElec") or 0
+            labor_cost = _manual_value("laborCost", "labor") or 0
+            engineering_cost = _manual_value("engineeringCost", "engineering") or 0
+            logistics_cost = _manual_value("logisticsCost", "logistics") or 0
+            permit_cost = _manual_value("permitCost", "permits") or 0
+            subtotal = manual_total
+    vat_key = getattr(request.assumptions, "vatProfile", "standard") or "standard"
+    vat_profiles = assumptions.get("vatProfiles", {})
+    vat = vat_profiles.get(vat_key) or vat_profiles.get("standard", {})
+    vat_fallback_applied = False
+    if vat_key == "manual":
+        manual_rates = getattr(request.assumptions, "manualVatRates", None) or {}
+        if "panelVatRate" in manual_rates and "nonPanelVatRate" in manual_rates:
+            panel_vat_rate = max(0.0, min(1.0, float(manual_rates.get("panelVatRate") or 0)))
+            non_panel_vat_rate = max(0.0, min(1.0, float(manual_rates.get("nonPanelVatRate") or 0)))
+        else:
+            vat = vat_profiles.get("standard", {})
+            vat_fallback_applied = True
+            panel_vat_rate = float(vat.get("panelVatRate", 0) or 0)
+            non_panel_vat_rate = float(vat.get("nonPanelVatRate", 0.20) or 0.20)
+    else:
+        panel_vat_rate = float(vat.get("panelVatRate", 0) or 0)
+        non_panel_vat_rate = float(vat.get("nonPanelVatRate", 0.20) or 0.20)
+    non_panel_subtotal = subtotal - panel_cost
+    kdv = panel_cost * panel_vat_rate + non_panel_subtotal * non_panel_vat_rate
+    manual_kdv = _manual_value("kdv", "vat") if manual_mode == "fullManualBom" else None
+    if manual_kdv is not None:
+        kdv = manual_kdv
+    total = max(1, subtotal + kdv)
+    return {
+        "panel": round(panel_cost),
+        "inverter": round(inverter_cost),
+        "mounting": round(mounting_cost),
+        "dcCable": round(dc_cable_cost),
+        "acElec": round(ac_elec_cost),
+        "labor": round(labor_cost),
+        "engineering": round(engineering_cost),
+        "logistics": round(logistics_cost),
+        "permits": round(permit_cost),
+        "subtotal": round(subtotal),
+        "kdv": round(kdv),
+        "total": round(total),
+        "invUnit": round(inverter_per_kwp),
+        "costProfile": cost_profile,
+        "manualCostMode": manual_mode,
+        "vatProfile": "standard" if vat_fallback_applied else vat_key,
+        "requestedVatProfile": vat_key,
+        "vatFallbackApplied": vat_fallback_applied,
+        "panelKdvRate": panel_vat_rate,
+        "nonPanelKdvRate": non_panel_vat_rate,
+        "costAssumptionVersion": assumptions.get("version"),
+    }
+
+
+def _frontend_default_capex(request: EngineRequest, system_power_kwp: float) -> float:
+    """Backward-compatible helper for tests and older internal callers."""
+    return float(_frontend_default_capex_breakdown(request, system_power_kwp)["total"])
 
 
 def calculate_financial_proposal(request: EngineRequest) -> EngineResponse:

@@ -1,5 +1,14 @@
 import { INVERTER_TYPES } from './data.js';
 import { calculateSystemLayout, resolvePanelSpec } from './calc-core.js';
+import {
+  COST_ASSUMPTIONS,
+  FINANCIAL_ASSUMPTIONS,
+  DEFAULT_COST_PROFILE,
+  DEFAULT_FINANCIAL_PROFILE,
+  DEFAULT_PANEL_FORM_FACTOR,
+  DEFAULT_VAT_PROFILE,
+  resolveFinancialAssumptions
+} from './assumptions/index.js';
 
 export const PV_ENGINE_CONTRACT_VERSION = 'GH-PV-ENGINE-CONTRACT-2026.04-v1';
 
@@ -86,6 +95,10 @@ function normalizeHourlyProfile(values) {
 export function buildPvEngineRequest(state = {}) {
   const panel = resolvePanelSpec(state, state.panelType || 'mono_perc');
   const inverter = INVERTER_TYPES[state.inverterType || 'string'] || INVERTER_TYPES.string;
+  const financialAssumptions = resolveFinancialAssumptions({
+    ...state,
+    financialProfile: state.financialProfile || (state.annualPriceIncrease !== undefined || state.discountRate !== undefined ? 'custom' : DEFAULT_FINANCIAL_PROFILE)
+  });
   const cableLossPct = state.cableLossEnabled
     ? Math.max(0, finite(state.cableLoss?.totalLossPct ?? state.cableLossPct ?? state.cableLoss, 0))
     : 0;
@@ -153,6 +166,17 @@ export function buildPvEngineRequest(state = {}) {
       heatPumpEnabled: !!state.heatPumpEnabled,
       heatPump: state.heatPump || null
     },
+    assumptions: {
+      costProfile: state.costProfile || DEFAULT_COST_PROFILE,
+      panelFormFactor: state.panelFormFactor || DEFAULT_PANEL_FORM_FACTOR,
+      vatProfile: state.vatProfile || DEFAULT_VAT_PROFILE,
+      manualCostMode: state.manualCostMode || 'none',
+      manualCostOverrides: state.manualCostOverrides || null,
+      manualVatRates: state.manualVatRates || null,
+      financialProfile: financialAssumptions.profile,
+      costAssumptionVersion: COST_ASSUMPTIONS.version,
+      financialAssumptionVersion: FINANCIAL_ASSUMPTIONS.version
+    },
     parity: {
       contractPurpose: 'frontend-backend-production-parity',
       authoritativeSourceRule: 'one-production-source-per-run',
@@ -213,8 +237,12 @@ export function buildPvEngineRequest(state = {}) {
         : 0,
       offGridCostPerKwhTry: state.scenarioKey === 'off-grid' ? nullableFinite(state.offGridCostPerKwh) : null,
       contractedPowerKw: finite(state.contractedPowerKw, 0),
-      annualPriceIncrease: finite(state.annualPriceIncrease, 0.12),
-      discountRate: finite(state.discountRate, 0.18),
+      annualPriceIncrease: finite(financialAssumptions.tariffIncreaseCurve?.[0]?.rate, 0),
+      tariffIncreaseCurve: financialAssumptions.tariffIncreaseCurve,
+      financialProfile: financialAssumptions.profile,
+      financialModelLabel: financialAssumptions.modelLabel,
+      financialAssumptionVersion: FINANCIAL_ASSUMPTIONS.version,
+      discountRate: finite(financialAssumptions.discountRate, 0),
       sourceDate: state.tariffSourceDate || null,
       sourceCheckedAt: state.tariffSourceCheckedAt || null
     },

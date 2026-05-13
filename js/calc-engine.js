@@ -17,7 +17,7 @@ import {
   simulateHourlyEnergy, resolveAnnualOperatingCosts,
   resolveTaxTreatment, resolveProductionTemperatureAdjustment,
   sumMonthlyArrays, normalizeMonthlyProductionToAnnual,
-  COMMON_YEAR_MONTH_DAYS
+  COMMON_YEAR_MONTH_DAYS, resolveBifacialGainAssumption
 } from './calc-core.js';
 import { buildQuoteReadiness } from './turkey-regulation.js';
 import { buildProposalGovernance } from './proposal-governance.js';
@@ -504,11 +504,8 @@ export async function runCalculation() {
   // effectiveShading is not yet computed here; we use a forward reference approach:
   // shading-based correction is applied in the section loop below (per-section).
   // Albedo scaling is pre-computed once here.
-  const groundAlbedo = Math.max(0.05, Math.min(0.50, Number(state.groundAlbedo) || 0.20));
-  const albedoScale  = groundAlbedo / 0.20;  // normalised to IEC reference albedo
-  const bifacialBaseGain = ((state.panelType === 'bifacial' || state.panelType === 'bifacial_topcon') && panel.bifacialGain > 0)
-    ? panel.bifacialGain * albedoScale
-    : 0;
+  const bifacialGainAssumption = resolveBifacialGainAssumption(state, panel);
+  const bifacialBaseGain = bifacialGainAssumption.baseGain;
   const fallbackTempAdjustment = resolveProductionTemperatureAdjustment({
     source: 'fallback-psh',
     panelTempCoeff: panel.tempCoeff,
@@ -887,8 +884,12 @@ export async function runCalculation() {
     systemPowerKwp: systemPower,
     panel,
     inverterTypeKey: invTypeKey,
-    panelKdvRate: 0,
-    nonPanelKdvRate: 0.20
+    panelCount,
+    costProfile: state.costProfile || 'standard',
+    vatProfile: state.vatProfile || 'standard',
+    manualVatRates: state.manualVatRates || null,
+    manualCostMode: state.manualCostMode || 'none',
+    manualCostOverrides: state.manualCostOverrides || null
   });
   const invUnit = costBreakdownBase.invUnit;
   const invUnitEffective = invUnit;
@@ -898,6 +899,8 @@ export async function runCalculation() {
   const dcCableCost = costBreakdownBase.dcCableCost;
   const acElecCost = costBreakdownBase.acElecCost;
   const laborCost = costBreakdownBase.laborCost;
+  const engineeringCost = costBreakdownBase.engineeringCost;
+  const logisticsCost = costBreakdownBase.logisticsCost;
   const permitCost = costBreakdownBase.permitCost;
   const subtotal = costBreakdownBase.subtotal;
   const nonPanelSubtotal = costBreakdownBase.nonPanelSubtotal;
@@ -1494,12 +1497,17 @@ export async function runCalculation() {
     tempLossEnergy: Math.round(tempLossEnergy),
     azimuthLossEnergy: Math.round(azimuthLossEnergy),
     bifacialGainEnergy: Math.round(bifacialGainEnergy),
+    bifacialGainAssumption,
     soilingLoss: Math.round(soilingLoss),
     cableLoss: Math.round(totalCableLoss),
     cableLossPct,
     osmShadowFactor,
     ysp, cf, irr, lcoe, compensatedLcoe,
     tariff, annualPriceIncrease, discountRate, tariffModel,
+    tariffIncreaseCurve: tariffModel.tariffIncreaseCurve,
+    financialProfile: tariffModel.financialProfile,
+    financialModelLabel: tariffModel.financialModelLabel,
+    financialAssumptionVersion: tariffModel.financialAssumptionVersion,
     financialSavingsRate: effectiveSavingsTariff,
     financialSavingsBasis: financialTariffModel.financialBasis || 'grid-import-tariff',
     financialTariffModel,
@@ -1530,8 +1538,17 @@ export async function runCalculation() {
       panel: Math.round(panelCost), inverter: Math.round(inverterCost),
       mounting: Math.round(mountingCost), dcCable: Math.round(dcCableCost),
       acElec: Math.round(acElecCost), labor: Math.round(laborCost),
+      engineering: Math.round(engineeringCost), logistics: Math.round(logisticsCost),
       permits: Math.round(permitCost), subtotal: Math.round(subtotal),
       kdv: Math.round(kdv), kdvRate, total: Math.round(solarCost), invUnit: invUnitEffective,
+      panelKdvRate: costBreakdownBase.panelKdvRate,
+      nonPanelKdvRate: costBreakdownBase.nonPanelKdvRate,
+      vatProfile: costBreakdownBase.vatProfile,
+      requestedVatProfile: costBreakdownBase.requestedVatProfile,
+      vatFallbackApplied: costBreakdownBase.vatFallbackApplied,
+      costProfile: costBreakdownBase.costProfile,
+      manualCostMode: costBreakdownBase.manualCostMode,
+      costAssumptionVersion: costBreakdownBase.costAssumptionVersion,
       battery: batteryCostVal,
       generator: generatorCapexVal,
       generatorCapex: generatorCapexVal,

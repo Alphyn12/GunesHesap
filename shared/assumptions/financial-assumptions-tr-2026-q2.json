@@ -1,0 +1,51 @@
+{
+  "version": "TR-2026-Q2-FIN-v1",
+  "market": "Turkey",
+  "currency": "TRY",
+  "sourceDate": "2026-05-13",
+  "modelLabel": "Nominal TL model",
+  "financialProfiles": {
+    "conservative": {
+      "discountRate": 0.35,
+      "tariffIncreaseCurve": [
+        { "fromYear": 1, "toYear": 3, "rate": 0.15 },
+        { "fromYear": 4, "toYear": 10, "rate": 0.10 },
+        { "fromYear": 11, "toYear": 25, "rate": 0.06 }
+      ],
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Nominal TRY conservative profile using 2026 macro-rate environment",
+      "confidence": "medium"
+    },
+    "base": {
+      "discountRate": 0.32,
+      "tariffIncreaseCurve": [
+        { "fromYear": 1, "toYear": 3, "rate": 0.22 },
+        { "fromYear": 4, "toYear": 10, "rate": 0.15 },
+        { "fromYear": 11, "toYear": 25, "rate": 0.08 }
+      ],
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Nominal TRY base profile using Turkey 2026 tariff and rate environment",
+      "confidence": "medium"
+    },
+    "optimistic": {
+      "discountRate": 0.28,
+      "tariffIncreaseCurve": [
+        { "fromYear": 1, "toYear": 3, "rate": 0.25 },
+        { "fromYear": 4, "toYear": 10, "rate": 0.18 },
+        { "fromYear": 11, "toYear": 25, "rate": 0.10 }
+      ],
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Nominal TRY optimistic profile with stronger medium-term tariff growth",
+      "confidence": "medium"
+    },
+    "custom": {
+      "discountRate": 0.32,
+      "tariffIncreaseCurve": [
+        { "fromYear": 1, "toYear": 25, "rate": 0.22 }
+      ],
+      "sourceDate": "2026-05-13",
+      "sourceLabel": "Custom/legacy profile; user values override defaults when present",
+      "confidence": "medium"
+    }
+  }
+}
