@@ -42,7 +42,7 @@ import { toggleOSMShadow, refreshOSMShadowAnalysis } from './osm-shadow.js';
 import { initExchangeRateService, refreshExchangeRate, setManualUsdTryRate, convertTry } from './exchange-rate.js';
 import { appendAuditEntry } from './audit-log.js';
 import { attachEvidenceFile } from './evidence-files.js';
-import { SCENARIO_ICONS, SCENARIO_COLORS } from './scenario-icons.js';
+import { SCENARIO_ICONS } from './scenario-icons.js';
 import { normalizeUserIdentity } from './identity.js';
 import { buildApprovalWorkflow } from './proposal-governance.js';
 import { buildOffgridFieldAcceptanceSnapshot, buildOffgridFieldOperationSnapshot } from './evidence-governance.js';
@@ -707,6 +707,22 @@ function initMap() {
     maxZoom: 19, crossOrigin: 'anonymous'
   });
 
+  darkLayer.on('tileerror', () => {
+    if (window._cartoFallbackApplied) return;
+    window._cartoFallbackApplied = true;
+    clearTimeout(window._tileErrorToastTimer);
+    window._tileErrorToastTimer = setTimeout(() => {
+      try {
+        if (map.hasLayer(darkLayer)) {
+          map.removeLayer(darkLayer);
+          osmLayer.addTo(map);
+          window._activeTileLayer = 'osm';
+        }
+      } catch { /* tile fallback is best-effort */ }
+      window.showToast?.('Harita altlığı geçici olarak yüklenemedi; OpenStreetMap altlığına geçildi.', 'warning');
+    }, 1200);
+  });
+
   satelliteLayer.on('tileerror', () => {
     clearTimeout(window._tileErrorToastTimer);
     window._tileErrorToastTimer = setTimeout(() => {
@@ -1195,17 +1211,15 @@ function renderScenarioCards() {
     .map(rawScenario => {
       const scenario = localizeScenarioDefinition(rawScenario, key => i18n.t(key));
       const icon = SCENARIO_ICONS?.[scenario.key] || '';
-      const color = SCENARIO_COLORS?.[scenario.key] || 'var(--primary)';
       const forWhom = i18n.t(`scenarios.${scenario.key === 'on-grid' ? 'onGrid' : 'offGrid'}.forWhom`);
       const forWhomHtml = forWhom && forWhom !== `scenarios.${scenario.key === 'on-grid' ? 'onGrid' : 'offGrid'}.forWhom`
         ? `<span class="scenario-card-for-whom"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="svg-shrink-mt-1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${forWhom}</span>`
         : '';
       return `
-    <button type="button" class="scenario-choice-card${window.state.scenarioKey === scenario.key ? ' selected' : ''}"
+    <button type="button" class="scenario-choice-card scenario-color-${scenario.key}${window.state.scenarioKey === scenario.key ? ' selected' : ''}"
             data-scenario-key="${scenario.key}"
             data-testid="scenario-card-${scenario.key}"
-            aria-pressed="${window.state.scenarioKey === scenario.key ? 'true' : 'false'}"
-            data-card-color="${color}">
+            aria-pressed="${window.state.scenarioKey === scenario.key ? 'true' : 'false'}">
       <div class="scenario-card-icon">${icon}</div>
       <strong class="scenario-card-title">${scenario.label}</strong>
       <span class="scenario-card-desc">${scenario.description}</span>
@@ -1214,7 +1228,6 @@ function renderScenarioCards() {
     }).join('');
   wrap.querySelectorAll('[data-scenario-key]').forEach(btn => {
     btn.addEventListener('click', () => selectScenario(btn.dataset.scenarioKey));
-    if (btn.dataset.cardColor) btn.style.setProperty('--card-color', btn.dataset.cardColor);
   });
 }
 

@@ -7,6 +7,7 @@ import {
   fetchPVGISLive,
   getPvgisSourceLabel,
   isPvgisParityAvailable,
+  resolvePvgisProxyUrlForRuntime,
   PVGIS_FETCH_STATUS
 } from '../js/pvgis-fetch.js';
 
@@ -332,6 +333,44 @@ describe('fetchPVGISLive — browser CORS guard', () => {
     } finally {
       if (previousWindow === undefined) delete globalThis.window;
       else globalThis.window = previousWindow;
+    }
+  });
+
+  it('production browser ortamında loopback proxy yerine relative /api/pvgis-proxy kullanır', async () => {
+    const previousWindow = globalThis.window;
+    const previousLocation = globalThis.location;
+    globalThis.window = {};
+    Object.defineProperty(globalThis, 'location', {
+      value: new URL('https://solarrota.example/'),
+      configurable: true
+    });
+    const calls = [];
+    const fetchImpl = async (url) => {
+      calls.push(String(url));
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ ok: true, rawEnergy: 1100, rawPoa: 1600, rawMonthly: null })
+      };
+    };
+    try {
+      assert.equal(resolvePvgisProxyUrlForRuntime('http://127.0.0.1:8000/api/pvgis-proxy'), '/api/pvgis-proxy');
+      const result = await fetchPVGISLive(PARAMS, {
+        fetchImpl,
+        timeoutMs: 5000,
+        retries: 2,
+        retryDelaysMs: [0, 0],
+        backendProxyUrl: 'http://127.0.0.1:8000/api/pvgis-proxy',
+        proxyFirst: true,
+      });
+      assert.equal(result.fetchStatus, PVGIS_FETCH_STATUS.PROXY_SUCCESS);
+      assert.ok(calls[0].startsWith('/api/pvgis-proxy?'));
+      assert.ok(!calls.some(url => url.includes('127.0.0.1') || url.includes('localhost')));
+    } finally {
+      if (previousWindow === undefined) delete globalThis.window;
+      else globalThis.window = previousWindow;
+      if (previousLocation === undefined) delete globalThis.location;
+      else Object.defineProperty(globalThis, 'location', { value: previousLocation, configurable: true });
     }
   });
 });

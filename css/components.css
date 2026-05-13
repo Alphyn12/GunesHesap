@@ -3413,6 +3413,12 @@ body>main{z-index:auto}
 .map-load-error     { display: flex; align-items: center; justify-content: center; height: 100%; color: #F59E0B; font-size: 0.85rem; padding: 20px; text-align: center; }
 .svg-shrink-mt-1    { flex-shrink: 0; margin-top: 1px; }
 .scenario-card-color { --card-color: var(--c); }
+.scenario-color-on-grid { --card-color: #F59E0B; }
+.scenario-color-off-grid { --card-color: #8B5CF6; }
+.scenario-color-agricultural-irrigation { --card-color: #10B981; }
+.scenario-color-heat-pump { --card-color: #EC4899; }
+.scenario-color-flexible-mobile { --card-color: #06B6D4; }
+.scenario-color-ev-charging { --card-color: #3B82F6; }
 .ml-2               { margin-left: 8px; }
 .flex-wrap-row-mt-1 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 /* off-grid device table */

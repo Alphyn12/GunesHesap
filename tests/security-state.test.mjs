@@ -29,6 +29,9 @@ for (const f of jsFiles) {
     `F1 invariant: js/${f} must not inject inline onclick="" via templates`);
 }
 
+const appJs = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+assert.doesNotMatch(appJs, /style\.setProperty\('--card-color'/,
+  'CSP invariant: scenario cards must use CSS classes, not inline --card-color styles');
 
 assert.equal(escapeHtml('<img src=x onerror=alert(1)>'), '&lt;img src=x onerror=alert(1)&gt;');
 

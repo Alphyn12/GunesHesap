@@ -84,6 +84,32 @@ function buildUserMessage(errorType, lang) {
   }
 }
 
+function isLoopbackHostname(hostname) {
+  return ['127.0.0.1', 'localhost', '::1'].includes(String(hostname || '').toLowerCase());
+}
+
+function isBrowserOnLoopback() {
+  if (typeof location === 'undefined') return true;
+  return isLoopbackHostname(location.hostname);
+}
+
+function isLoopbackUrl(url) {
+  try {
+    const parsed = new URL(String(url), typeof location !== 'undefined' ? location.href : 'http://localhost/');
+    return isLoopbackHostname(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+export function resolvePvgisProxyUrlForRuntime(backendProxyUrl) {
+  if (!backendProxyUrl) return null;
+  if (typeof window !== 'undefined' && !isBrowserOnLoopback() && isLoopbackUrl(backendProxyUrl)) {
+    return '/api/pvgis-proxy';
+  }
+  return backendProxyUrl;
+}
+
 /**
  * Attempt to fetch from the backend PVGIS proxy endpoint.
  * Returns a result object or null if the proxy is unavailable/fails quickly.
@@ -230,12 +256,14 @@ export async function fetchPVGISLive(params, options = {}) {
   const { lat, lon, peakpower, loss = 0, angle, aspect } = params;
   const baseParams = `lat=${lat}&lon=${lon}&peakpower=${peakpower}&loss=${loss}&angle=${angle}&aspect=${aspect}&outputformat=json&pvtechchoice=crystSi&mountingplace=building`;
 
+  const runtimeProxyUrl = resolvePvgisProxyUrlForRuntime(backendProxyUrl);
+
   // ── Tier 1: Backend proxy (preferred, avoids CORS) ──────────────────────────
   let proxyAttempted = false;
-  if (backendProxyUrl && proxyFirst && typeof fetchImpl === 'function') {
+  if (runtimeProxyUrl && proxyFirst && typeof fetchImpl === 'function') {
     proxyAttempted = true;
     const proxyTimeoutMs = includeHourly ? PROXY_HOURLY_TIMEOUT_MS : PROXY_TIMEOUT_MS;
-    const proxyResult = await _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, proxyTimeoutMs, includeHourly);
+    const proxyResult = await _tryBackendProxy(runtimeProxyUrl, baseParams, fetchImpl, proxyTimeoutMs, includeHourly);
     if (proxyResult) {
       return {
         ...proxyResult,
@@ -353,9 +381,9 @@ export async function fetchPVGISLive(params, options = {}) {
   }
 
   // ── Tier 3 (legacy): backend proxy as last resort if not proxyFirst ──────────
-  if (backendProxyUrl && !proxyFirst && typeof fetchImpl === 'function') {
+  if (runtimeProxyUrl && !proxyFirst && typeof fetchImpl === 'function') {
     const proxyTimeoutMs = includeHourly ? PROXY_HOURLY_TIMEOUT_MS : PROXY_TIMEOUT_MS;
-    const proxyResult = await _tryBackendProxy(backendProxyUrl, baseParams, fetchImpl, proxyTimeoutMs, includeHourly);
+    const proxyResult = await _tryBackendProxy(runtimeProxyUrl, baseParams, fetchImpl, proxyTimeoutMs, includeHourly);
     if (proxyResult) {
       const rawHourly = proxyResult.rawHourly
         || (includeHourly ? await fetchPVGISHourlySeries(baseParams, fetchImpl, hourlyTimeoutMs) : null);
