@@ -69,6 +69,16 @@ assert.equal(sanitizeSharedState({ multiRoof: true, tariffIncludesTax: false }).
 assert.equal(sanitizeSharedState({ panelType: 'poly' }).panelType, 'n_type_topcon');
 assert.equal(sanitizeSharedState({ panelSelectionMode: 'advanced' }).panelSelectionMode, 'advanced');
 assert.equal('panelSelectionMode' in sanitizeSharedState({ panelSelectionMode: 'expert' }), false);
+assert.equal(sanitizeSharedState({ costProfile: 'premium' }).costProfile, 'premium');
+assert.equal('costProfile' in sanitizeSharedState({ costProfile: 'invalid' }), false);
+assert.equal(sanitizeSharedState({ panelFormFactor: 'largeFormatCommercial' }).panelFormFactor, 'largeFormatCommercial');
+assert.equal('panelFormFactor' in sanitizeSharedState({ panelFormFactor: 'huge' }), false);
+assert.equal(sanitizeSharedState({ financialProfile: 'custom' }).financialProfile, 'custom');
+assert.equal('financialProfile' in sanitizeSharedState({ financialProfile: 'legacy' }), false);
+assert.equal(sanitizeSharedState({ vatProfile: 'manual' }).vatProfile, 'manual');
+assert.equal('vatProfile' in sanitizeSharedState({ vatProfile: 'zero' }), false);
+assert.equal(sanitizeSharedState({ manualCostMode: 'partialManualOverride' }).manualCostMode, 'partialManualOverride');
+assert.equal('manualCostMode' in sanitizeSharedState({ manualCostMode: 'all' }), false);
 
 const snapshot = createShareStateSnapshot({
   cityName: 'Izmir',

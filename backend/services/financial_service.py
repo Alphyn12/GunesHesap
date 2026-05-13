@@ -354,6 +354,19 @@ def _frontend_default_capex_breakdown(request: EngineRequest, system_power_kwp: 
                     return value
         return None
 
+    full_manual_aliases = {
+        "panelCost": ("panelCost", "panel"),
+        "inverterCost": ("inverterCost", "inverter"),
+        "mountingCost": ("mountingCost", "mounting"),
+        "dcCableCost": ("dcCableCost", "dcCable"),
+        "acElecCost": ("acElecCost", "acElec"),
+        "laborCost": ("laborCost", "labor"),
+        "engineeringCost": ("engineeringCost", "engineering"),
+        "logisticsCost": ("logisticsCost", "logistics"),
+        "permitCost": ("permitCost", "permits"),
+    }
+    manual_bom_missing_fields: list[str] = []
+
     if manual_mode == "partialManualOverride":
         panel_cost = _manual_value("panelCost", "panel") if _manual_value("panelCost", "panel") is not None else panel_cost
         inverter_cost = _manual_value("inverterCost", "inverter") if _manual_value("inverterCost", "inverter") is not None else inverter_cost
@@ -381,6 +394,24 @@ def _frontend_default_capex_breakdown(request: EngineRequest, system_power_kwp: 
             logistics_cost = _manual_value("logisticsCost", "logistics") or 0
             permit_cost = _manual_value("permitCost", "permits") or 0
             subtotal = manual_total
+        else:
+            manual_bom_missing_fields = [
+                key for key, aliases in full_manual_aliases.items()
+                if _manual_value(*aliases) is None
+            ]
+            panel_cost = _manual_value("panelCost", "panel") or 0
+            inverter_cost = _manual_value("inverterCost", "inverter") or 0
+            mounting_cost = _manual_value("mountingCost", "mounting") or 0
+            dc_cable_cost = _manual_value("dcCableCost", "dcCable") or 0
+            ac_elec_cost = _manual_value("acElecCost", "acElec") or 0
+            labor_cost = _manual_value("laborCost", "labor") or 0
+            engineering_cost = _manual_value("engineeringCost", "engineering") or 0
+            logistics_cost = _manual_value("logisticsCost", "logistics") or 0
+            permit_cost = _manual_value("permitCost", "permits") or 0
+            subtotal = (
+                panel_cost + inverter_cost + mounting_cost + dc_cable_cost + ac_elec_cost
+                + labor_cost + engineering_cost + logistics_cost + permit_cost
+            )
     vat_key = getattr(request.assumptions, "vatProfile", "standard") or "standard"
     vat_profiles = assumptions.get("vatProfiles", {})
     vat = vat_profiles.get(vat_key) or vat_profiles.get("standard", {})
@@ -426,6 +457,8 @@ def _frontend_default_capex_breakdown(request: EngineRequest, system_power_kwp: 
         "panelKdvRate": panel_vat_rate,
         "nonPanelKdvRate": non_panel_vat_rate,
         "costAssumptionVersion": assumptions.get("version"),
+        "manualBomCompleteness": "incomplete" if manual_mode == "fullManualBom" and manual_bom_missing_fields else "complete",
+        "manualBomMissingFields": manual_bom_missing_fields,
     }
 
 

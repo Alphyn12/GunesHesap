@@ -9,7 +9,14 @@ import {
   resolvePanelSpec
 } from '../js/calc-core.js';
 import { buildPvEngineRequest } from '../js/pv-engine-contracts.js';
+import {
+  compactManualCostOverrides,
+  flatTariffIncreaseCurveFromPercent,
+  manualVatRatesFromUi,
+  normalizeAssumptionUiState
+} from '../js/assumption-ui-state.js';
 
+const indexHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const cost = JSON.parse(await readFile(new URL('../shared/assumptions/cost-assumptions-tr-2026-q2.json', import.meta.url), 'utf8'));
 const financial = JSON.parse(await readFile(new URL('../shared/assumptions/financial-assumptions-tr-2026-q2.json', import.meta.url), 'utf8'));
 const costSchema = JSON.parse(await readFile(new URL('../shared/assumptions/cost-assumptions.schema.json', import.meta.url), 'utf8'));
@@ -76,6 +83,22 @@ const full = estimateSolarCapex({
 assert.equal(full.subtotal, 250000);
 assert.equal(full.solarKdv, 20000);
 assert.equal(full.solarCost, 270000);
+assert.equal(full.manualBomCompleteness, 'complete');
+
+const incompleteFull = estimateSolarCapex({
+  systemPowerKwp: 10,
+  panel: basePanel,
+  panelCount: 23,
+  costProfile: 'standard',
+  vatProfile: 'standard',
+  manualCostMode: 'fullManualBom',
+  manualCostOverrides: { panelCost: 100000, inverterCost: 40000 }
+});
+assert.equal(incompleteFull.manualBomCompleteness, 'incomplete');
+assert.ok(incompleteFull.manualBomMissingFields.includes('laborCost'));
+assert.equal(incompleteFull.panelCost, 100000);
+assert.equal(incompleteFull.inverterCost, 40000);
+assert.equal(incompleteFull.mountingCost, 0);
 
 const manualVatFallback = estimateSolarCapex({
   systemPowerKwp: 10,
@@ -129,5 +152,46 @@ assert.equal(request.assumptions.costAssumptionVersion, cost.version);
 assert.equal(request.assumptions.financialAssumptionVersion, financial.version);
 assert.equal(request.tariff.financialAssumptionVersion, financial.version);
 assert.notEqual(request.tariff.discountRate, 0.12);
+
+for (const id of [
+  'cost-profile-select',
+  'panel-form-factor-select',
+  'financial-profile-select',
+  'vat-profile-select',
+  'manual-cost-mode-select',
+  'custom-finance-fields',
+  'manual-vat-fields',
+  'manual-cost-fields'
+]) {
+  assert.match(indexHtml, new RegExp(`id="${id}"`), `missing UI control: ${id}`);
+}
+assert.match(indexHtml, /data-change-action="updateAssumptionControls"/);
+assert.equal(normalizeAssumptionUiState({ costProfile: 'bad' }).costProfile, 'standard');
+assert.equal(normalizeAssumptionUiState({ panelFormFactor: 'bad' }).panelFormFactor, 'compactResidential');
+assert.equal(normalizeAssumptionUiState({ financialProfile: 'bad' }).financialProfile, 'base');
+assert.equal(normalizeAssumptionUiState({ vatProfile: 'bad' }).vatProfile, 'standard');
+assert.equal(normalizeAssumptionUiState({ manualCostMode: 'bad' }).manualCostMode, 'none');
+
+assert.deepEqual(flatTariffIncreaseCurveFromPercent(19), [{ fromYear: 1, toYear: 25, rate: 0.19 }]);
+const uiVat = manualVatRatesFromUi({ panelVatRate: 10, inverterVatRate: 20, bosVatRate: 18, laborVatRate: 12 });
+assert.equal(uiVat.panelVatRate, 0.10);
+assert.equal(uiVat.nonPanelVatRate, (20 + 18 + 12) / 300);
+assert.equal(manualVatRatesFromUi({ panelVatRate: 10, inverterVatRate: '' }), null);
+assert.equal(manualVatRatesFromUi({ panelVatRate: 10, inverterVatRate: 20, bosVatRate: 20, laborVatRate: '' }), null);
+assert.deepEqual(compactManualCostOverrides({ panelCost: 100000, inverterCost: '', laborCost: -1 }), { panelCost: 100000 });
+
+const customFinanceRequest = buildPvEngineRequest({
+  lat: 36.8969,
+  lon: 30.7133,
+  roofArea: 100,
+  panelType: 'mono_perc',
+  tariff: 3.23,
+  financialProfile: 'custom',
+  customDiscountRate: 0.29,
+  customTariffIncreaseCurve: flatTariffIncreaseCurveFromPercent(19)
+});
+assert.equal(customFinanceRequest.tariff.financialProfile, 'custom');
+assert.equal(customFinanceRequest.tariff.discountRate, 0.29);
+assert.deepEqual(customFinanceRequest.tariff.tariffIncreaseCurve, [{ fromYear: 1, toYear: 25, rate: 0.19 }]);
 
 console.log('assumption model tests passed');

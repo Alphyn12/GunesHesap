@@ -2744,6 +2744,117 @@
         </div>
       </details>
 
+      <details class="step5-subdetails" open>
+        <summary class="step5-subsummary">
+          <div>
+            <strong>Hesaplama Varsayımları</strong>
+            <span>Maliyet, panel formatı, KDV ve finans varsayımlarını seçerek fizibilite sonucunu farklı senaryolara göre inceleyebilirsiniz.</span>
+          </div>
+        </summary>
+        <div class="step5-subbody">
+          <div class="step5-inline-note">Bu seçimler 2026-Q2 varsayım modelini değiştirir; shared varsayım değerleri sabit kalır. Sonuçlar Nominal TL modelinde değerlendirilir.</div>
+          <div class="step5-tariff-quick-grid">
+            <label class="assumption-control">
+              <span class="text-caption-helper">Maliyet Profili</span>
+              <select class="input-form-row" id="cost-profile-select" aria-label="Maliyet Profili" data-change-action="updateAssumptionControls">
+                <option value="economy">Ekonomik</option>
+                <option value="standard" selected>Standart</option>
+                <option value="premium">Premium</option>
+              </select>
+              <small>Düşük maliyet, anahtar teslim veya premium saha riski varsayımı.</small>
+            </label>
+            <label class="assumption-control">
+              <span class="text-caption-helper">Panel Formatı</span>
+              <select class="input-form-row" id="panel-form-factor-select" aria-label="Panel Formatı" data-change-action="updateAssumptionControls">
+                <option value="compactResidential" selected>Kompakt konut paneli</option>
+                <option value="largeFormatCommercial">Büyük format ticari panel</option>
+              </select>
+              <small>430-470 W konut veya 550-600 W büyük format alan/ağırlık modeli.</small>
+            </label>
+            <label class="assumption-control">
+              <span class="text-caption-helper">Finans Senaryosu</span>
+              <select class="input-form-row" id="financial-profile-select" aria-label="Finans Senaryosu" data-change-action="updateAssumptionControls">
+                <option value="conservative">Muhafazakar</option>
+                <option value="base" selected>Baz senaryo</option>
+                <option value="optimistic">İyimser</option>
+                <option value="custom">Özel</option>
+              </select>
+              <small>Tarife artış eğrisi ve iskonto oranı birlikte seçilir.</small>
+            </label>
+            <label class="assumption-control">
+              <span class="text-caption-helper">KDV Profili</span>
+              <select class="input-form-row" id="vat-profile-select" aria-label="KDV Profili" data-change-action="updateAssumptionControls">
+                <option value="standard" selected>Standart KDV</option>
+                <option value="incentive">Teşvikli / özel varsayım</option>
+                <option value="manual">Manuel KDV</option>
+              </select>
+              <small>Manuel oranlar eksikse sistem Standart KDV profiline döner.</small>
+            </label>
+            <label class="assumption-control">
+              <span class="text-caption-helper">Manuel Maliyet Modu</span>
+              <select class="input-form-row" id="manual-cost-mode-select" aria-label="Manuel Maliyet Modu" data-change-action="updateAssumptionControls">
+                <option value="none" selected>Kapalı</option>
+                <option value="partialManualOverride">Kısmi manuel override</option>
+                <option value="fullManualBom">Tam manuel BOM</option>
+              </select>
+              <small>Profil maliyetleri veya kullanıcı BOM kalemleriyle çalışır.</small>
+            </label>
+          </div>
+
+          <div class="assumption-conditional is-hidden" id="custom-finance-fields">
+            <div class="step5-inline-note">Özel finans seçildiğinde girilen yıllık tarife artışı 25 yıllık flat eğriye çevrilir. Oranlar 0-100 aralığında sınırlandırılır.</div>
+            <div class="step5-tariff-quick-grid">
+              <label class="assumption-control">
+                <span class="text-caption-helper">Özel yıllık tarife artışı (%)</span>
+                <input class="input-form-row" type="number" id="custom-tariff-increase-rate" min="0" max="100" step="1" aria-label="Özel yıllık tarife artışı" data-input-action="updateAssumptionControls"/>
+              </label>
+              <label class="assumption-control">
+                <span class="text-caption-helper">Özel iskonto oranı (%)</span>
+                <input class="input-form-row" type="number" id="custom-discount-rate" min="0" max="100" step="1" aria-label="Özel iskonto oranı" data-input-action="updateAssumptionControls"/>
+              </label>
+            </div>
+          </div>
+
+          <div class="assumption-conditional is-hidden" id="manual-vat-fields">
+            <div class="step5-inline-note">Manuel KDV oranları eksikse sistem güvenli şekilde Standart KDV profiline döner. Panel dışı KDV oranları sistemde panel dışı toplam maliyet için birleştirilerek uygulanır.</div>
+            <div class="step5-tariff-quick-grid">
+              <label class="assumption-control">
+                <span class="text-caption-helper">Panel KDV (%)</span>
+                <input class="input-form-row" type="number" id="manual-panel-vat-rate" min="0" max="100" step="1" aria-label="Panel KDV oranı" data-input-action="updateAssumptionControls"/>
+              </label>
+              <label class="assumption-control">
+                <span class="text-caption-helper">İnverter KDV (%)</span>
+                <input class="input-form-row" type="number" id="manual-inverter-vat-rate" min="0" max="100" step="1" aria-label="İnverter KDV oranı" data-input-action="updateAssumptionControls"/>
+              </label>
+              <label class="assumption-control">
+                <span class="text-caption-helper">BOS KDV (%)</span>
+                <input class="input-form-row" type="number" id="manual-bos-vat-rate" min="0" max="100" step="1" aria-label="BOS KDV oranı" data-input-action="updateAssumptionControls"/>
+              </label>
+              <label class="assumption-control">
+                <span class="text-caption-helper">İşçilik KDV (%)</span>
+                <input class="input-form-row" type="number" id="manual-labor-vat-rate" min="0" max="100" step="1" aria-label="İşçilik KDV oranı" data-input-action="updateAssumptionControls"/>
+              </label>
+            </div>
+          </div>
+
+          <div class="assumption-conditional is-hidden" id="manual-cost-fields">
+            <div class="step5-inline-note" id="partial-manual-bom-note">Sadece doldurduğunuz kalemler profil değerlerini ezer; boş kalanlar seçili profilden hesaplanır.</div>
+            <div class="step5-inline-note is-hidden" id="full-manual-bom-warning">Tüm maliyet kullanıcı BOM'una göre hesaplanır. Eksik kalemler sonucu etkileyebilir.</div>
+            <div class="step5-tariff-quick-grid">
+              <label class="assumption-control"><span class="text-caption-helper">Panel maliyeti (TL)</span><input class="input-form-row" type="number" id="manual-panel-cost" min="0" step="1000" aria-label="Panel maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">İnverter maliyeti (TL)</span><input class="input-form-row" type="number" id="manual-inverter-cost" min="0" step="1000" aria-label="İnverter maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">Montaj maliyeti (TL)</span><input class="input-form-row" type="number" id="manual-mounting-cost" min="0" step="1000" aria-label="Montaj maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">DC kablo maliyeti (TL)</span><input class="input-form-row" type="number" id="manual-dc-cable-cost" min="0" step="1000" aria-label="DC kablo maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">AC elektrik maliyeti (TL)</span><input class="input-form-row" type="number" id="manual-ac-electrical-cost" min="0" step="1000" aria-label="AC elektrik maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">İşçilik maliyeti (TL)</span><input class="input-form-row" type="number" id="manual-labor-cost" min="0" step="1000" aria-label="İşçilik maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">Proje mühendislik (TL)</span><input class="input-form-row" type="number" id="manual-engineering-cost" min="0" step="1000" aria-label="Proje mühendislik maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">Lojistik maliyeti (TL)</span><input class="input-form-row" type="number" id="manual-logistics-cost" min="0" step="1000" aria-label="Lojistik maliyeti" data-input-action="updateAssumptionControls"/></label>
+              <label class="assumption-control"><span class="text-caption-helper">İzin / başvuru (TL)</span><input class="input-form-row" type="number" id="manual-permit-cost" min="0" step="1000" aria-label="İzin ve başvuru maliyeti" data-input-action="updateAssumptionControls"/></label>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <details class="step5-subdetails">
         <summary class="step5-subsummary">
           <div>

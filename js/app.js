@@ -66,6 +66,13 @@ import {
   DEFAULT_VAT_PROFILE,
   resolveFinancialAssumptions
 } from './assumptions/index.js';
+import {
+  ASSUMPTION_UI_DEFAULTS,
+  compactManualCostOverrides,
+  flatTariffIncreaseCurveFromPercent,
+  manualVatRatesFromUi,
+  normalizeAssumptionUiState
+} from './assumption-ui-state.js';
 
 // ── Global data referansı ────────────────────────────────────────────────────
 window._appData = { PANEL_TYPES, PANEL_CATALOG, BATTERY_MODELS, COMPASS_DIRS, INVERTER_TYPES, MONTHS, HEAT_PUMP_DATA, EV_MODELS };
@@ -630,10 +637,12 @@ function migrateLegacyAssumptions(state = {}, persistedState = {}) {
 if (persistedProposal?.state) {
   Object.assign(window.state, persistedProposal.state, { results: null, step: 1 });
   assumptionMigrationNoticePending = migrateLegacyAssumptions(window.state, persistedProposal.state);
+  Object.assign(window.state, normalizeAssumptionUiState(window.state));
   if (window.state.enginePreference === 'auto' && window.GUNESHESAP_ENABLE_BACKEND_AUTO !== true) {
     window.state.enginePreference = 'pvgis-hybrid-js';
   }
 }
+Object.assign(window.state, normalizeAssumptionUiState(window.state));
 applyApril2026TariffProfile(window.state, window.state.tariffType || 'residential');
 
 function persistState() {
@@ -984,6 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadFromHash();
   syncMultiRoofUi();
   syncEnterpriseInputsFromState();
+  syncAssumptionControlsFromState();
   initScenarioExperience();
   updateProgressBar();
   updateDashboard();
@@ -1328,6 +1338,7 @@ function syncScenarioControls() {
   setVal('tariff-input-mode', s.tariffInputMode || 'net-plus-fee');
   setVal('tariff-source-type', s.tariffSourceType || 'official');
   setVal('cost-source-type', s.costSourceType || 'catalog');
+  syncAssumptionControlsFromState();
   renderOnGridMonthlyInputs();
   setOnGridInputMode(s.onGridInputMode || 'basic');
   syncStep5AdvancedForScenario();
@@ -2429,6 +2440,134 @@ function updateOnGridAssumptions(options = {}) {
   persistState();
 }
 
+let assumptionRecalcTimer = null;
+function scheduleAssumptionRecalculation() {
+  if (!window.state?.results || isCalculationInProgress()) return;
+  clearTimeout(assumptionRecalcTimer);
+  assumptionRecalcTimer = setTimeout(() => {
+    if (!window.state?.results || isCalculationInProgress()) return;
+    runCalculation().catch(err => {
+      console.warn('[assumptions] recalculation failed:', err);
+      showToast('Varsayım değişikliği sonrası hesaplama yenilenemedi.', 'error');
+    });
+  }, 450);
+}
+
+function setAssumptionSectionVisible(id, visible) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('is-hidden', !visible);
+}
+
+function syncAssumptionControlsFromState() {
+  const s = window.state;
+  Object.assign(s, normalizeAssumptionUiState(s));
+  const setVal = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined && value !== null) el.value = value;
+  };
+  setVal('cost-profile-select', s.costProfile || ASSUMPTION_UI_DEFAULTS.costProfile);
+  setVal('panel-form-factor-select', s.panelFormFactor || ASSUMPTION_UI_DEFAULTS.panelFormFactor);
+  setVal('financial-profile-select', s.financialProfile || ASSUMPTION_UI_DEFAULTS.financialProfile);
+  setVal('vat-profile-select', s.vatProfile || ASSUMPTION_UI_DEFAULTS.vatProfile);
+  setVal('manual-cost-mode-select', s.manualCostMode || ASSUMPTION_UI_DEFAULTS.manualCostMode);
+
+  const financialAssumptions = resolveFinancialAssumptions(s);
+  setVal('price-increase-input', Math.round((financialAssumptions.tariffIncreaseCurve?.[0]?.rate ?? 0) * 100));
+  setVal('discount-rate-input', Math.round((financialAssumptions.discountRate ?? 0) * 100));
+  setVal('custom-tariff-increase-rate', Math.round((financialAssumptions.tariffIncreaseCurve?.[0]?.rate ?? 0) * 100));
+  setVal('custom-discount-rate', Math.round((financialAssumptions.discountRate ?? 0) * 100));
+
+  setAssumptionSectionVisible('custom-finance-fields', s.financialProfile === 'custom');
+  setAssumptionSectionVisible('manual-vat-fields', s.vatProfile === 'manual');
+  setAssumptionSectionVisible('manual-cost-fields', s.manualCostMode !== 'none');
+  setAssumptionSectionVisible('full-manual-bom-warning', s.manualCostMode === 'fullManualBom');
+
+  const vat = s.manualVatRates || {};
+  setVal('manual-panel-vat-rate', vat.panelVatRate != null ? Math.round(Number(vat.panelVatRate) * 100) : '');
+  setVal('manual-inverter-vat-rate', vat.inverterVatRate != null ? Math.round(Number(vat.inverterVatRate) * 100) : '');
+  setVal('manual-bos-vat-rate', vat.bosVatRate != null ? Math.round(Number(vat.bosVatRate) * 100) : '');
+  setVal('manual-labor-vat-rate', vat.laborVatRate != null ? Math.round(Number(vat.laborVatRate) * 100) : '');
+
+  const manual = s.manualCostOverrides || {};
+  [
+    ['manual-panel-cost', 'panelCost'],
+    ['manual-inverter-cost', 'inverterCost'],
+    ['manual-mounting-cost', 'mountingCost'],
+    ['manual-dc-cable-cost', 'dcCableCost'],
+    ['manual-ac-electrical-cost', 'acElecCost'],
+    ['manual-labor-cost', 'laborCost'],
+    ['manual-engineering-cost', 'engineeringCost'],
+    ['manual-logistics-cost', 'logisticsCost'],
+    ['manual-permit-cost', 'permitCost']
+  ].forEach(([id, key]) => setVal(id, manual[key] ?? ''));
+}
+
+function readAssumptionControls() {
+  const s = window.state;
+  const enumState = normalizeAssumptionUiState({
+    costProfile: document.getElementById('cost-profile-select')?.value || s.costProfile,
+    panelFormFactor: document.getElementById('panel-form-factor-select')?.value || s.panelFormFactor,
+    financialProfile: document.getElementById('financial-profile-select')?.value || s.financialProfile,
+    vatProfile: document.getElementById('vat-profile-select')?.value || s.vatProfile,
+    manualCostMode: document.getElementById('manual-cost-mode-select')?.value || s.manualCostMode
+  });
+  Object.assign(s, enumState);
+
+  if (s.financialProfile === 'custom') {
+    const discountPct = document.getElementById('custom-discount-rate')?.value || document.getElementById('discount-rate-input')?.value;
+    const tariffPct = document.getElementById('custom-tariff-increase-rate')?.value || document.getElementById('price-increase-input')?.value;
+    if (discountPct !== undefined && discountPct !== '') s.customDiscountRate = Math.max(0, Math.min(1, Number(discountPct) / 100 || 0));
+    if (tariffPct !== undefined && tariffPct !== '') s.customTariffIncreaseCurve = flatTariffIncreaseCurveFromPercent(tariffPct);
+    const priceEl = document.getElementById('price-increase-input');
+    const discountEl = document.getElementById('discount-rate-input');
+    if (priceEl && tariffPct !== undefined && tariffPct !== '') priceEl.value = String(Math.round(Number(tariffPct) || 0));
+    if (discountEl && discountPct !== undefined && discountPct !== '') discountEl.value = String(Math.round(Number(discountPct) || 0));
+  } else {
+    s.customDiscountRate = null;
+    s.customTariffIncreaseCurve = null;
+    const resolved = resolveFinancialAssumptions(s);
+    const priceEl = document.getElementById('price-increase-input');
+    const discountEl = document.getElementById('discount-rate-input');
+    if (priceEl) priceEl.value = Math.round((resolved.tariffIncreaseCurve?.[0]?.rate ?? 0) * 100);
+    if (discountEl) discountEl.value = Math.round((resolved.discountRate ?? 0) * 100);
+  }
+
+  if (s.vatProfile === 'manual') {
+    s.manualVatRates = manualVatRatesFromUi({
+      panelVatRate: document.getElementById('manual-panel-vat-rate')?.value,
+      inverterVatRate: document.getElementById('manual-inverter-vat-rate')?.value,
+      bosVatRate: document.getElementById('manual-bos-vat-rate')?.value,
+      laborVatRate: document.getElementById('manual-labor-vat-rate')?.value
+    });
+  } else {
+    s.manualVatRates = null;
+  }
+
+  if (s.manualCostMode === 'none') {
+    s.manualCostOverrides = null;
+  } else {
+    s.manualCostOverrides = compactManualCostOverrides({
+      panelCost: document.getElementById('manual-panel-cost')?.value,
+      inverterCost: document.getElementById('manual-inverter-cost')?.value,
+      mountingCost: document.getElementById('manual-mounting-cost')?.value,
+      dcCableCost: document.getElementById('manual-dc-cable-cost')?.value,
+      acElecCost: document.getElementById('manual-ac-electrical-cost')?.value,
+      laborCost: document.getElementById('manual-labor-cost')?.value,
+      engineeringCost: document.getElementById('manual-engineering-cost')?.value,
+      logisticsCost: document.getElementById('manual-logistics-cost')?.value,
+      permitCost: document.getElementById('manual-permit-cost')?.value
+    });
+  }
+}
+
+function updateAssumptionControls() {
+  readAssumptionControls();
+  syncAssumptionControlsFromState();
+  updatePanelPreview();
+  persistState();
+  scheduleAssumptionRecalculation();
+}
+
 function updateTariffAssumptions() {
   const s = window.state;
   const readNumber = (id, fallback) => {
@@ -2501,6 +2640,7 @@ function updateTariffAssumptions() {
   s.sellableExportCapKwh = readNumber('sellable-export-cap-input', s.sellableExportCapKwh ?? 0);
   s.usdToTry = readNumber('usd-try-input', s.usdToTry || 38.5);
   s.displayCurrency = document.getElementById('display-currency')?.value || s.displayCurrency || 'TRY';
+  readAssumptionControls();
   const financialDefaults = resolveFinancialAssumptions(s);
   const priceIncreaseEl = document.getElementById('price-increase-input');
   const discountRateEl = document.getElementById('discount-rate-input');
@@ -2572,6 +2712,7 @@ function updateTariffAssumptions() {
     }, currentUser());
   }
   lastTariffAuditSnapshot = snapshot;
+  syncAssumptionControlsFromState();
   persistState();
 }
 
@@ -2730,6 +2871,7 @@ function syncEnterpriseInputsFromState() {
   setVal('tariff-evidence-url', s.evidence?.tariffSource?.sourceUrl);
   setVal('display-currency', s.displayCurrency);
   setVal('usd-try-input', s.usdToTry);
+  syncAssumptionControlsFromState();
   setChecked('tariff-tax-included', s.tariffIncludesTax);
   setChecked('quote-bill-verified', s.hasSignedCustomerBillData);
   setVal('bill-evidence-ref', s.evidence?.customerBill?.ref);
@@ -4191,6 +4333,8 @@ window.updateShading = updateShading;
 window.updateSoiling = updateSoiling;
 window.updateTariffType = updateTariffType;
 window.updateTariffAssumptions = updateTariffAssumptions;
+window.updateAssumptionControls = updateAssumptionControls;
+window.syncAssumptionControlsFromState = syncAssumptionControlsFromState;
 window.updateOnGridAssumptions = updateOnGridAssumptions;
 window.updateOnGridMonthlyConsumption = updateOnGridMonthlyConsumption;
 window.setOnGridInputMode = setOnGridInputMode;
@@ -4296,6 +4440,7 @@ registerActions({
 // updateTariffType select.value bekler (data-arg-prop="value").
 registerActions({
   updateTariffAssumptions,
+  updateAssumptionControls,
   updateTariffType,
 });
 

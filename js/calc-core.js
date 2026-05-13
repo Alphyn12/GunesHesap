@@ -346,6 +346,18 @@ export function estimateSolarCapex({
     }
     return null;
   };
+  const fullManualBomFieldAliases = {
+    panelCost: ['panelCost', 'panel'],
+    inverterCost: ['inverterCost', 'inverter'],
+    mountingCost: ['mountingCost', 'mounting'],
+    dcCableCost: ['dcCableCost', 'dcCable'],
+    acElecCost: ['acElecCost', 'acElec'],
+    laborCost: ['laborCost', 'labor'],
+    engineeringCost: ['engineeringCost', 'engineering'],
+    logisticsCost: ['logisticsCost', 'logistics'],
+    permitCost: ['permitCost', 'permits']
+  };
+  let manualBomMissingFields = [];
   let effectiveCosts = { ...baseCosts };
   if (manualCostMode === 'partialManualOverride') {
     effectiveCosts = {
@@ -373,6 +385,21 @@ export function estimateSolarCapex({
         logisticsCost: readManual('logisticsCost', 'logistics') ?? 0,
         permitCost: readManual('permitCost', 'permits') ?? 0,
         fullManualSubtotal: total
+      };
+    } else {
+      manualBomMissingFields = Object.entries(fullManualBomFieldAliases)
+        .filter(([, aliases]) => readManual(...aliases) === null)
+        .map(([key]) => key);
+      effectiveCosts = {
+        panelCost: readManual('panelCost', 'panel') ?? 0,
+        inverterCost: readManual('inverterCost', 'inverter') ?? 0,
+        mountingCost: readManual('mountingCost', 'mounting') ?? 0,
+        dcCableCost: readManual('dcCableCost', 'dcCable') ?? 0,
+        acElecCost: readManual('acElecCost', 'acElec') ?? 0,
+        laborCost: readManual('laborCost', 'labor') ?? 0,
+        engineeringCost: readManual('engineeringCost', 'engineering') ?? 0,
+        logisticsCost: readManual('logisticsCost', 'logistics') ?? 0,
+        permitCost: readManual('permitCost', 'permits') ?? 0
       };
     }
   }
@@ -426,7 +453,9 @@ export function estimateSolarCapex({
     requestedVatProfile: vat.requestedProfile,
     vatFallbackApplied: vat.fallbackApplied,
     costAssumptionVersion: COST_ASSUMPTIONS.version,
-    manualCostMode
+    manualCostMode,
+    manualBomCompleteness: manualCostMode === 'fullManualBom' && manualBomMissingFields.length ? 'incomplete' : 'complete',
+    manualBomMissingFields
   };
 }
 

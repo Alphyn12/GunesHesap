@@ -1451,6 +1451,23 @@ body>main{z-index:auto}
   line-height: 1.6;
 }
 
+.assumption-control {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.assumption-control small {
+  color: var(--text-muted);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+
+.assumption-conditional {
+  margin-top: 12px;
+  padding-top: 2px;
+}
+
 /* ═══ UZMAN ANALİZ MODÜLLERİ ═══════════════════════════════════ */
 
 .expert-modules-card  { margin-top: 20px; overflow: hidden; }

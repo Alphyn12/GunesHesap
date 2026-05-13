@@ -10,6 +10,7 @@ import { createShareStateSnapshot, escapeHtml, sanitizeSharedState } from './sec
 import { buildStructuredProposalExport } from './evidence-governance.js';
 import { buildCrmLeadExport } from './crm-export.js';
 import { resolvePanelSpec } from './calc-core.js';
+import { COST_ASSUMPTIONS, FINANCIAL_ASSUMPTIONS } from './assumptions/index.js';
 
 let monthlyChart = null;
 
@@ -1050,6 +1051,18 @@ function renderNMResults(nm, enabled) {
   document.getElementById('nm-self-consumption').textContent = `${nm.selfConsumptionPct}%`;
 }
 
+const ASSUMPTION_LABELS = {
+  costProfile: { economy: 'Ekonomik', standard: 'Standart', premium: 'Premium' },
+  panelFormFactor: { compactResidential: 'Kompakt konut paneli', largeFormatCommercial: 'Büyük format ticari panel' },
+  financialProfile: { conservative: 'Muhafazakar', base: 'Baz senaryo', optimistic: 'İyimser', custom: 'Özel' },
+  vatProfile: { standard: 'Standart KDV', incentive: 'Teşvikli / özel', manual: 'Manuel KDV' },
+  manualCostMode: { none: 'Kapalı', partialManualOverride: 'Kısmi manuel override', fullManualBom: 'Tam manuel BOM' }
+};
+
+function assumptionLabel(group, value) {
+  return ASSUMPTION_LABELS[group]?.[value] || value || '—';
+}
+
 function percentText(value, digits = 1) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
@@ -1227,6 +1240,24 @@ function renderOnGridResultLayers(state, r) {
     { label: i18n.t('onGridResult.flowOffset'), value: `${Math.round(comp.importOffsetKwh || 0).toLocaleString(localeTag())} kWh` },
     { label: i18n.t('onGridResult.flowSurplus'), value: `${totalExportKwh.toLocaleString(localeTag())} kWh` }
   ];
+  const costBreakdown = r.costBreakdown || {};
+  const selectedCostProfile = costBreakdown.costProfile || state.costProfile || 'standard';
+  const selectedVatProfile = costBreakdown.vatProfile || state.vatProfile || 'standard';
+  const selectedManualMode = costBreakdown.manualCostMode || state.manualCostMode || 'none';
+  const selectedPanelFormat = state.panelFormFactor || 'compactResidential';
+  const selectedFinancialProfile = r.financialProfile || state.financialProfile || 'base';
+  const panelFormatDetail = `${Number(r.panelCount || 0).toLocaleString(localeTag())} panel · ${panelArea.toFixed(1)} m²${panelSpec.weightKg ? ` · ${Number(panelSpec.weightKg).toFixed(0)} kg/panel` : ''}`;
+  const vatFallbackNote = costBreakdown.vatFallbackApplied
+    ? '<div class="financial-explain">Manuel KDV oranları eksik olduğu için Standart KDV profili kullanıldı.</div>'
+    : '';
+  const manualBomIncompleteNote = selectedManualMode === 'fullManualBom' && costBreakdown.manualBomCompleteness === 'incomplete'
+    ? '<div class="financial-explain">Tam manuel BOM seçili, ancak bazı maliyet kalemleri eksik. Sonuç eksik kullanıcı girdilerine göre hesaplanmıştır.</div>'
+    : '';
+  const bifacialNote = state.panelType === 'bifacial_topcon'
+    ? (r.bifacialGainAssumption?.applied
+      ? '<div class="financial-explain">Bifacial üretim kazancı uygulandı.</div>'
+      : '<div class="financial-explain">Bifacial kazanç otomatik uygulanmadı; uygun koşul veya manuel seçim gerekir.</div>')
+    : '';
 
   setVisible(wrap, true);
   wrap.innerHTML = `
@@ -1239,6 +1270,7 @@ function renderOnGridResultLayers(state, r) {
         <div class="result-chip-row">
           ${resultChip(i18n.t('onGridResult.profileSourceLabel'), profileSourceText, profileSourceTone)}
           ${resultChip(i18n.t('onGridResult.productionSourceLabel'), productionProfileText, productionTone)}
+          ${resultChip('Panel formatı', assumptionLabel('panelFormFactor', selectedPanelFormat), 'neutral')}
         </div>
       </div>
       <div class="energy-flow-strip">
@@ -1253,8 +1285,10 @@ function renderOnGridResultLayers(state, r) {
       ${resultSection(i18n.t('onGridResult.sectionInstallation'), [
         resultMetricCell({ eyebrow: i18n.t('onGridResult.installedPower'), value: `${Number(r.systemPower || 0).toFixed(2)} kWp`, label: `${Number(r.panelCount || 0).toLocaleString(localeTag())} ${i18n.t('units.panelUnit')}`, tone: 'accent' }),
         resultMetricCell({ eyebrow: i18n.t('onGridResult.roofUse'), value: `${roofUsePct.toFixed(1)}%`, label: multiRoofNote, tone: 'neutral' }),
+        resultMetricCell({ eyebrow: 'Panel format etkisi', value: assumptionLabel('panelFormFactor', selectedPanelFormat), label: panelFormatDetail, tone: 'neutral', wide: true }),
         resultMetricCell({ eyebrow: i18n.t('onGridResult.shadowQualityLabel'), value: shadowText, label: i18n.t('onGridResult.dataQualityLabel'), tone: shadowTone, wide: true })
       ])}
+      ${bifacialNote}
       ${resultSection(i18n.t('onGridResult.sectionProduction'), [
         resultMetricCell({ eyebrow: i18n.t('onGridResult.annualProduction'), value: `${Number(r.annualEnergy || 0).toLocaleString(localeTag())} kWh`, label: i18n.t('onGridResult.annualProductionNote'), tone: 'accent' }),
         resultMetricCell({ eyebrow: i18n.t('onGridResult.specificYield'), value: `${r.ysp} kWh/kWp`, label: i18n.t('onGridResult.specificYieldNote'), tone: 'info' }),
@@ -1278,6 +1312,8 @@ function renderOnGridResultLayers(state, r) {
           ${resultChip(i18n.t('onGridResult.pricingModeLabel'), tariffModeText, 'neutral')}
           ${resultChip(i18n.t('onGridResult.costConfidenceLabel'), costSourceText, costSourceTone)}
           ${resultChip('Finans modeli', r.financialModelLabel || 'Nominal TL model', 'neutral')}
+          ${resultChip('Maliyet profili', assumptionLabel('costProfile', selectedCostProfile), 'neutral')}
+          ${resultChip('Finans senaryosu', assumptionLabel('financialProfile', selectedFinancialProfile), 'neutral')}
         </div>
       </div>
       <div class="financial-verdict financial-verdict--${escapeHtml(decision.tone)}">
@@ -1288,6 +1324,8 @@ function renderOnGridResultLayers(state, r) {
         <b>${escapeHtml(money(r.npvTotal))}</b>
       </div>
       ${mismatch ? `<div class="financial-explain">${escapeHtml(i18n.t('onGridResult.nominalVsDiscountedWarning'))}</div>` : ''}
+      ${vatFallbackNote}
+      ${manualBomIncompleteNote}
       ${resultSection(i18n.t('onGridResult.sectionBudget'), [
         resultMetricCell({ eyebrow: i18n.t('onGridResult.totalCost'), value: money(r.totalCost), label: i18n.t('onGridResult.totalCostNote'), tone: 'accent' }),
         resultMetricCell({ eyebrow: i18n.t('onGridResult.financialBasis'), value: money(r.financialCostBasis || r.totalCost), label: i18n.t('onGridResult.financialBasisNote'), tone: 'neutral' })
@@ -1313,6 +1351,12 @@ function renderOnGridResultLayers(state, r) {
         ${resultChip(i18n.t('onGridResult.priceIncreaseLabel'), r.tariffIncreaseCurve ? `${percentText(Number(r.tariffIncreaseCurve[0]?.rate || 0) * 100, 0)} eğri` : percentText(Number(r.annualPriceIncrease || 0) * 100, 0), 'neutral')}
         ${resultChip(i18n.t('onGridResult.discountRateLabel'), percentText(Number(r.discountRate || 0) * 100, 0), 'neutral')}
         ${resultChip(i18n.t('onGridResult.settlementBasisLabel'), settlementBasisText, 'neutral')}
+        ${resultChip('KDV profili', assumptionLabel('vatProfile', selectedVatProfile), costBreakdown.vatFallbackApplied ? 'warn' : 'neutral')}
+        ${resultChip('Manuel maliyet modu', assumptionLabel('manualCostMode', selectedManualMode), selectedManualMode === 'none' ? 'neutral' : 'warn')}
+        ${selectedManualMode === 'fullManualBom' ? resultChip('Manuel BOM durumu', costBreakdown.manualBomCompleteness === 'incomplete' ? 'Eksik' : 'Tam', costBreakdown.manualBomCompleteness === 'incomplete' ? 'warn' : 'good') : ''}
+        ${resultChip('Maliyet varsayımı', costBreakdown.costAssumptionVersion || COST_ASSUMPTIONS.version, 'neutral')}
+        ${resultChip('Finans varsayımı', r.financialAssumptionVersion || FINANCIAL_ASSUMPTIONS.version, 'neutral')}
+        ${resultChip('Kaynak tarihi', `${COST_ASSUMPTIONS.sourceDate || '—'} / ${FINANCIAL_ASSUMPTIONS.sourceDate || '—'}`, 'neutral')}
       </div>
     </section>
   `;

@@ -1548,6 +1548,8 @@ export async function runCalculation() {
       vatFallbackApplied: costBreakdownBase.vatFallbackApplied,
       costProfile: costBreakdownBase.costProfile,
       manualCostMode: costBreakdownBase.manualCostMode,
+      manualBomCompleteness: costBreakdownBase.manualBomCompleteness,
+      manualBomMissingFields: costBreakdownBase.manualBomMissingFields || [],
       costAssumptionVersion: costBreakdownBase.costAssumptionVersion,
       battery: batteryCostVal,
       generator: generatorCapexVal,
@@ -1555,6 +1557,8 @@ export async function runCalculation() {
       totalWithBattery: Math.round(solarCost + batteryCostVal),
       totalWithBatteryAndGenerator: Math.round(totalCost)
     },
+    manualBomCompleteness: costBreakdownBase.manualBomCompleteness,
+    manualBomMissingFields: costBreakdownBase.manualBomMissingFields || [],
     generatorCapex: Math.round(generatorCapexVal),
     financialCostBasis: Math.round(financialCostBasis),
     taxTreatment,
