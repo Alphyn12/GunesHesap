@@ -210,7 +210,7 @@ export async function refreshOSMShadowAnalysis() {
     return result;
   } catch (err) {
     // Fetch başarısız: önceki tile katmanını geri yükle ki kullanıcı manuel geçişe zorlanmasın.
-    if (previousTileLayer === 'dark' && window._activeTileLayer === 'osm' && window.map) {
+    if (previousTileLayer === 'dark' && !window._cartoTilesDisabled && window._activeTileLayer === 'osm' && window.map) {
       window._osmLayer?.remove();
       window._darkLayer?.addTo(window.map);
       window._activeTileLayer = 'dark';

@@ -34,6 +34,12 @@ assert.doesNotMatch(appJs, /style\.setProperty\('--card-color'/,
   'CSP invariant: scenario cards must use CSS classes, not inline --card-color styles');
 assert.match(appJs, /removeLayer\(darkLayer\)/,
   'Carto tile errors must disable the dark layer before switching to OSM fallback');
+assert.match(appJs, /osmLayer\.addTo\(map\);/,
+  'Map must start on OSM so production does not request Carto dark_all tiles during init');
+assert.doesNotMatch(appJs, /darkLayer\.addTo\(map\);/,
+  'Carto dark_all must not be added during map init');
+assert.match(appJs, /_cartoTilesDisabled = true/,
+  'Carto tile errors must disable Carto for the rest of the session');
 
 assert.equal(escapeHtml('<img src=x onerror=alert(1)>'), '&lt;img src=x onerror=alert(1)&gt;');
 

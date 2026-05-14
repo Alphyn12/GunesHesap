@@ -669,7 +669,8 @@ window.map = null;
 window.marker = null;
 window._drawingMode = false;
 window._glarePickMode = false;
-window._activeTileLayer = 'dark';
+window._activeTileLayer = 'osm';
+window._cartoTilesDisabled = false;
 
 function syncHeaderHeightVar() {
   const header = document.getElementById('app-header');
@@ -707,17 +708,23 @@ function initMap() {
     maxZoom: 19, crossOrigin: 'anonymous'
   });
 
+  let baseLayerControl = null;
+
   darkLayer.on('tileerror', () => {
-    if (window._cartoFallbackApplied) return;
+    if (window._cartoFallbackApplied || window._cartoTilesDisabled) return;
     window._cartoFallbackApplied = true;
+    window._cartoTilesDisabled = true;
     clearTimeout(window._tileErrorToastTimer);
     window._tileErrorToastTimer = setTimeout(() => {
       try {
         if (map.hasLayer(darkLayer)) {
           map.removeLayer(darkLayer);
-          osmLayer.addTo(map);
-          window._activeTileLayer = 'osm';
         }
+        baseLayerControl?.removeLayer(darkLayer);
+        window._darkLayer = null;
+        if (!map.hasLayer(osmLayer)) osmLayer.addTo(map);
+        window._activeTileLayer = 'osm';
+        syncMapLayerButton();
       } catch { /* tile fallback is best-effort */ }
       window.showToast?.('Harita altlığı geçici olarak yüklenemedi; OpenStreetMap altlığına geçildi.', 'warning');
     }, 1200);
@@ -730,23 +737,33 @@ function initMap() {
     }, 1200);
   });
 
-  // Başlangıçta karanlık harita
-  darkLayer.addTo(map);
+  // Production başlangıcında Carto çağrısı üretmemek için güvenilir OSM altlığıyla başla.
+  osmLayer.addTo(map);
   window._darkLayer = darkLayer;
   window._satelliteLayer = satelliteLayer;
   window._osmLayer = osmLayer;
-  window._activeTileLayer = 'dark';
+  window._activeTileLayer = 'osm';
 
   // ── Layer control ────────────────────────────────────────
-  L.control.layers({
+  baseLayerControl = L.control.layers({
+    'OpenStreetMap': osmLayer,
     'Koyu (Genel)': darkLayer,
-    'Uydu (Kurulum Alanı Çizimi İçin)': satelliteLayer,
-    'OpenStreetMap': osmLayer
+    'Uydu (Kurulum Alanı Çizimi İçin)': satelliteLayer
   }, {}, { position: 'bottomleft', collapsed: false }).addTo(map);
+  window._baseLayerControl = baseLayerControl;
 
   // Layer değişimi izle
   map.on('baselayerchange', e => {
     const name = e.name;
+    if (name.includes('Koyu') && window._cartoTilesDisabled) {
+      try {
+        map.removeLayer(darkLayer);
+        if (!map.hasLayer(osmLayer)) osmLayer.addTo(map);
+      } catch { /* layer fallback is best-effort */ }
+      window._activeTileLayer = 'osm';
+      syncMapLayerButton();
+      return;
+    }
     if (name.includes('Uydu')) {
       window._activeTileLayer = 'satellite';
     } else if (name.includes('OSM') || name.includes('Open')) {
@@ -801,12 +818,10 @@ function toggleMapLayer() {
   const current = window._activeTileLayer;
   if (current === 'satellite') {
     window._satelliteLayer.remove();
-    window._osmLayer.remove();
-    window._darkLayer.addTo(window.map);
-    window._activeTileLayer = 'dark';
+    window._osmLayer.addTo(window.map);
+    window._activeTileLayer = 'osm';
     document.getElementById('map-satellite-btn')?.classList.remove('active');
   } else {
-    window._darkLayer.remove();
     window._osmLayer.remove();
     window._satelliteLayer.addTo(window.map);
     window._activeTileLayer = 'satellite';

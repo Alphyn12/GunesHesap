@@ -1,5 +1,5 @@
-// v58: route same-origin API calls network-first and refresh PVGIS runtime assets.
-const CACHE_NAME = 'solarRota-v58';
+// v59: default production maps to OSM and avoid Carto dark_all startup requests.
+const CACHE_NAME = 'solarRota-v59';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
