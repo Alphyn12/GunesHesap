@@ -24,6 +24,7 @@ for (const required of [
   '/js/app.js',
   '/js/scenario-icons.js',
   '/js/pvlib-bridge.js',
+  '/js/pvgis-fetch.js',
   '/js/backend-config.js',
   '/js/calculation-service.js',
   '/js/pv-engine-contracts.js',
@@ -40,5 +41,10 @@ for (const href of [...index.matchAll(/<link[^>]+href="(css\/[^"]+)"/g)].map(mat
 for (const modulePath of [...app.matchAll(/from '\.\/([^']+\.js)'/g)].map(match => `/js/${match[1]}`)) {
   assert.ok(assets.has(modulePath), `${modulePath} is imported by app.js but not precached`);
 }
+
+assert.match(sw, /pathname\.startsWith\('\/api\/'\)/,
+  'same-origin /api routes must be handled as API requests, not static HTML fallbacks');
+assert.match(sw, /pathname === '\/api\/pvgis-proxy' \? 80000 : 20000/,
+  'PVGIS same-origin proxy must keep the longer hourly timeout budget');
 
 console.log('service worker asset tests passed');

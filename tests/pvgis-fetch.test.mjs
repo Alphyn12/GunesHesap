@@ -10,6 +10,10 @@ import {
   resolvePvgisProxyUrlForRuntime,
   PVGIS_FETCH_STATUS
 } from '../js/pvgis-fetch.js';
+import {
+  normalizePvgisProxyQuery,
+  buildPvgisSearchParams
+} from '../api/pvgis-proxy.js';
 
 // ── Mock fetch yardımcıları ──────────────────────────────────────────────────
 
@@ -372,6 +376,79 @@ describe('fetchPVGISLive — browser CORS guard', () => {
       if (previousLocation === undefined) delete globalThis.location;
       else Object.defineProperty(globalThis, 'location', { value: previousLocation, configurable: true });
     }
+  });
+
+  it('production browser ortamında /api/pvgis-proxy 404 olursa direkt PVGIS fallback dener', async () => {
+    const previousWindow = globalThis.window;
+    const previousLocation = globalThis.location;
+    globalThis.window = {};
+    Object.defineProperty(globalThis, 'location', {
+      value: new URL('https://solarrota.example/'),
+      configurable: true
+    });
+    const calls = [];
+    const fetchImpl = async (url) => {
+      calls.push(String(url));
+      if (String(url).startsWith('/api/pvgis-proxy')) {
+        return { ok: false, status: 404, json: async () => ({}) };
+      }
+      return { ok: true, status: 200, json: async () => VALID_PVGIS_BODY };
+    };
+    try {
+      const result = await fetchPVGISLive(PARAMS, {
+        fetchImpl,
+        timeoutMs: 5000,
+        retries: 1,
+        retryDelaysMs: [0],
+        backendProxyUrl: 'http://127.0.0.1:8000/api/pvgis-proxy',
+        proxyFirst: true,
+      });
+      assert.equal(result.fetchStatus, PVGIS_FETCH_STATUS.LIVE_SUCCESS);
+      assert.ok(calls[0].startsWith('/api/pvgis-proxy?'));
+      assert.ok(calls.some(url => url.startsWith('https://re.jrc.ec.europa.eu/api/')));
+      assert.ok(!calls.some(url => url.includes('127.0.0.1') || url.includes('localhost')));
+    } finally {
+      if (previousWindow === undefined) delete globalThis.window;
+      else globalThis.window = previousWindow;
+      if (previousLocation === undefined) delete globalThis.location;
+      else Object.defineProperty(globalThis, 'location', { value: previousLocation, configurable: true });
+    }
+  });
+});
+
+describe('api/pvgis-proxy — parametre validasyonu', () => {
+  it('sadece izinli ve doğrulanmış PVGIS parametrelerini üretir', () => {
+    const { params, errors } = normalizePvgisProxyQuery({
+      lat: '39',
+      lon: '32',
+      peakpower: '5',
+      loss: '14',
+      angle: '30',
+      aspect: '0',
+      includeHourly: '1',
+      url: 'http://127.0.0.1:8000/private',
+      endpoint: 'http://localhost/evil'
+    });
+    assert.deepEqual(errors, []);
+    assert.equal(params.includeHourly, true);
+    const search = buildPvgisSearchParams(params).toString();
+    assert.ok(search.includes('lat=39'));
+    assert.ok(search.includes('pvtechchoice=crystSi'));
+    assert.ok(!search.includes('127.0.0.1'));
+    assert.ok(!search.includes('localhost'));
+    assert.ok(!search.includes('endpoint='));
+  });
+
+  it('fiziksel sınır dışı PVGIS parametrelerini reddeder', () => {
+    const { errors } = normalizePvgisProxyQuery({
+      lat: '200',
+      lon: '32',
+      peakpower: '0',
+      loss: '101',
+      angle: '95',
+      aspect: '181'
+    });
+    assert.ok(errors.length >= 5);
   });
 });
 

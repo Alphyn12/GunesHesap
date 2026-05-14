@@ -1,5 +1,5 @@
-// v50: prevent HTML fallbacks from being served as JS/CSS module assets.
-const CACHE_NAME = 'solarRota-v57';
+// v58: route same-origin API calls network-first and refresh PVGIS runtime assets.
+const CACHE_NAME = 'solarRota-v58';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -47,6 +47,7 @@ const STATIC_ASSETS = [
   '/js/output-i18n.js',
   '/js/offgrid-field-import.js',
   '/js/panel-catalog.js',
+  '/js/pvgis-fetch.js',
   '/js/pv-engine-contracts.js',
   '/js/pvlib-bridge.js',
   '/js/proposal-governance.js',
@@ -130,6 +131,7 @@ self.addEventListener('activate', (event) => {
 
 // ── Yardımcı: URL'nin API domain'e ait olup olmadığını kontrol et ───────────
 function isApiRequest(url) {
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return true;
   return API_DOMAINS.some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));
 }
 
@@ -275,8 +277,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isApiRequest(url)) {
-    // API istekleri: Network First (20s timeout) → cache fallback
-    event.respondWith(networkFirstWithTimeout(event.request, 20000));
+    // API istekleri: Network First → cache fallback. PVGIS saatlik seri proxy'si daha uzun sürebilir.
+    event.respondWith(networkFirstWithTimeout(event.request, url.pathname === '/api/pvgis-proxy' ? 80000 : 20000));
   } else {
     // Static assets: Cache First → network fallback
     event.respondWith(cacheFirst(event.request));

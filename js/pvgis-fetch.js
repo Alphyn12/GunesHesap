@@ -110,6 +110,17 @@ export function resolvePvgisProxyUrlForRuntime(backendProxyUrl) {
   return backendProxyUrl;
 }
 
+function isSameOriginPvgisProxy(url) {
+  return String(url || '').startsWith('/api/pvgis-proxy');
+}
+
+function canUseDirectPvgisFallback(allowDirectPvgisFetch, runtimeProxyUrl, proxyAttempted) {
+  if (allowDirectPvgisFetch) return true;
+  if (typeof window === 'undefined') return false;
+  if (!proxyAttempted || isBrowserOnLoopback()) return false;
+  return isSameOriginPvgisProxy(runtimeProxyUrl);
+}
+
 /**
  * Attempt to fetch from the backend PVGIS proxy endpoint.
  * Returns a result object or null if the proxy is unavailable/fails quickly.
@@ -277,7 +288,9 @@ export async function fetchPVGISLive(params, options = {}) {
     if (logFetchDiagnostics) console.info('[pvgis-fetch] Backend proxy unavailable — trying direct PVGIS');
   }
 
-  if (!allowDirectPvgisFetch) {
+  const directPvgisAllowed = canUseDirectPvgisFallback(allowDirectPvgisFetch, runtimeProxyUrl, proxyAttempted);
+
+  if (!directPvgisAllowed) {
     const errorType = proxyAttempted ? 'proxy-unavailable' : 'cors';
     const errorMessage = proxyAttempted
       ? 'Backend PVGIS proxy unavailable; direct browser PVGIS calls are disabled because PVGIS does not allow AJAX/CORS.'

@@ -32,6 +32,8 @@ for (const f of jsFiles) {
 const appJs = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 assert.doesNotMatch(appJs, /style\.setProperty\('--card-color'/,
   'CSP invariant: scenario cards must use CSS classes, not inline --card-color styles');
+assert.match(appJs, /removeLayer\(darkLayer\)/,
+  'Carto tile errors must disable the dark layer before switching to OSM fallback');
 
 assert.equal(escapeHtml('<img src=x onerror=alert(1)>'), '&lt;img src=x onerror=alert(1)&gt;');
 
