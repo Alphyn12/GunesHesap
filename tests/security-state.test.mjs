@@ -64,6 +64,16 @@ assert.doesNotMatch(heatmapJs, /tile\.openstreetmap\.org|basemaps\.cartocdn\.com
   'Heatmap must not initialize OSM/Carto tiles');
 assert.doesNotMatch(appJs, /location-warning['"]\)\.style\.display/,
   'Location warning visibility must use classes instead of inline style writes');
+assert.match(appJs, /function applyGoogleMapSuccessState\(container = document\.getElementById\('map'\)\)/,
+  'Google Maps successful init must apply an explicit success state');
+assert.match(appJs, /querySelectorAll\('\.map-manual-fallback'\)\.forEach\(el => el\.remove\(\)\)/,
+  'Google Maps successful init must remove manual fallback overlays');
+assert.match(appJs, /if \(window\._googleMapAdapter\) \{\s*applyGoogleMapSuccessState\(container\);/s,
+  'Reusing an existing Google Maps adapter must still clear fallback UI');
+assert.match(appJs, /if \(map\) \{\s*if \(window\._mapProvider === 'google'\) applyGoogleMapSuccessState\(document\.getElementById\('map'\)\);/s,
+  'Re-entering Step 2 or Step 3 with an existing Google map must keep success UI active');
+assert.match(appJs, /isMapContainerReady\(container\) && attempt < 6/s,
+  'Google Maps init should wait briefly for the visible Step 2/3 container before creating the map');
 assert.match(appJs, /_cartoTilesDisabled = true/,
   'Carto tile errors must disable Carto for the rest of the session');
 

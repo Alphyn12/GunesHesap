@@ -701,6 +701,27 @@ function setMapProviderNotice(message = '', tone = 'warning') {
   notice.textContent = message;
 }
 
+function clearMapFallbackUi(container = document.getElementById('map')) {
+  if (!container) return;
+  container.querySelectorAll('.map-manual-fallback').forEach(el => el.remove());
+  container.classList.remove('map-error', 'map-unavailable', 'fallback-active', 'manual-coordinate-fallback');
+  document.getElementById('map-card')?.classList.remove('map-error', 'map-unavailable', 'fallback-active', 'manual-coordinate-fallback');
+  setMapProviderNotice('', 'info');
+}
+
+function applyGoogleMapSuccessState(container = document.getElementById('map')) {
+  clearMapFallbackUi(container);
+  container?.classList.add('map-provider-google');
+  window._mapFallbackMode = null;
+  console.debug?.('[map-provider] Google map success state applied');
+}
+
+function isMapContainerReady(container) {
+  if (!container?.getBoundingClientRect) return false;
+  const rect = container.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
 function googleMapFailureMessage(err) {
   const message = String(err?.message || err || '');
   if (message.includes('missing-api-key')) {
@@ -715,13 +736,20 @@ function googleMapFailureMessage(err) {
 async function initGoogleMap() {
   const container = document.getElementById('map');
   if (!container) throw new Error('map-container-missing');
-  if (window._googleMapAdapter) return window._googleMapAdapter;
+  if (window._googleMapAdapter) {
+    applyGoogleMapSuccessState(container);
+    setTimeout(() => window._googleMapAdapter?.invalidateSize?.(), 80);
+    return window._googleMapAdapter;
+  }
 
   const apiKey = getGoogleMapsApiKey();
   if (!apiKey) throw new Error('missing-api-key');
+  console.debug?.('[map-provider] Google key found');
   console.debug?.('[map-provider] loading Google Maps script');
   const maps = await loadGoogleMaps(apiKey);
   if (!maps) throw new Error('google-maps-unavailable');
+  console.debug?.('[map-provider] Google script loaded');
+  console.debug?.('[map-provider] Google map container found');
 
   const center = (window.state?.lat && window.state?.lon)
     ? { lat: Number(window.state.lat), lng: Number(window.state.lon) }
@@ -744,8 +772,8 @@ async function initGoogleMap() {
   window.marker = marker;
   window._mapProvider = 'google';
   window._activeTileLayer = 'google-roadmap';
-  window._mapFallbackMode = null;
-  setMapProviderNotice('', 'info');
+  applyGoogleMapSuccessState(container);
+  console.debug?.('[map-provider] Google map instance created');
   syncMapLayerButton();
   if (window.state?.lat && window.state?.lon) marker.setLatLng([window.state.lat, window.state.lon]);
   setTimeout(() => map.invalidateSize(), 100);
@@ -757,7 +785,16 @@ function initManualCoordinateFallback(message) {
   window._mapProvider = MAP_PROVIDER_CONFIG.fallback;
   window._mapFallbackMode = 'manualCoordinate';
   const container = document.getElementById('map');
-  if (container && !container.querySelector('.map-manual-fallback')) {
+  if (container) {
+    container.classList.remove('map-provider-google');
+    container.classList.add('manual-coordinate-fallback', 'fallback-active');
+    document.getElementById('map-card')?.classList.add('manual-coordinate-fallback', 'fallback-active');
+  }
+  const existingFallback = container?.querySelector('.map-manual-fallback');
+  if (existingFallback) {
+    const text = existingFallback.querySelector('span');
+    if (text) text.textContent = message || 'Google Maps yüklenemedi. Koordinatı manuel girebilir veya basit harita moduyla devam edebilirsiniz.';
+  } else if (container) {
     const fallback = document.createElement('div');
     fallback.className = 'map-manual-fallback';
     fallback.innerHTML = `
@@ -771,7 +808,10 @@ function initManualCoordinateFallback(message) {
 }
 
 async function initMap() {
-  if (map) return map;
+  if (map) {
+    if (window._mapProvider === 'google') applyGoogleMapSuccessState(document.getElementById('map'));
+    return map;
+  }
   const provider = getDefaultMapProvider();
   if (provider === 'google') {
     try {
@@ -3895,15 +3935,20 @@ function ensureMapForStep(n) {
     console.warn('[map-provider] init failed:', err);
     initManualCoordinateFallback(message);
   });
-  requestAnimationFrame(() => {
+  const attemptInit = (attempt = 0) => requestAnimationFrame(() => {
     const container = document.getElementById('map');
     if (!container) {
       console.warn('[map-provider] Google Maps loader was not triggered: map container missing');
       setTimeout(run, 120);
       return;
     }
+    if (!isMapContainerReady(container) && attempt < 6) {
+      setTimeout(() => attemptInit(attempt + 1), 120);
+      return;
+    }
     run();
   });
+  attemptInit();
 }
 
 function getMaxUnlockedStep() {
