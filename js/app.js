@@ -755,13 +755,14 @@ async function initGoogleMap() {
     ? { lat: Number(window.state.lat), lng: Number(window.state.lon) }
     : { lat: 39.0, lng: 35.0 };
   const zoom = window.state?.lat && window.state?.lon ? 9 : 6;
+  const safeGetGhiColor = typeof getGHIColor === 'function' ? getGHIColor : fallbackGHIColor;
   const adapter = new GoogleMapAdapter({
     maps,
     container,
     center,
     zoom,
     cities: TURKISH_CITIES,
-    getGhiColor,
+    getGhiColor: safeGetGhiColor,
     onLocationSelect: (lat, lng, checkBounds) => selectLocationFromLatLon(lat, lng, checkBounds)
   });
 
@@ -1016,6 +1017,16 @@ function getGHIColor(ghi) {
   if (ghi < 1700) return '#EAB308';
   if (ghi < 1800) return '#F97316';
   return '#EF4444';
+}
+
+function fallbackGHIColor(ghi) {
+  const value = Number(ghi);
+  if (!Number.isFinite(value)) return '#F59E0B';
+  return getGHIColor(value);
+}
+
+function stripInlineSvgStyles(svg = '') {
+  return String(svg).replace(/<style[\s\S]*?<\/style>/gi, '');
 }
 
 function geolocationIconSvg() {
@@ -1394,7 +1405,7 @@ function renderScenarioCards() {
     .filter(s => VISIBLE_SCENARIOS.includes(s.key))
     .map(rawScenario => {
       const scenario = localizeScenarioDefinition(rawScenario, key => i18n.t(key));
-      const icon = SCENARIO_ICONS?.[scenario.key] || '';
+      const icon = stripInlineSvgStyles(SCENARIO_ICONS?.[scenario.key] || '');
       const forWhom = i18n.t(`scenarios.${scenario.key === 'on-grid' ? 'onGrid' : 'offGrid'}.forWhom`);
       const forWhomHtml = forWhom && forWhom !== `scenarios.${scenario.key === 'on-grid' ? 'onGrid' : 'offGrid'}.forWhom`
         ? `<span class="scenario-card-for-whom"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="svg-shrink-mt-1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${forWhom}</span>`

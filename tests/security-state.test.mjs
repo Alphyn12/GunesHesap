@@ -38,12 +38,20 @@ const heatmapJs = await readFile(new URL('../js/heatmap.js', import.meta.url), '
 const googleProviderJs = await readFile(new URL('../js/google-maps-provider.js', import.meta.url), 'utf8');
 assert.doesNotMatch(appJs, /style\.setProperty\('--card-color'/,
   'CSP invariant: scenario cards must use CSS classes, not inline --card-color styles');
+assert.match(appJs, /function stripInlineSvgStyles\(svg = ''\)/,
+  'Scenario icon SVGs must be sanitized before render to avoid inline <style> CSP violations');
+assert.match(appJs, /const icon = stripInlineSvgStyles\(SCENARIO_ICONS\?\.\[scenario\.key\] \|\| ''\);/,
+  'renderScenarioCards must not inject SVG <style> blocks from SCENARIO_ICONS');
 assert.match(appJs, /removeLayer\(darkLayer\)/,
   'Carto tile errors must disable the dark layer before switching to OSM fallback');
 assert.match(appJs, /getDefaultMapProvider\(\)/,
   'Map init must route through provider config');
 assert.match(appJs, /initGoogleMap/,
   'Production default map provider must initialize Google Maps');
+assert.match(appJs, /const safeGetGhiColor = typeof getGHIColor === 'function' \? getGHIColor : fallbackGHIColor;/,
+  'Google Maps init must use the locally defined GHI color helper safely');
+assert.doesNotMatch(appJs, /\bgetGhiColor,\s*\n/,
+  'Google Maps init must not reference an undefined getGhiColor shorthand');
 assert.match(appJs, /Harita sağlayıcısı step 2\/3'e girildiğinde lazy-load edilir/,
   'Map provider must be lazy-loaded instead of initialized during DOMContentLoaded');
 assert.match(appJs, /requestAnimationFrame\(\(\) => ensureMapForStep\(n\)\)/,
