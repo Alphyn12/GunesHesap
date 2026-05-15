@@ -3411,6 +3411,14 @@ body>main{z-index:auto}
 /* ── F1.C.7 batch 5: app.js — divIcon, error msg, off-grid device table ── */
 .city-marker-rozet  { width: 22px; height: 22px; background: #F59E0B; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
 .map-load-error     { display: flex; align-items: center; justify-content: center; height: 100%; color: #F59E0B; font-size: 0.85rem; padding: 20px; text-align: center; }
+.map-provider-notice{position:absolute;left:14px;right:14px;bottom:14px;z-index:1001;padding:10px 12px;border:1px solid rgba(245,158,11,.35);background:rgba(15,23,42,.92);color:#F8FAFC;border-radius:8px;font-size:.82rem;line-height:1.4;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+.map-provider-notice[data-tone="info"]{border-color:rgba(56,189,248,.35)}
+.map-manual-fallback{height:100%;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;text-align:center;color:#F8FAFC;background:linear-gradient(180deg,#0B1220 0%,#111827 100%)}
+.map-manual-fallback strong{font-family:var(--font-display);font-size:1rem;color:#F59E0B}
+.map-manual-fallback span{max-width:520px;font-size:.86rem;color:var(--text-muted);line-height:1.5}
+.manual-coordinate-panel{display:grid;grid-template-columns:minmax(86px,110px) minmax(86px,110px) auto;gap:8px;align-items:center}
+.manual-coordinate-panel input{height:38px;font-size:.84rem;padding:8px 10px}
+@media(max-width:760px){.manual-coordinate-panel{grid-template-columns:1fr 1fr}.manual-coordinate-panel button{grid-column:1/-1;justify-content:center}}
 .svg-shrink-mt-1    { flex-shrink: 0; margin-top: 1px; }
 .scenario-card-color { --card-color: var(--c); }
 .scenario-color-on-grid { --card-color: #F59E0B; }

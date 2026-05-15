@@ -24,12 +24,6 @@ export function initHeatmap() {
     attributionControl: false
   });
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 10,
-    detectRetina: false
-  }).addTo(heatmapMap);
-
   renderHeatmapMonth(0);
 }
 

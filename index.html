@@ -1245,7 +1245,7 @@
 <!-- ═══════════════ STEP 1: SENARYO SEÇİMİ (HERO) ═══════════════ -->
 <div class="step-pane active step-hero" id="step-1">
 
-  <!-- Off-screen map preload slot: Leaflet'in gerçek boyutla başlatılması için -->
+  <!-- Off-screen map slot: provider lazy-load edilene kadar pasif kalır -->
   <div class="position-offscreen" id="map-preload-slot">
     <div class="card fill-area" id="map-card">
       <div class="fill-area" id="map"></div>
@@ -1343,6 +1343,11 @@
     </button>
     <div class="u-0" id="location-warning" data-i18n="step2.outOfTurkey">
       ⚠ Türkiye sınırları içinde bir konum seçin.
+    </div>
+    <div class="manual-coordinate-panel" id="manual-coordinate-panel" aria-label="Manuel koordinat girişi">
+      <input type="number" id="manual-lat-input" min="35.75" max="42.15" step="0.0001" placeholder="Enlem" aria-label="Enlem"/>
+      <input type="number" id="manual-lon-input" min="25.55" max="44.90" step="0.0001" placeholder="Boylam" aria-label="Boylam"/>
+      <button type="button" class="btn btn-secondary btn-pad-thin-gap" data-click-action="applyManualCoordinates">Uygula</button>
     </div>
     <!-- Hidden for JS compatibility -->
     <div class="is-hidden" id="selected-location">
@@ -4254,6 +4259,7 @@
   </div>
 </div>
 
+<script src="/js/runtime-config.js"></script>
 <script type="module" src="/js/app.js"></script>
 
 <!-- ═══════════════════════════════════════════════════════════

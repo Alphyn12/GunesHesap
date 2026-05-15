@@ -1,0 +1,1 @@
+window.SOLAR_ROTA_CONFIG = window.SOLAR_ROTA_CONFIG || {};

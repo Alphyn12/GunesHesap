@@ -18,6 +18,10 @@ assert.doesNotMatch(vercelJson, /'unsafe-inline'/,
   "F1 invariant: vercel.json CSP must not contain 'unsafe-inline'");
 assert.match(vercelJson, /https:\/\/nominatim\.openstreetmap\.org/,
   'F1 invariant: vercel.json connect-src must include Nominatim');
+assert.match(vercelJson, /https:\/\/maps\.googleapis\.com/,
+  'Google Maps integration requires maps.googleapis.com in CSP');
+assert.match(vercelJson, /https:\/\/\*\.gstatic\.com/,
+  'Google Maps integration requires gstatic in CSP');
 
 const jsDir = new URL('../js/', import.meta.url);
 const jsFiles = (await readdir(jsDir)).filter(f => f.endsWith('.js'));
@@ -30,14 +34,30 @@ for (const f of jsFiles) {
 }
 
 const appJs = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+const heatmapJs = await readFile(new URL('../js/heatmap.js', import.meta.url), 'utf8');
+const googleProviderJs = await readFile(new URL('../js/google-maps-provider.js', import.meta.url), 'utf8');
 assert.doesNotMatch(appJs, /style\.setProperty\('--card-color'/,
   'CSP invariant: scenario cards must use CSS classes, not inline --card-color styles');
 assert.match(appJs, /removeLayer\(darkLayer\)/,
   'Carto tile errors must disable the dark layer before switching to OSM fallback');
-assert.match(appJs, /osmLayer\.addTo\(map\);/,
-  'Map must start on OSM so production does not request Carto dark_all tiles during init');
+assert.match(appJs, /getDefaultMapProvider\(\)/,
+  'Map init must route through provider config');
+assert.match(appJs, /initGoogleMap/,
+  'Production default map provider must initialize Google Maps');
+assert.match(appJs, /Harita sağlayıcısı step 2\/3'e girildiğinde lazy-load edilir/,
+  'Map provider must be lazy-loaded instead of initialized during DOMContentLoaded');
 assert.doesNotMatch(appJs, /darkLayer\.addTo\(map\);/,
   'Carto dark_all must not be added during map init');
+assert.doesNotMatch(appJs, /try \{ initMap\(\); \} catch/,
+  'Map must not initialize during first page load');
+assert.doesNotMatch(indexHtml, /maps\.googleapis\.com\/maps\/api\/js/,
+  'Google Maps script must be lazy-loaded by the provider, not loaded from index.html');
+assert.doesNotMatch(googleProviderJs, /libraries=places/,
+  'Google Maps provider must not request Places library');
+assert.doesNotMatch(googleProviderJs, /Geocoding|Directions|Routes|Solar API|places/i,
+  'Google Maps provider must not integrate Geocoding, Routes, or Solar APIs');
+assert.doesNotMatch(heatmapJs, /tile\.openstreetmap\.org|basemaps\.cartocdn\.com/,
+  'Heatmap must not initialize OSM/Carto tiles');
 assert.match(appJs, /_cartoTilesDisabled = true/,
   'Carto tile errors must disable Carto for the rest of the session');
 

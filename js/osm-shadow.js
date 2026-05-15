@@ -94,7 +94,7 @@ async function fetchBuildingsAround(center, radiusM = 160, retries = 2) {
 }
 
 function drawBuildings(map, buildings, contributors) {
-  if (!map || !window.L) return;
+  if (!map || !window.L || window._mapProvider !== 'leaflet') return;
   // Önceki katmanı güvenli şekilde kaldır
   if (window.osmShadowLayer) {
     try { map.removeLayer(window.osmShadowLayer); } catch { /* ignore */ }
@@ -189,9 +189,9 @@ export async function refreshOSMShadowAnalysis() {
       OSM Overpass bina verisi alınıyor (${center.lat.toFixed(4)}, ${center.lng.toFixed(4)})...
     </div>`;
 
-  // OSM analizi için OpenStreetMap katmanına geç (binalar daha net görünür)
+  // OSM analizi için Leaflet modunda OpenStreetMap katmanına geç (binalar daha net görünür)
   const previousTileLayer = window._activeTileLayer;
-  if (previousTileLayer === 'dark' && window.map) {
+  if (window._mapProvider === 'leaflet' && previousTileLayer === 'dark' && window.map) {
     window._darkLayer?.remove();
     window._osmLayer?.addTo(window.map);
     window._activeTileLayer = 'osm';
@@ -210,7 +210,7 @@ export async function refreshOSMShadowAnalysis() {
     return result;
   } catch (err) {
     // Fetch başarısız: önceki tile katmanını geri yükle ki kullanıcı manuel geçişe zorlanmasın.
-    if (previousTileLayer === 'dark' && !window._cartoTilesDisabled && window._activeTileLayer === 'osm' && window.map) {
+    if (window._mapProvider === 'leaflet' && previousTileLayer === 'dark' && !window._cartoTilesDisabled && window._activeTileLayer === 'osm' && window.map) {
       window._osmLayer?.remove();
       window._darkLayer?.addTo(window.map);
       window._activeTileLayer = 'dark';

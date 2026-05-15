@@ -59,6 +59,8 @@ import { runDatasheetSizing, attachDatasheetSizingHandlers } from './datasheet-s
 import { buildHourlyProfileEvidence, validateHourlyProfile8760 } from './consumption-evidence.js';
 import { initStorageCrypto, isEncryptionAvailable } from './storage-crypto.js';
 import { preloadEncryptedState } from './storage.js';
+import { getDefaultMapProvider, getGoogleMapsApiKey, MAP_PROVIDER_CONFIG } from './map-provider-config.js';
+import { GoogleMapAdapter, createGoogleMarkerFacade, loadGoogleMaps } from './google-maps-provider.js';
 import {
   DEFAULT_COST_PROFILE,
   DEFAULT_FINANCIAL_PROFILE,
@@ -669,7 +671,9 @@ window.map = null;
 window.marker = null;
 window._drawingMode = false;
 window._glarePickMode = false;
-window._activeTileLayer = 'osm';
+window._mapProvider = null;
+window._mapFallbackMode = null;
+window._activeTileLayer = 'google-roadmap';
 window._cartoTilesDisabled = false;
 
 function syncHeaderHeightVar() {
@@ -679,7 +683,109 @@ function syncHeaderHeightVar() {
 }
 window.syncHeaderHeightVar = syncHeaderHeightVar;
 
-function initMap() {
+function setMapProviderNotice(message = '', tone = 'warning') {
+  const container = document.getElementById('map');
+  if (!container) return;
+  let notice = document.getElementById('map-provider-notice');
+  if (!message) {
+    if (notice) notice.remove();
+    return;
+  }
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.id = 'map-provider-notice';
+    notice.className = 'map-provider-notice';
+    container.appendChild(notice);
+  }
+  notice.dataset.tone = tone;
+  notice.textContent = message;
+}
+
+function googleMapFailureMessage(err) {
+  const message = String(err?.message || err || '');
+  if (message.includes('missing-api-key')) {
+    return 'Google Maps API anahtarı yapılandırılmamış. Manuel koordinat girişiyle devam edebilirsiniz.';
+  }
+  if (message.includes('RefererNotAllowed') || message.includes('ApiNotActivated') || message.includes('InvalidKey') || message.includes('auth')) {
+    return 'Google Maps bu ortamda yetkilendirilemedi. Lütfen domain ve API key ayarlarını kontrol edin.';
+  }
+  return 'Google Maps yüklenemedi. Koordinatı manuel girebilir veya basit harita moduyla devam edebilirsiniz.';
+}
+
+async function initGoogleMap() {
+  const container = document.getElementById('map');
+  if (!container) throw new Error('map-container-missing');
+  if (window._googleMapAdapter) return window._googleMapAdapter;
+
+  const apiKey = getGoogleMapsApiKey();
+  if (!apiKey) throw new Error('missing-api-key');
+  const maps = await loadGoogleMaps(apiKey);
+  if (!maps) throw new Error('google-maps-unavailable');
+
+  const center = (window.state?.lat && window.state?.lon)
+    ? { lat: Number(window.state.lat), lng: Number(window.state.lon) }
+    : { lat: 39.0, lng: 35.0 };
+  const zoom = window.state?.lat && window.state?.lon ? 9 : 6;
+  const adapter = new GoogleMapAdapter({
+    maps,
+    container,
+    center,
+    zoom,
+    cities: TURKISH_CITIES,
+    getGhiColor,
+    onLocationSelect: (lat, lng, checkBounds) => selectLocationFromLatLon(lat, lng, checkBounds)
+  });
+
+  window._googleMapAdapter = adapter;
+  map = adapter;
+  marker = createGoogleMarkerFacade(adapter);
+  window.map = map;
+  window.marker = marker;
+  window._mapProvider = 'google';
+  window._activeTileLayer = 'google-roadmap';
+  window._mapFallbackMode = null;
+  setMapProviderNotice('', 'info');
+  syncMapLayerButton();
+  if (window.state?.lat && window.state?.lon) marker.setLatLng([window.state.lat, window.state.lon]);
+  setTimeout(() => map.invalidateSize(), 100);
+  setTimeout(() => map.invalidateSize(), 600);
+  return adapter;
+}
+
+function initManualCoordinateFallback(message) {
+  window._mapProvider = MAP_PROVIDER_CONFIG.fallback;
+  window._mapFallbackMode = 'manualCoordinate';
+  const container = document.getElementById('map');
+  if (container && !container.querySelector('.map-manual-fallback')) {
+    const fallback = document.createElement('div');
+    fallback.className = 'map-manual-fallback';
+    fallback.innerHTML = `
+      <strong>Harita kullanılamıyor</strong>
+      <span>${escapeHtml(message || 'Google Maps yüklenemedi. Koordinatı manuel girebilir veya basit harita moduyla devam edebilirsiniz.')}</span>
+    `;
+    container.appendChild(fallback);
+  }
+  setMapProviderNotice(message, 'warning');
+  syncMapLayerButton();
+}
+
+async function initMap() {
+  if (map) return map;
+  const provider = getDefaultMapProvider();
+  if (provider === 'google') {
+    try {
+      return await initGoogleMap();
+    } catch (err) {
+      const message = googleMapFailureMessage(err);
+      console.warn('[map-provider] Google Maps fallback:', err);
+      initManualCoordinateFallback(message);
+      return null;
+    }
+  }
+  return initLeafletMap();
+}
+
+function initLeafletMap() {
   // Etap 4: Mobil dokunmatik optimizasyon
   map = L.map('map', {
     zoomControl: true,
@@ -690,6 +796,7 @@ function initMap() {
     bounceAtZoomLimits: false
   }).setView([39.0, 35.0], 6);
   window.map = map;
+  window._mapProvider = 'leaflet';
 
   // ── Tile katmanları ──────────────────────────────────────
   const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
@@ -737,12 +844,14 @@ function initMap() {
     }, 1200);
   });
 
-  // Production başlangıcında Carto çağrısı üretmemek için güvenilir OSM altlığıyla başla.
-  osmLayer.addTo(map);
+  // Leaflet fallback init sırasında OSM/Carto public tile istekleri başlatılmaz.
+  // Uydu altlığı eski poligon çizimi için kullanılır; OSM/Carto sadece kullanıcı
+  // layer seçerse devreye girer.
+  satelliteLayer.addTo(map);
   window._darkLayer = darkLayer;
   window._satelliteLayer = satelliteLayer;
   window._osmLayer = osmLayer;
-  window._activeTileLayer = 'osm';
+  window._activeTileLayer = 'satellite';
 
   // ── Layer control ────────────────────────────────────────
   baseLayerControl = L.control.layers({
@@ -810,11 +919,20 @@ function initMap() {
   setTimeout(() => map.invalidateSize(), 100);
   setTimeout(() => map.invalidateSize(), 600);
   setTimeout(() => map.invalidateSize(), 1500);
+  return map;
 }
 
 // ── Harita katmanı toggle butonu ────────────────────────
 function toggleMapLayer() {
   if (!window.map) return;
+  if (window._mapProvider === 'google' && window._googleMapAdapter) {
+    const isSatellite = window._googleMapAdapter.getMapType() === 'satellite';
+    window._googleMapAdapter.setMapType(isSatellite ? 'roadmap' : 'satellite');
+    window._activeTileLayer = isSatellite ? 'google-roadmap' : 'google-satellite';
+    document.getElementById('map-satellite-btn')?.classList.toggle('active', !isSatellite);
+    syncMapLayerButton();
+    return;
+  }
   const current = window._activeTileLayer;
   if (current === 'satellite') {
     window._satelliteLayer.remove();
@@ -834,6 +952,16 @@ window.toggleMapLayer = toggleMapLayer;
 function syncMapLayerButton() {
   const lbl = document.getElementById('map-layer-label');
   if (!lbl) return;
+  if (window._mapFallbackMode === 'manualCoordinate') {
+    lbl.textContent = 'Manuel koordinat';
+    return;
+  }
+  if (window._mapProvider === 'google') {
+    lbl.textContent = window._activeTileLayer === 'google-satellite'
+      ? i18n.t('step2.darkMapLabel')
+      : i18n.t('step2.satelliteMapLabel');
+    return;
+  }
   lbl.textContent = window._activeTileLayer === 'satellite'
     ? i18n.t('step2.darkMapLabel')
     : i18n.t('step2.satelliteMapLabel');
@@ -1015,11 +1143,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   syncHeaderHeightVar();
   window.addEventListener('resize', syncHeaderHeightVar);
-  try { initMap(); } catch(e) {
-    console.error('initMap hatası:', e);
-    document.getElementById('map').innerHTML =
-      `<div class="map-load-error">⚠ Harita yüklenemedi: ${e.message}</div>`;
-  }
+  // Harita sağlayıcısı step 2/3'e girildiğinde lazy-load edilir. İlk açılışta
+  // OSM/Carto tile veya Google Maps script isteği başlatmayız.
   buildPanelCards();
   buildCompass();
   buildInverterCards();
@@ -1205,8 +1330,8 @@ function _selectNominatimResult(result) {
   document.getElementById('city-search').value = name;
   setAutocompleteOpen(false);
   document.getElementById('location-warning').style.display = 'none';
-  map.setView([lat, lon], 15, { animate: true });
-  marker.setLatLng([lat, lon]);
+  if (map) map.setView([lat, lon], 15, { animate: true });
+  if (marker) marker.setLatLng([lat, lon]);
   setLocationBottomCard(name, lat, lon, nearest.ghi);
 }
 
@@ -1491,7 +1616,7 @@ function useGeolocation() {
       return;
     }
     selectLocationFromLatLon(latitude, longitude, false);
-    map.setView([latitude, longitude], 10, { animate: true });
+    if (map) map.setView([latitude, longitude], 10, { animate: true });
   }, err => {
     setGeolocationButton(false);
     showToast(i18n.t('step2.geoDenied'), 'error');
@@ -2468,6 +2593,19 @@ function updateOnGridAssumptions(options = {}) {
   syncOnGridMonthlyBillEstimate();
   updateOnGridFlowSummary();
   persistState();
+}
+
+function applyManualCoordinates() {
+  const lat = Number(document.getElementById('manual-lat-input')?.value);
+  const lon = Number(document.getElementById('manual-lon-input')?.value);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    showToast('Lütfen geçerli enlem ve boylam girin.', 'error');
+    return;
+  }
+  selectLocationFromLatLon(lat, lon, true);
+  if (window.state?.lat && window.state?.lon && map) {
+    map.setView([window.state.lat, window.state.lon], 10, { animate: true });
+  }
 }
 
 let assumptionRecalcTimer = null;
@@ -3709,19 +3847,41 @@ function updateEquipmentSelectionSummary() {
 // ═══════════════════════════════════════════════════════════
 // STEP NAVIGATION
 // ═══════════════════════════════════════════════════════════
-// ── DOM-MOVE HARİTASI: tek Leaflet instance adımlar arasında taşınır ──
+// ── DOM-MOVE HARİTASI: tek harita instance'ı adımlar arasında taşınır ──
 function repositionMap(n) {
   const mapCard = document.getElementById('map-card');
-  if (!mapCard || !map) return;
+  if (!mapCard) return;
   const step2Slot = document.getElementById('step2-map-slot');
   const step3Slot = document.getElementById('step3-map-slot');
   if (n === 2 && step2Slot && !step2Slot.contains(mapCard)) {
     step2Slot.appendChild(mapCard);
-    requestAnimationFrame(() => { map.invalidateSize(); setTimeout(() => map.invalidateSize(), 400); });
+    requestAnimationFrame(() => { try { map?.invalidateSize(); setTimeout(() => map?.invalidateSize(), 400); } catch {} });
   } else if (n === 3 && step3Slot && !step3Slot.contains(mapCard)) {
     step3Slot.appendChild(mapCard);
-    requestAnimationFrame(() => { map.invalidateSize(); setTimeout(() => map.invalidateSize(), 400); });
+    requestAnimationFrame(() => { try { map?.invalidateSize(); setTimeout(() => map?.invalidateSize(), 400); } catch {} });
   }
+}
+
+function ensureMapForStep(n) {
+  if (n !== 2 && n !== 3) return;
+  repositionMap(n);
+  initMap().then(() => {
+    repositionMap(n);
+    if (window._mapProvider === 'google') {
+      const roofStartHint = document.getElementById('roof-draw-start-hint');
+      if (roofStartHint) roofStartHint.style.display = 'none';
+    }
+    if (n === 3 && window._mapProvider === 'google') {
+      const out = document.getElementById('roof-geometry-summary');
+      if (out && !window.state?.roofGeometry) {
+        out.textContent = 'Google Maps modunda koordinat seçimi aktiftir. Detaylı çatı poligonu için alanı manuel girin veya basit harita/fallback modunu kullanın.';
+      }
+    }
+  }).catch(err => {
+    const message = googleMapFailureMessage(err);
+    console.warn('[map-provider] init failed:', err);
+    initManualCoordinateFallback(message);
+  });
 }
 
 function getMaxUnlockedStep() {
@@ -4733,6 +4893,7 @@ registerActions({
   downloadPDF,
   downloadTechnicalPDF,
   useGeolocation,
+  applyManualCoordinates,
   toggleEngReport,
   shareResults,
   refreshOSMShadowAnalysis,
@@ -4791,6 +4952,7 @@ registerActions({
 });
 window.selectCity = selectCity;
 window.useGeolocation = useGeolocation;
+window.applyManualCoordinates = applyManualCoordinates;
 window.isInTurkey = isInTurkey;
 window.clearRoofDrawing = function() {
   if (window.roofDrawnItems) {

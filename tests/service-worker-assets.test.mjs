@@ -22,6 +22,8 @@ for (const required of [
   '/css/redesign.css',
   '/css/mobile.css',
   '/js/app.js',
+  '/js/google-maps-provider.js',
+  '/js/map-provider-config.js',
   '/js/scenario-icons.js',
   '/js/pvlib-bridge.js',
   '/js/pvgis-fetch.js',
@@ -46,5 +48,10 @@ assert.match(sw, /pathname\.startsWith\('\/api\/'\)/,
   'same-origin /api routes must be handled as API requests, not static HTML fallbacks');
 assert.match(sw, /pathname === '\/api\/pvgis-proxy' \? 80000 : 20000/,
   'PVGIS same-origin proxy must keep the longer hourly timeout budget');
+assert.ok(!assets.has('/js/runtime-config.js'), 'runtime config must not be precached because it may contain the public Google Maps key');
+assert.doesNotMatch(sw, /maps\.googleapis\.com[^\n]*STATIC_ASSETS/,
+  'Google Maps external scripts must not be precached');
+assert.match(sw, /isGoogleMapsExternalRequest/,
+  'Google Maps external assets must bypass runtime cache');
 
 console.log('service worker asset tests passed');

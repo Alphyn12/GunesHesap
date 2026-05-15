@@ -1,5 +1,5 @@
-// v59: default production maps to OSM and avoid Carto dark_all startup requests.
-const CACHE_NAME = 'solarRota-v59';
+// v60: Google Maps lazy provider; do not precache/runtime-cache Google external assets.
+const CACHE_NAME = 'solarRota-v60';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -35,6 +35,7 @@ const STATIC_ASSETS = [
   '/js/evidence-files.js',
   '/js/exchange-rate.js',
   '/js/glare.js',
+  '/js/google-maps-provider.js',
   '/js/heat-pump.js',
   '/js/heatmap.js',
   '/js/hourly-profile.js',
@@ -43,6 +44,7 @@ const STATIC_ASSETS = [
   '/js/landing-bootstrap.js',
   '/js/inverter.js',
   '/js/location-validation.js',
+  '/js/map-provider-config.js',
   '/js/osm-shadow.js',
   '/js/output-i18n.js',
   '/js/offgrid-field-import.js',
@@ -133,6 +135,15 @@ self.addEventListener('activate', (event) => {
 function isApiRequest(url) {
   if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return true;
   return API_DOMAINS.some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));
+}
+
+function isGoogleMapsExternalRequest(url) {
+  return url.hostname === 'maps.googleapis.com'
+    || url.hostname.endsWith('.googleapis.com')
+    || url.hostname === 'maps.gstatic.com'
+    || url.hostname.endsWith('.gstatic.com')
+    || url.hostname.endsWith('.google.com')
+    || url.hostname.endsWith('.googleusercontent.com');
 }
 
 function apiOfflineResponse() {
@@ -273,6 +284,11 @@ self.addEventListener('fetch', (event) => {
 
   if (event.request.method !== 'GET') {
     if (isApiRequest(url)) event.respondWith(fetch(event.request).catch(() => apiOfflineResponse()));
+    return;
+  }
+
+  if (isGoogleMapsExternalRequest(url) || (url.origin === self.location.origin && url.pathname === '/js/runtime-config.js')) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
 
