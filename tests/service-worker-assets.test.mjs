@@ -51,7 +51,15 @@ assert.match(sw, /pathname === '\/api\/pvgis-proxy' \? 80000 : 20000/,
 assert.ok(!assets.has('/js/runtime-config.js'), 'runtime config must not be precached because it may contain the public Google Maps key');
 assert.doesNotMatch(sw, /maps\.googleapis\.com[^\n]*STATIC_ASSETS/,
   'Google Maps external scripts must not be precached');
-assert.match(sw, /isGoogleMapsExternalRequest/,
-  'Google Maps external assets must bypass runtime cache');
+assert.match(sw, /function shouldBypassExternalRequest\(url\)/,
+  'fetch handler must define an external request bypass');
+assert.match(sw, /url\.origin !== self\.location\.origin/,
+  'cross-origin requests must bypass this service worker');
+assert.match(sw, /shouldBypassExternalRequest\(url\)\) return;/,
+  'external requests must return without event.respondWith');
+assert.doesNotMatch(sw, /maps\.googleapis\.com[\s\S]{0,240}respondWith/,
+  'Google Maps requests must not be handled with respondWith');
+assert.match(sw, /pathname === '\/js\/runtime-config\.js'\) return;/,
+  'runtime config must bypass service worker cache and fallback handling');
 
 console.log('service worker asset tests passed');

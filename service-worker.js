@@ -1,5 +1,5 @@
-// v60: Google Maps lazy provider; do not precache/runtime-cache Google external assets.
-const CACHE_NAME = 'solarRota-v60';
+// v61: bypass cross-origin requests so Google Maps CSP probes are not SW-handled.
+const CACHE_NAME = 'solarRota-v61';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -89,15 +89,6 @@ const STATIC_ASSETS = [
   '/icon-512.svg'
 ];
 
-const API_DOMAINS = [
-  're.jrc.ec.europa.eu',
-  'api.open-meteo.com',
-  'overpass-api.de',
-  'cdn.jsdelivr.net',
-  'api.exchangerate-api.com',
-  'open.er-api.com'
-];
-
 // ── Install: tüm static assets'i önbelleğe al ──────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -133,17 +124,20 @@ self.addEventListener('activate', (event) => {
 
 // ── Yardımcı: URL'nin API domain'e ait olup olmadığını kontrol et ───────────
 function isApiRequest(url) {
-  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return true;
-  return API_DOMAINS.some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));
+  return url.origin === self.location.origin && url.pathname.startsWith('/api/');
 }
 
-function isGoogleMapsExternalRequest(url) {
+function isExplicitExternalBypassHost(url) {
   return url.hostname === 'maps.googleapis.com'
     || url.hostname.endsWith('.googleapis.com')
     || url.hostname === 'maps.gstatic.com'
     || url.hostname.endsWith('.gstatic.com')
-    || url.hostname.endsWith('.google.com')
-    || url.hostname.endsWith('.googleusercontent.com');
+    || url.hostname === 'fonts.googleapis.com'
+    || url.hostname === 'fonts.gstatic.com';
+}
+
+function shouldBypassExternalRequest(url) {
+  return url.origin !== self.location.origin || isExplicitExternalBypassHost(url);
 }
 
 function apiOfflineResponse() {
@@ -282,15 +276,16 @@ self.addEventListener('fetch', (event) => {
   // Chrome extension ve browser-internal isteklerini atla
   if (url.protocol === 'chrome-extension:') return;
 
+  // Cross-origin Google Maps/CDN/API isteklerini bu service worker yönetmez.
+  // respondWith çağırmadan çıkmak tarayıcının normal network akışını korur.
+  if (shouldBypassExternalRequest(url)) return;
+
   if (event.request.method !== 'GET') {
     if (isApiRequest(url)) event.respondWith(fetch(event.request).catch(() => apiOfflineResponse()));
     return;
   }
 
-  if (isGoogleMapsExternalRequest(url) || (url.origin === self.location.origin && url.pathname === '/js/runtime-config.js')) {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }));
-    return;
-  }
+  if (url.pathname === '/js/runtime-config.js') return;
 
   if (isApiRequest(url)) {
     // API istekleri: Network First → cache fallback. PVGIS saatlik seri proxy'si daha uzun sürebilir.
