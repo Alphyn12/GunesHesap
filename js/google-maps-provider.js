@@ -64,6 +64,7 @@ export function loadGoogleMaps(apiKey, doc = globalThis.document) {
     script.addEventListener('load', done, { once: true });
     script.addEventListener('error', () => rejectOnce(new Error('script-load-failed')), { once: true });
     doc.head.appendChild(script);
+    globalThis.console?.debug?.('[map-provider] Google Maps script appended');
   }).catch(err => {
     googleMapsLoadPromise = null;
     throw err;

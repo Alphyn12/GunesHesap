@@ -46,6 +46,10 @@ assert.match(appJs, /initGoogleMap/,
   'Production default map provider must initialize Google Maps');
 assert.match(appJs, /Harita sağlayıcısı step 2\/3'e girildiğinde lazy-load edilir/,
   'Map provider must be lazy-loaded instead of initialized during DOMContentLoaded');
+assert.match(appJs, /requestAnimationFrame\(\(\) => ensureMapForStep\(n\)\)/,
+  'Step navigation must trigger map provider init after step 2/3 render');
+assert.match(appJs, /if \(n === state\.step\) \{\s*requestAnimationFrame\(\(\) => ensureMapForStep\(n\)\);/s,
+  'Re-entering the active map step must still trigger lazy map init');
 assert.doesNotMatch(appJs, /darkLayer\.addTo\(map\);/,
   'Carto dark_all must not be added during map init');
 assert.doesNotMatch(appJs, /try \{ initMap\(\); \} catch/,
@@ -58,6 +62,8 @@ assert.doesNotMatch(googleProviderJs, /Geocoding|Directions|Routes|Solar API|pla
   'Google Maps provider must not integrate Geocoding, Routes, or Solar APIs');
 assert.doesNotMatch(heatmapJs, /tile\.openstreetmap\.org|basemaps\.cartocdn\.com/,
   'Heatmap must not initialize OSM/Carto tiles');
+assert.doesNotMatch(appJs, /location-warning['"]\)\.style\.display/,
+  'Location warning visibility must use classes instead of inline style writes');
 assert.match(appJs, /_cartoTilesDisabled = true/,
   'Carto tile errors must disable Carto for the rest of the session');
 

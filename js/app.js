@@ -719,6 +719,7 @@ async function initGoogleMap() {
 
   const apiKey = getGoogleMapsApiKey();
   if (!apiKey) throw new Error('missing-api-key');
+  console.debug?.('[map-provider] loading Google Maps script');
   const maps = await loadGoogleMaps(apiKey);
   if (!maps) throw new Error('google-maps-unavailable');
 
@@ -1011,16 +1012,20 @@ function setLocationBottomCard(cityName, lat, lon, ghi) {
   card.classList.add('visible');
 }
 
-function selectLocationFromLatLon(lat, lon, checkBounds) {
+function setLocationWarningVisible(visible) {
   const warnEl = document.getElementById('location-warning');
+  if (warnEl) warnEl.classList.toggle('location-warning-visible', !!visible);
+}
+
+function selectLocationFromLatLon(lat, lon, checkBounds) {
   if (checkBounds && !isInTurkey(lat, lon)) {
-    if (warnEl) warnEl.style.display = 'block';
+    setLocationWarningVisible(true);
     if (marker && window.state.lat && window.state.lon) {
       marker.setLatLng([window.state.lat, window.state.lon]);
     }
     return;
   }
-  if (warnEl) warnEl.style.display = 'none';
+  setLocationWarningVisible(false);
   window.state.lat = lat; window.state.lon = lon;
   if (marker) marker.setLatLng([lat, lon]);
   let nearest = null, minDist = Infinity;
@@ -1272,8 +1277,7 @@ function selectCity(city) {
   const cityInput = document.getElementById('city-search');
   if (cityInput) cityInput.value = city.name;
   setAutocompleteOpen(false);
-  const warnEl = document.getElementById('location-warning');
-  if (warnEl) warnEl.style.display = 'none';
+  setLocationWarningVisible(false);
   const locText = document.getElementById('selected-loc-text');
   if (locText) {
     locText.textContent = `${city.name} — ${city.lat.toFixed(4)}°K, ${city.lon.toFixed(4)}°D (GHI: ${city.ghi})`;
@@ -1329,7 +1333,7 @@ function _selectNominatimResult(result) {
   clearStepInlineAlert(2);
   document.getElementById('city-search').value = name;
   setAutocompleteOpen(false);
-  document.getElementById('location-warning').style.display = 'none';
+  setLocationWarningVisible(false);
   if (map) map.setView([lat, lon], 15, { animate: true });
   if (marker) marker.setLatLng([lat, lon]);
   setLocationBottomCard(name, lat, lon, nearest.ghi);
@@ -1612,7 +1616,7 @@ function useGeolocation() {
     const { latitude, longitude } = pos.coords;
     if (!isInTurkey(latitude, longitude)) {
       showToast(i18n.t('step2.geoOutside'), 'error');
-      document.getElementById('location-warning').style.display = 'block';
+      setLocationWarningVisible(true);
       return;
     }
     selectLocationFromLatLon(latitude, longitude, false);
@@ -3865,11 +3869,20 @@ function repositionMap(n) {
 function ensureMapForStep(n) {
   if (n !== 2 && n !== 3) return;
   repositionMap(n);
-  initMap().then(() => {
+  console.debug?.('[map-provider] ensure map for step', n);
+  if (getGoogleMapsApiKey()) {
+    setTimeout(() => {
+      const hasScript = !!document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+      if (!hasScript && !window.google?.maps && window._mapProvider !== MAP_PROVIDER_CONFIG.fallback) {
+        console.warn('[map-provider] Google Maps loader was not triggered');
+      }
+    }, 700);
+  }
+  const run = () => initMap().then(() => {
     repositionMap(n);
     if (window._mapProvider === 'google') {
       const roofStartHint = document.getElementById('roof-draw-start-hint');
-      if (roofStartHint) roofStartHint.style.display = 'none';
+      if (roofStartHint) roofStartHint.classList.add('is-hidden');
     }
     if (n === 3 && window._mapProvider === 'google') {
       const out = document.getElementById('roof-geometry-summary');
@@ -3881,6 +3894,15 @@ function ensureMapForStep(n) {
     const message = googleMapFailureMessage(err);
     console.warn('[map-provider] init failed:', err);
     initManualCoordinateFallback(message);
+  });
+  requestAnimationFrame(() => {
+    const container = document.getElementById('map');
+    if (!container) {
+      console.warn('[map-provider] Google Maps loader was not triggered: map container missing');
+      setTimeout(run, 120);
+      return;
+    }
+    run();
   });
 }
 
@@ -3914,7 +3936,10 @@ function goToStep(n) {
   const state = window.state;
   if (n < 1 || n > 7) return;
   ensureAppRouteVisible();
-  if (n === state.step) return;
+  if (n === state.step) {
+    requestAnimationFrame(() => ensureMapForStep(n));
+    return;
+  }
   unlockStep(n);
   const fromEl = document.getElementById(`step-${state.step}`);
   const toEl = document.getElementById(`step-${n}`);
@@ -3956,8 +3981,9 @@ function goToStep(n) {
   // Show/hide roof start hint
   const roofStartHint = document.getElementById('roof-draw-start-hint');
   if (roofStartHint) {
-    roofStartHint.style.display = (n === 2 && !window.roofDrawnItems?.getLayers().length) ? 'flex' : 'none';
+    roofStartHint.classList.toggle('is-hidden', !(n === 2 && !window.roofDrawnItems?.getLayers().length));
   }
+  requestAnimationFrame(() => ensureMapForStep(n));
 }
 
 function updateProgressBar() {

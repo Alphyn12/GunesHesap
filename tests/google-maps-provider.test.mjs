@@ -40,6 +40,36 @@ describe('Google Maps script loader', () => {
   it('rejects without an API key instead of throwing synchronously', async () => {
     await assert.rejects(() => loadGoogleMaps('', { createElement() {}, head: {} }), /missing-api-key/);
   });
+
+  it('creates a Google Maps script element when a runtime key is available', async () => {
+    const previousGoogle = globalThis.google;
+    let appendedScript = null;
+    const doc = {
+      head: {
+        appendChild(script) {
+          appendedScript = script;
+          globalThis.google = { maps: {} };
+          script._handlers.load();
+        }
+      },
+      querySelector() { return null; },
+      createElement(tag) {
+        assert.equal(tag, 'script');
+        return {
+          dataset: {},
+          _handlers: {},
+          addEventListener(event, handler) { this._handlers[event] = handler; }
+        };
+      }
+    };
+    await loadGoogleMaps('runtime-key', doc);
+    assert.ok(appendedScript, 'script element should be appended');
+    assert.match(appendedScript.src, /^https:\/\/maps\.googleapis\.com\/maps\/api\/js\?/);
+    assert.match(appendedScript.src, /key=runtime-key/);
+    assert.match(appendedScript.src, /loading=async/);
+    assert.doesNotMatch(appendedScript.src, /libraries=places/);
+    globalThis.google = previousGoogle;
+  });
 });
 
 describe('GoogleMapAdapter', () => {
