@@ -52,6 +52,12 @@ assert.match(appJs, /const safeGetGhiColor = typeof getGHIColor === 'function' \
   'Google Maps init must use the locally defined GHI color helper safely');
 assert.doesNotMatch(appJs, /\bgetGhiColor,\s*\n/,
   'Google Maps init must not reference an undefined getGhiColor shorthand');
+assert.match(googleProviderJs, /timeoutMs = 5000/,
+  'Google Maps provider must wait briefly before treating a missing Map constructor as fatal');
+assert.match(googleProviderJs, /currentGoogleObj\.maps\.importLibrary\('maps'\)/,
+  'Google Maps provider must use importLibrary("maps") without adding Places or other libraries');
+assert.match(googleProviderJs, /importLibrary\("maps"\) transient failure/,
+  'Transient importLibrary failures should be logged and retried instead of forcing immediate fallback');
 assert.match(appJs, /Harita sağlayıcısı step 2\/3'e girildiğinde lazy-load edilir/,
   'Map provider must be lazy-loaded instead of initialized during DOMContentLoaded');
 assert.match(appJs, /requestAnimationFrame\(\(\) => ensureMapForStep\(n\)\)/,

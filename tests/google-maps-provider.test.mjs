@@ -4,7 +4,8 @@ import {
   GoogleMapAdapter,
   buildGoogleMapsScriptUrl,
   loadGoogleMaps,
-  resolveGoogleMapsClasses
+  resolveGoogleMapsClasses,
+  waitForGoogleMapConstructor
 } from '../js/google-maps-provider.js';
 import {
   MAP_PROVIDER_CONFIG,
@@ -136,6 +137,50 @@ describe('GoogleMapAdapter', () => {
     });
     assert.equal(resolved.MapCtor, ImportedMapCtor);
     assert.equal(resolved.MarkerCtor, null);
+  });
+
+  it('waits until google.maps.Map becomes available after a short delay', async () => {
+    class DelayedMapCtor {}
+    const googleObj = { maps: {} };
+    setTimeout(() => { googleObj.maps.Map = DelayedMapCtor; }, 300);
+    const MapCtor = await waitForGoogleMapConstructor({
+      googleObj,
+      timeoutMs: 1000,
+      intervalMs: 40
+    });
+    assert.equal(MapCtor, DelayedMapCtor);
+  });
+
+  it('retries after transient importLibrary failures', async () => {
+    class ImportedMapCtor {}
+    let attempts = 0;
+    const MapCtor = await waitForGoogleMapConstructor({
+      googleObj: {
+        maps: {
+          importLibrary(name) {
+            assert.equal(name, 'maps');
+            attempts += 1;
+            if (attempts === 1) return Promise.reject(new Error('ERR_BLOCKED_BY_CLIENT'));
+            return Promise.resolve({ Map: ImportedMapCtor });
+          }
+        }
+      },
+      timeoutMs: 500,
+      intervalMs: 20
+    });
+    assert.equal(MapCtor, ImportedMapCtor);
+    assert.ok(attempts >= 2);
+  });
+
+  it('times out when the Map constructor never becomes available', async () => {
+    await assert.rejects(
+      () => waitForGoogleMapConstructor({
+        googleObj: { maps: {} },
+        timeoutMs: 60,
+        intervalMs: 10
+      }),
+      /google-maps-map-constructor-unavailable/
+    );
   });
 
   it('keeps MarkerCtor optional so missing markers do not block map init', () => {

@@ -73,22 +73,67 @@ export function loadGoogleMaps(apiKey, doc = globalThis.document) {
   return googleMapsLoadPromise;
 }
 
-export async function resolveGoogleMapsClasses(googleObj = globalThis.google) {
-  if (!googleObj?.maps) throw new Error('google-maps-namespace-unavailable');
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  let MapCtor = googleObj.maps.Map;
-  if (typeof MapCtor !== 'function' && typeof googleObj.maps.importLibrary === 'function') {
-    const mapsLibrary = await googleObj.maps.importLibrary('maps');
-    MapCtor = mapsLibrary?.Map;
+export async function waitForGoogleMapConstructor({
+  googleObj,
+  timeoutMs = 5000,
+  intervalMs = 120
+} = {}) {
+  const startedAt = Date.now();
+  let importLibraryPromise = null;
+  let waitingLogged = false;
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const currentGoogleObj = googleObj?.maps ? googleObj : globalThis.google;
+    if (typeof currentGoogleObj?.maps?.Map === 'function') {
+      globalThis.console?.debug?.('[map-provider] Map constructor ready');
+      return currentGoogleObj.maps.Map;
+    }
+
+    if (currentGoogleObj?.maps && !waitingLogged) {
+      waitingLogged = true;
+      globalThis.console?.debug?.('[map-provider] Google namespace available; waiting for Map constructor');
+    }
+
+    if (typeof currentGoogleObj?.maps?.importLibrary === 'function') {
+      if (!importLibraryPromise) {
+        importLibraryPromise = Promise.resolve(currentGoogleObj.maps.importLibrary('maps'))
+          .catch(err => {
+            globalThis.console?.debug?.('[map-provider] importLibrary("maps") transient failure:', err);
+            return null;
+          })
+          .finally(() => { importLibraryPromise = null; });
+      }
+      const mapsLibrary = await Promise.race([
+        importLibraryPromise,
+        delay(intervalMs).then(() => null)
+      ]);
+      if (typeof mapsLibrary?.Map === 'function') {
+        globalThis.console?.debug?.('[map-provider] Map constructor ready');
+        return mapsLibrary.Map;
+      }
+    } else {
+      await delay(intervalMs);
+    }
   }
-  if (typeof MapCtor !== 'function') throw new Error('google-maps-map-constructor-unavailable');
+
+  throw new Error('google-maps-map-constructor-unavailable');
+}
+
+export async function resolveGoogleMapsClasses(googleObj = globalThis.google, options = {}) {
+  const MapCtor = await waitForGoogleMapConstructor({ googleObj, ...options });
+  const resolvedGoogleObj = googleObj?.maps ? googleObj : globalThis.google;
+  if (!resolvedGoogleObj?.maps) throw new Error('google-maps-namespace-unavailable');
 
   return {
-    googleObj,
+    googleObj: resolvedGoogleObj,
     MapCtor,
-    MarkerCtor: typeof googleObj.maps.Marker === 'function' ? googleObj.maps.Marker : null,
-    SymbolPath: googleObj.maps.SymbolPath || null,
-    eventApi: googleObj.maps.event || null
+    MarkerCtor: typeof resolvedGoogleObj.maps.Marker === 'function' ? resolvedGoogleObj.maps.Marker : null,
+    SymbolPath: resolvedGoogleObj.maps.SymbolPath || null,
+    eventApi: resolvedGoogleObj.maps.event || null
   };
 }
 
