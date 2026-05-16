@@ -164,12 +164,12 @@ export const GHI_MARKER_COLORS = Object.freeze({
 });
 
 export const GHI_MARKER_BUCKETS = Object.freeze([
-  { key: 'lt1300', className: 'ghi-marker--lt1300', color: GHI_MARKER_COLORS.lt1300, maxExclusive: 1300 },
-  { key: 'gte1450', className: 'ghi-marker--gte1450', color: GHI_MARKER_COLORS.gte1450, maxExclusive: 1450 },
-  { key: 'gte1600', className: 'ghi-marker--gte1600', color: GHI_MARKER_COLORS.gte1600, maxExclusive: 1600 },
-  { key: 'gte1700', className: 'ghi-marker--gte1700', color: GHI_MARKER_COLORS.gte1700, maxExclusive: 1700 },
-  { key: 'gte1800', className: 'ghi-marker--gte1800', color: GHI_MARKER_COLORS.gte1800, maxExclusive: 1800 },
-  { key: 'gt1800', className: 'ghi-marker--gt1800', color: GHI_MARKER_COLORS.gt1800, maxExclusive: Infinity }
+  { key: 'lt1300', className: 'solar-map-marker--lt1300', color: GHI_MARKER_COLORS.lt1300, maxExclusive: 1300 },
+  { key: 'gte1450', className: 'solar-map-marker--gte1450', color: GHI_MARKER_COLORS.gte1450, maxExclusive: 1450 },
+  { key: 'gte1600', className: 'solar-map-marker--gte1600', color: GHI_MARKER_COLORS.gte1600, maxExclusive: 1600 },
+  { key: 'gte1700', className: 'solar-map-marker--gte1700', color: GHI_MARKER_COLORS.gte1700, maxExclusive: 1700 },
+  { key: 'gte1800', className: 'solar-map-marker--gte1800', color: GHI_MARKER_COLORS.gte1800, maxExclusive: 1800 },
+  { key: 'gt1800', className: 'solar-map-marker--gt1800', color: GHI_MARKER_COLORS.gt1800, maxExclusive: Infinity }
 ]);
 
 export const GOOGLE_DARK_MAP_STYLES = Object.freeze([
@@ -341,7 +341,7 @@ export class GoogleMapAdapter {
           position: { lat: city.lat, lng: city.lon },
           title: `${city.name} - GHI: ${city.ghi} kWh/m2/yil`,
           bucketClass: bucket.className,
-          icon: createCircleMarkerIcon(color, { size: 15, strokeColor: '#F8FAFC', strokeWidth: 3 }),
+          icon: createCircleMarkerIcon(color, { size: 21, strokeColor: '#F8FAFC', strokeWidth: 4, glow: true }),
           clickable: false
         });
         if (marker) this.cityMarkers.push(marker);
@@ -410,7 +410,6 @@ export class GoogleMapAdapter {
     tools.className = 'google-roof-tools';
     tools.innerHTML = `
       <button type="button" class="google-roof-tool-btn" data-google-roof-action="draw">Poligon</button>
-      <button type="button" class="google-roof-tool-btn" data-google-roof-action="rectangle">Dikdörtgen</button>
       <button type="button" class="google-roof-tool-btn" data-google-roof-action="finish">Bitir</button>
       <button type="button" class="google-roof-tool-btn" data-google-roof-action="undo">Geri al</button>
       <button type="button" class="google-roof-tool-btn danger" data-google-roof-action="clear">Sil</button>
@@ -420,7 +419,6 @@ export class GoogleMapAdapter {
       if (!button) return;
       const action = button.dataset.googleRoofAction;
       if (action === 'draw') this.startRoofDrawing('polygon');
-      if (action === 'rectangle') this.startRoofDrawing('rectangle');
       if (action === 'finish') this.finishRoofDrawing();
       if (action === 'undo') this.undoRoofVertex();
       if (action === 'clear') this.clearRoofDrawing();
@@ -615,8 +613,7 @@ export class GoogleMapAdapter {
     const hasShape = hasPoints || !!this.roofPolygon;
     tools.querySelectorAll?.('[data-google-roof-action]')?.forEach(button => {
       const action = button.dataset.googleRoofAction;
-      const isActive = (action === 'draw' && this.isRoofDrawing && this.roofDrawMode === 'polygon')
-        || (action === 'rectangle' && this.isRoofDrawing && this.roofDrawMode === 'rectangle');
+      const isActive = action === 'draw' && this.isRoofDrawing && this.roofDrawMode === 'polygon';
       button.classList?.toggle?.('active', isActive);
       button.disabled = (action === 'finish' && !canFinish)
         || (action === 'undo' && !hasPoints)

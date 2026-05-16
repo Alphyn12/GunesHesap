@@ -104,12 +104,24 @@ assert.match(indexHtml, /Kurulum alanını haritada çizin/,
   'Step 3 guide must describe the current Google Maps drawing flow');
 assert.match(indexHtml, /Geri al: Yanlış eklenen son noktayı kaldırın/,
   'Step 3 guide must document the undo vertex action');
+assert.match(indexHtml, /Bitir: En az 3 nokta seçtikten sonra çizimi tamamlayıp alanı hesaplayın/,
+  'Step 3 guide must document the finish action shown in the toolbar');
 assert.doesNotMatch(indexHtml, /drawGuideEdit|Düzenle: Turuncu noktaları/,
   'Step 3 guide must not document the removed edit button');
-assert.match(redesignCss, /\.roof-tool-legend \{\s*position: absolute;[\s\S]*left: 16px;/,
-  'Step 3 guide should occupy the top-left safe zone');
-assert.match(redesignCss, /\.roof-map-compass \{\s*position: absolute;[\s\S]*right: 16px;/,
-  'Step 3 compass should occupy the bottom-right safe zone');
+assert.doesNotMatch(indexHtml, /drawGuideRect|Dikdörtgen: Düzenli çatılar/,
+  'Step 3 guide must not document the removed rectangle tool');
+assert.doesNotMatch(googleProviderJs, /data-google-roof-action="rectangle"/,
+  'Google roof toolbar must not render the removed rectangle button');
+assert.match(googleProviderJs, /solar-map-marker--gte1600/,
+  'GHI marker bucket classes must match CSS marker color classes');
+assert.match(redesignCss, /\.step2-map-helper \{[\s\S]*left: 16px;/,
+  'Step 2 location helper should align to the top-left safe zone');
+assert.match(redesignCss, /\.roof-tool-legend \{\s*position: absolute;[\s\S]*right: 16px;[\s\S]*left: auto;/,
+  'Step 3 guide should occupy the top-right safe zone');
+assert.match(redesignCss, /\.roof-map-compass \{\s*position: absolute;[\s\S]*left: 16px;[\s\S]*right: auto;/,
+  'Step 3 compass should occupy the top-left safe zone');
+assert.match(redesignCss, /#step3-map-slot \.map-layer-btn \{[\s\S]*bottom: 42px/,
+  'Step 3 map layer toggle should occupy the bottom-right safe zone');
 assert.doesNotMatch(googleProviderJs, /libraries=places/,
   'Google Maps provider must not request Places library');
 assert.doesNotMatch(googleProviderJs, /Geocoding|Directions|Routes|Solar API|places/i,

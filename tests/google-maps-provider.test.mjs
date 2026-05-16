@@ -7,6 +7,7 @@ import {
   createCircleMarkerIcon,
   DEFAULT_GOOGLE_MAP_TYPE_ID,
   GOOGLE_DARK_MAP_STYLES,
+  getGhiMarkerBucket,
   getGhiMarkerColor,
   loadGoogleMaps,
   resolveGoogleMapsClasses,
@@ -253,6 +254,7 @@ describe('GoogleMapAdapter', () => {
     assert.notEqual(cityMarker.icon, undefined);
     assert.equal(getGhiMarkerColor(1490), '#22C55E');
     assert.match(createCircleMarkerIcon('#22C55E').url, /%2322C55E/);
+    assert.equal(getGhiMarkerBucket(1490).className, 'solar-map-marker--gte1600');
   });
 
   it('builds Google map options without local styles when mapId is present', () => {
@@ -318,6 +320,7 @@ describe('GoogleMapAdapter', () => {
       }
     };
     let advancedUsed = false;
+    const contents = [];
     class MapCtor {
       constructor() { this.zoom = 6; }
       addListener() {}
@@ -329,7 +332,7 @@ describe('GoogleMapAdapter', () => {
       getMapTypeId() { return this.type || 'roadmap'; }
     }
     class AdvancedMarkerCtor {
-      constructor(options) { advancedUsed = true; this.position = options.position; this.content = options.content; }
+      constructor(options) { advancedUsed = true; this.position = options.position; this.content = options.content; contents.push(options.content); }
       addListener() {}
     }
     class MarkerCtor {
@@ -345,6 +348,7 @@ describe('GoogleMapAdapter', () => {
     });
     assert.equal(advancedUsed, true);
     assert.ok(adapter.marker);
+    assert.ok(contents.some(content => content?.className?.includes('solar-map-marker--gte1700')));
     globalThis.document = previousDocument;
   });
 
@@ -440,8 +444,9 @@ describe('GoogleMapAdapter', () => {
     new GoogleMapAdapter({ container, MapCtor });
     const tools = container.querySelector('.google-roof-tools');
     const actions = tools.querySelectorAll('[data-google-roof-action]').map(button => button.dataset.googleRoofAction);
-    assert.deepEqual(actions, ['draw', 'rectangle', 'finish', 'undo', 'clear']);
+    assert.deepEqual(actions, ['draw', 'finish', 'undo', 'clear']);
     assert.equal(actions.includes('edit'), false);
+    assert.equal(actions.includes('rectangle'), false);
     globalThis.document = previousDocument;
   });
 

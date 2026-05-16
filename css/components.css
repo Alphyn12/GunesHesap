@@ -3427,8 +3427,8 @@ body>main{z-index:auto}
 .scenario-color-heat-pump { --card-color: #EC4899; }
 .scenario-color-flexible-mobile { --card-color: #06B6D4; }
 .scenario-color-ev-charging { --card-color: #3B82F6; }
-.solar-map-marker{width:16px;height:16px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(15,23,42,.52);box-shadow:0 5px 14px rgba(0,0,0,.38);transform:translateY(-1px)}
-.solar-map-marker-dot{width:12px;height:12px;border-radius:999px;border:3px solid #F8FAFC;background:#EAB308;box-shadow:0 0 0 1px rgba(15,23,42,.55)}
+.solar-map-marker{width:22px;height:22px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(15,23,42,.58);box-shadow:0 6px 16px rgba(0,0,0,.46);transform:translateY(-1px)}
+.solar-map-marker-dot{width:16px;height:16px;border-radius:999px;border:4px solid #F8FAFC;background:#EAB308;box-shadow:0 0 0 1px rgba(15,23,42,.68),0 0 14px rgba(255,255,255,.24)}
 .solar-map-marker--lt1300 .solar-map-marker-dot{background:#6B7280}
 .solar-map-marker--gte1450 .solar-map-marker-dot{background:#3B82F6}
 .solar-map-marker--gte1600 .solar-map-marker-dot{background:#22C55E}
@@ -3785,7 +3785,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .leaflet-control-layers label{color:#F1F5F9!important;font-family:'Inter',sans-serif;font-size:0.8rem}
 #map-draw-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(9,14,25,0.92);color:#F59E0B;font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:600;padding:8px 16px;border-radius:8px;border:1px solid rgba(245,158,11,0.4);z-index:1000;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.5);}
 #map-draw-hint.is-visible{display:block}
-.google-roof-tools{position:absolute;left:16px;right:auto;bottom:18px;z-index:1002;display:flex;gap:6px;flex-wrap:wrap;max-width:min(560px,calc(100% - 280px));padding:6px;border:1px solid rgba(245,158,11,.24);border-radius:10px;background:rgba(15,23,42,.9);box-shadow:0 12px 28px rgba(0,0,0,.34);backdrop-filter:blur(10px)}
+.google-roof-tools{position:absolute;left:18px;right:auto;bottom:42px;z-index:1002;display:flex;gap:6px;flex-wrap:wrap;max-width:min(460px,calc(100% - 300px));padding:6px;border:1px solid rgba(245,158,11,.24);border-radius:10px;background:rgba(15,23,42,.9);box-shadow:0 12px 28px rgba(0,0,0,.34);backdrop-filter:blur(10px)}
 .google-roof-tool-btn{border:1px solid rgba(245,158,11,.3);border-radius:8px;background:rgba(245,158,11,.1);color:#F8FAFC;font-size:.74rem;font-weight:800;padding:7px 10px;cursor:pointer;font-family:var(--font-display);line-height:1;transition:background .18s,border-color .18s,color .18s}
 .google-roof-tool-btn:hover{background:rgba(245,158,11,.2);border-color:#F59E0B;color:#F59E0B}
 .google-roof-tool-btn.active{background:rgba(245,158,11,.24);border-color:#F59E0B;color:#FBBF24}
@@ -3794,7 +3794,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .google-roof-tool-btn.danger:hover{border-color:#EF4444;color:#FCA5A5;background:rgba(239,68,68,.2)}
 #map.google-roof-drawing-active{cursor:crosshair}
 @media (max-width: 720px){
-  .google-roof-tools{left:10px;right:10px;bottom:12px;max-width:none;justify-content:center}
+  .google-roof-tools{left:10px;right:10px;bottom:46px;max-width:none;justify-content:center}
   .google-roof-tool-btn{font-size:.68rem;padding:7px 8px}
 }
 #roof-area-badge{display:none;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);border-radius:8px;padding:8px 14px;font-size:0.82rem;color:var(--primary);margin-top:10px;}

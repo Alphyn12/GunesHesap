@@ -425,7 +425,7 @@ h2, .h2, .step-heading-title {
 }
 .step2-map-helper {
   top: 14px;
-  left: 56px;
+  left: 16px;
   max-width: min(360px, calc(100% - 28px));
   display: grid;
   gap: 5px;
@@ -562,10 +562,11 @@ h2, .h2, .step-heading-title {
 }
 .roof-tool-legend {
   position: absolute;
-  top: 14px;
-  left: 16px;
+  top: 16px;
+  right: 16px;
+  left: auto;
   z-index: 998;
-  max-width: 330px;
+  width: min(360px, calc(100% - 32px));
   display: grid;
   gap: 8px;
   padding: 12px;
@@ -648,8 +649,9 @@ h2, .h2, .step-heading-title {
 }
 .roof-tool-legend-toggle {
   position: absolute;
-  top: 14px;
-  left: 16px;
+  top: 16px;
+  right: 16px;
+  left: auto;
   z-index: 998;
   display: inline-flex;
   align-items: center;
@@ -679,8 +681,10 @@ h2, .h2, .step-heading-title {
 }
 .roof-map-compass {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
+  top: 16px;
+  left: 16px;
+  right: auto;
+  bottom: auto;
   z-index: 998;
   display: grid;
   grid-template-columns: 42px auto;
@@ -693,6 +697,12 @@ h2, .h2, .step-heading-title {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 8px 22px rgba(0,0,0,.24);
+}
+#step3-map-slot .map-layer-btn {
+  top: auto !important;
+  right: 16px !important;
+  bottom: 42px !important;
+  z-index: 1001 !important;
 }
 .roof-map-compass-glyph {
   position: relative;

@@ -793,6 +793,8 @@ textarea {
 
   .step2-map-helper {
     top: 10px;
+    left: 10px;
+    max-width: min(320px, calc(100% - 20px));
   }
 
   .step2-legend-card {
@@ -855,21 +857,22 @@ textarea {
   .roof-tool-legend {
     top: 10px;
     left: 10px;
-    right: auto;
-    width: min(320px, calc(100% - 20px));
+    right: 10px;
+    width: auto;
     padding: 10px 12px;
   }
 
   .roof-tool-legend-toggle {
     top: 10px;
-    left: 10px;
-    right: auto;
+    left: auto;
+    right: 10px;
   }
 
   .roof-map-compass {
-    bottom: 72px;
-    right: 10px;
-    left: auto;
+    top: auto;
+    bottom: 92px;
+    right: auto;
+    left: 10px;
     grid-template-columns: 40px auto;
     padding: 8px 10px;
   }
@@ -1223,21 +1226,22 @@ textarea {
   .roof-tool-legend {
     top: 8px;
     left: 8px;
-    right: auto;
-    width: min(300px, calc(100% - 16px));
+    right: 8px;
+    width: auto;
     padding: 9px 10px;
   }
 
   .roof-tool-legend-toggle {
     top: 8px;
-    left: 8px;
-    right: auto;
+    left: auto;
+    right: 8px;
   }
 
   .roof-map-compass {
-    bottom: 76px;
-    right: 8px;
-    left: auto;
+    top: auto;
+    bottom: 96px;
+    right: auto;
+    left: 8px;
     max-width: calc(100% - 16px);
   }
 
