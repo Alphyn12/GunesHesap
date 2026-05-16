@@ -62,7 +62,10 @@ async function copyTarget(target) {
 
 async function writeRuntimeConfig() {
   const key = String(process.env.VITE_GOOGLE_MAPS_API_KEY || '').trim();
-  const config = key ? { VITE_GOOGLE_MAPS_API_KEY: key } : {};
+  const mapId = String(process.env.VITE_GOOGLE_MAPS_MAP_ID || '').trim();
+  const config = {};
+  if (key) config.VITE_GOOGLE_MAPS_API_KEY = key;
+  if (mapId) config.VITE_GOOGLE_MAPS_MAP_ID = mapId;
   const output = path.join(publicDir, 'js', 'runtime-config.js');
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(

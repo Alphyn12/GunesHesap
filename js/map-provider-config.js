@@ -26,6 +26,16 @@ export function getGoogleMapsApiKey() {
   ).trim();
 }
 
+export function getGoogleMapsMapId() {
+  const env = getRuntimeEnv();
+  return String(
+    env?.VITE_GOOGLE_MAPS_MAP_ID
+    || globalThis?.SOLAR_ROTA_CONFIG?.GOOGLE_MAPS_MAP_ID
+    || globalThis?.SOLAR_ROTA_CONFIG?.VITE_GOOGLE_MAPS_MAP_ID
+    || ''
+  ).trim();
+}
+
 export function getDefaultMapProvider() {
   return MAP_PROVIDER_CONFIG.productionDefault;
 }

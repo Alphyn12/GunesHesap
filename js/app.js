@@ -59,7 +59,7 @@ import { runDatasheetSizing, attachDatasheetSizingHandlers } from './datasheet-s
 import { buildHourlyProfileEvidence, validateHourlyProfile8760 } from './consumption-evidence.js';
 import { initStorageCrypto, isEncryptionAvailable } from './storage-crypto.js';
 import { preloadEncryptedState } from './storage.js';
-import { getDefaultMapProvider, getGoogleMapsApiKey, MAP_PROVIDER_CONFIG } from './map-provider-config.js';
+import { getDefaultMapProvider, getGoogleMapsApiKey, getGoogleMapsMapId, MAP_PROVIDER_CONFIG } from './map-provider-config.js';
 import { GoogleMapAdapter, createGoogleMarkerFacade, getGhiMarkerColor, loadGoogleMaps, resolveGoogleMapsClasses } from './google-maps-provider.js';
 import {
   DEFAULT_COST_PROFILE,
@@ -748,7 +748,7 @@ async function initGoogleMap() {
   console.debug?.('[map-provider] loading Google Maps script');
   const maps = await loadGoogleMaps(apiKey);
   if (!maps) throw new Error('google-maps-unavailable');
-  const { MapCtor, MarkerCtor, PolygonCtor, PolylineCtor, SymbolPath, eventApi } = await resolveGoogleMapsClasses(window.google);
+  const { MapCtor, AdvancedMarkerCtor, MarkerCtor, PolygonCtor, PolylineCtor, SymbolPath, eventApi } = await resolveGoogleMapsClasses(window.google);
   console.debug?.('[map-provider] Google script loaded');
   console.debug?.('[map-provider] Google map container found');
 
@@ -757,9 +757,11 @@ async function initGoogleMap() {
     : { lat: 39.0, lng: 35.0 };
   const zoom = window.state?.lat && window.state?.lon ? 9 : 6;
   const safeGetGhiColor = typeof getGHIColor === 'function' ? getGHIColor : fallbackGHIColor;
+  const mapId = getGoogleMapsMapId();
   const adapter = new GoogleMapAdapter({
     container,
     MapCtor,
+    AdvancedMarkerCtor,
     MarkerCtor,
     PolygonCtor,
     PolylineCtor,
@@ -767,6 +769,7 @@ async function initGoogleMap() {
     eventApi,
     center,
     zoom,
+    mapId,
     cities: TURKISH_CITIES,
     getGhiColor: safeGetGhiColor,
     onRoofPolygonsChange: (polygons, reason) => {
@@ -985,8 +988,8 @@ function initLeafletMap() {
 function toggleMapLayer() {
   if (!window.map) return;
   if (window._mapProvider === 'google' && window._googleMapAdapter) {
-    const isSatellite = window._googleMapAdapter.getMapType() === 'satellite';
-    window._googleMapAdapter.setMapType(isSatellite ? 'roadmap' : 'satellite');
+    const isSatellite = window._googleMapAdapter.getMapType() === 'hybrid';
+    window._googleMapAdapter.setMapType(isSatellite ? 'roadmap' : 'hybrid');
     window._activeTileLayer = isSatellite ? 'google-roadmap' : 'google-satellite';
     document.getElementById('map-satellite-btn')?.classList.toggle('active', !isSatellite);
     syncMapLayerButton();
@@ -1017,8 +1020,8 @@ function syncMapLayerButton() {
   }
   if (window._mapProvider === 'google') {
     lbl.textContent = window._activeTileLayer === 'google-satellite'
-      ? i18n.t('step2.darkMapLabel')
-      : i18n.t('step2.satelliteMapLabel');
+      ? 'Harita'
+      : 'Uydu';
     return;
   }
   lbl.textContent = window._activeTileLayer === 'satellite'

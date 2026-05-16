@@ -4,6 +4,7 @@ import {
   GoogleMapAdapter,
   buildGoogleMapsScriptUrl,
   createCircleMarkerIcon,
+  GOOGLE_DARK_MAP_STYLES,
   getGhiMarkerColor,
   loadGoogleMaps,
   resolveGoogleMapsClasses,
@@ -12,7 +13,8 @@ import {
 import {
   MAP_PROVIDER_CONFIG,
   getDefaultMapProvider,
-  getGoogleMapsApiKey
+  getGoogleMapsApiKey,
+  getGoogleMapsMapId
 } from '../js/map-provider-config.js';
 
 describe('Google Maps provider config', () => {
@@ -27,6 +29,15 @@ describe('Google Maps provider config', () => {
     const previous = globalThis.SOLAR_ROTA_CONFIG;
     globalThis.SOLAR_ROTA_CONFIG = { VITE_GOOGLE_MAPS_API_KEY: 'runtime-key' };
     assert.equal(getGoogleMapsApiKey(), 'runtime-key');
+    globalThis.SOLAR_ROTA_CONFIG = previous;
+  });
+
+  it('reads runtime map id names without hard-coding a value', () => {
+    const previous = globalThis.SOLAR_ROTA_CONFIG;
+    globalThis.SOLAR_ROTA_CONFIG = { VITE_GOOGLE_MAPS_MAP_ID: 'runtime-map-id' };
+    assert.equal(getGoogleMapsMapId(), 'runtime-map-id');
+    globalThis.SOLAR_ROTA_CONFIG = { GOOGLE_MAPS_MAP_ID: 'runtime-map-id-2' };
+    assert.equal(getGoogleMapsMapId(), 'runtime-map-id-2');
     globalThis.SOLAR_ROTA_CONFIG = previous;
   });
 });
@@ -129,15 +140,18 @@ describe('GoogleMapAdapter', () => {
 
   it('resolves MapCtor from importLibrary("maps") when google.maps.Map is not ready', async () => {
     class ImportedMapCtor {}
+    class AdvancedMarkerElement {}
     const resolved = await resolveGoogleMapsClasses({
       maps: {
         importLibrary(name) {
+          if (name === 'marker') return Promise.resolve({ AdvancedMarkerElement });
           assert.equal(name, 'maps');
           return Promise.resolve({ Map: ImportedMapCtor });
         }
       }
     });
     assert.equal(resolved.MapCtor, ImportedMapCtor);
+    assert.equal(resolved.AdvancedMarkerCtor, AdvancedMarkerElement);
     assert.equal(resolved.MarkerCtor, null);
   });
 
@@ -239,6 +253,117 @@ describe('GoogleMapAdapter', () => {
     assert.match(createCircleMarkerIcon('#22C55E').url, /%2322C55E/);
   });
 
+  it('uses dark roadmap options and disables native Google controls that collide with custom tools', () => {
+    let mapOptions = null;
+    class MapCtor {
+      constructor(_container, options) { mapOptions = options; this.zoom = options.zoom; this.type = options.mapTypeId; }
+      addListener() {}
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type; }
+    }
+    const adapter = new GoogleMapAdapter({ container: {}, MapCtor, mapId: 'test-map-id' });
+    assert.equal(mapOptions.mapTypeId, 'roadmap');
+    assert.equal(mapOptions.mapId, 'test-map-id');
+    assert.equal(mapOptions.disableDefaultUI, true);
+    assert.equal(mapOptions.fullscreenControl, false);
+    assert.equal(mapOptions.streetViewControl, false);
+    assert.equal(mapOptions.mapTypeControl, false);
+    assert.equal(mapOptions.zoomControl, false);
+    assert.equal(mapOptions.styles, GOOGLE_DARK_MAP_STYLES);
+    adapter.setMapType('hybrid');
+    assert.equal(adapter.getMapType(), 'hybrid');
+    adapter.setMapType('roadmap');
+    assert.equal(adapter.getMapType(), 'roadmap');
+  });
+
+  it('prefers AdvancedMarkerElement so production avoids deprecated google.maps.Marker', () => {
+    const previousDocument = globalThis.document;
+    globalThis.document = {
+      createElement() {
+        return {
+          className: '',
+          appendChild() {}
+        };
+      }
+    };
+    let advancedUsed = false;
+    class MapCtor {
+      constructor() { this.zoom = 6; }
+      addListener() {}
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    class AdvancedMarkerCtor {
+      constructor(options) { advancedUsed = true; this.position = options.position; this.content = options.content; }
+      addListener() {}
+    }
+    class MarkerCtor {
+      constructor() { throw new Error('legacy Marker should not be used'); }
+    }
+    const adapter = new GoogleMapAdapter({
+      container: {},
+      MapCtor,
+      AdvancedMarkerCtor,
+      MarkerCtor,
+      mapId: 'test-map-id',
+      cities: [{ name: 'Ankara', lat: 39.93, lon: 32.85, ghi: 1620 }]
+    });
+    assert.equal(advancedUsed, true);
+    assert.ok(adapter.marker);
+    globalThis.document = previousDocument;
+  });
+
+  it('falls back to legacy SVG circle markers when mapId is missing', () => {
+    const previousDocument = globalThis.document;
+    globalThis.document = {
+      createElement() {
+        return {
+          className: '',
+          appendChild() {}
+        };
+      }
+    };
+    let advancedUsed = false;
+    let legacyUsed = false;
+    class MapCtor {
+      constructor(_container, options) { this.options = options; this.zoom = 6; }
+      addListener() {}
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    class AdvancedMarkerCtor {
+      constructor() { advancedUsed = true; }
+    }
+    class MarkerCtor {
+      constructor(options) { legacyUsed = true; this.position = options.position; }
+      addListener() {}
+      setPosition(position) { this.position = position; }
+      getPosition() { return { lat: () => this.position.lat, lng: () => this.position.lng }; }
+    }
+    const adapter = new GoogleMapAdapter({
+      container: {},
+      MapCtor,
+      AdvancedMarkerCtor,
+      MarkerCtor
+    });
+    assert.equal(advancedUsed, false);
+    assert.equal(legacyUsed, true);
+    assert.ok(adapter.marker);
+    globalThis.document = previousDocument;
+  });
+
   it('creates, completes, edits, and clears Google roof polygons', () => {
     const listeners = {};
     class MapCtor {
@@ -286,5 +411,47 @@ describe('GoogleMapAdapter', () => {
     assert.equal(events.at(-1).reason, 'edit');
     adapter.clearRoofDrawing();
     assert.deepEqual(events.at(-1), { polygons: [], reason: 'clear' });
+  });
+
+  it('supports rectangle drawing as a four-corner polygon', () => {
+    const listeners = {};
+    class MapCtor {
+      constructor() { this.zoom = 6; }
+      addListener(event, handler) { listeners[event] = handler; }
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    class MarkerCtor {
+      constructor(options) { this.position = options.position; }
+      addListener() {}
+      setMap(map) { this.map = map; }
+      setPosition(position) { this.position = position; }
+      getPosition() { return { lat: () => this.position.lat, lng: () => this.position.lng }; }
+    }
+    class PolylineCtor { constructor(options) { this.options = options; } setMap(map) { this.map = map; } }
+    class PolygonCtor { constructor(options) { this.options = options; } setMap(map) { this.map = map; } }
+    const events = [];
+    const adapter = new GoogleMapAdapter({
+      container: {},
+      MapCtor,
+      MarkerCtor,
+      PolylineCtor,
+      PolygonCtor,
+      onRoofPolygonsChange: (polygons, reason) => events.push({ polygons, reason })
+    });
+    adapter.startRoofDrawing('rectangle');
+    listeners.click({ latLng: { lat: () => 41, lng: () => 29 } });
+    listeners.click({ latLng: { lat: () => 41.002, lng: () => 29.003 } });
+    assert.equal(events.at(-1).reason, 'complete');
+    assert.deepEqual(events.at(-1).polygons[0], [
+      { lat: 41, lng: 29 },
+      { lat: 41, lng: 29.003 },
+      { lat: 41.002, lng: 29.003 },
+      { lat: 41.002, lng: 29 }
+    ]);
   });
 });

@@ -5,6 +5,7 @@ import { createShareStateSnapshot, escapeHtml, sanitizeLocalState, sanitizeShare
 // ── F1 invariant: HTML/CSS/JS inline + CSP unsafe-inline ─────────────────
 const indexHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const vercelJson = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
+const redesignCss = await readFile(new URL('../css/redesign.css', import.meta.url), 'utf8');
 
 assert.doesNotMatch(indexHtml, /\son(click|change|input|submit|focus|blur|keydown|toggle|load|mouseover|mouseenter|mouseleave)\s*=/,
   'F1 invariant: index.html must not contain inline event handlers');
@@ -36,6 +37,9 @@ for (const f of jsFiles) {
 const appJs = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const heatmapJs = await readFile(new URL('../js/heatmap.js', import.meta.url), 'utf8');
 const googleProviderJs = await readFile(new URL('../js/google-maps-provider.js', import.meta.url), 'utf8');
+const mapProviderConfigJs = await readFile(new URL('../js/map-provider-config.js', import.meta.url), 'utf8');
+const buildStaticJs = await readFile(new URL('../scripts/build-static.mjs', import.meta.url), 'utf8');
+const runtimeConfigGeneratorJs = await readFile(new URL('../scripts/generate-runtime-config.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(appJs, /style\.setProperty\('--card-color'/,
   'CSP invariant: scenario cards must use CSS classes, not inline --card-color styles');
 assert.match(appJs, /function stripInlineSvgStyles\(svg = ''\)/,
@@ -56,6 +60,26 @@ assert.match(googleProviderJs, /timeoutMs = 5000/,
   'Google Maps provider must wait briefly before treating a missing Map constructor as fatal');
 assert.match(googleProviderJs, /currentGoogleObj\.maps\.importLibrary\('maps'\)/,
   'Google Maps provider must use importLibrary("maps") without adding Places or other libraries');
+assert.match(googleProviderJs, /importLibrary\('marker'\)/,
+  'Google Maps provider should load the marker library for AdvancedMarkerElement instead of default deprecated markers');
+assert.match(googleProviderJs, /GOOGLE_DARK_MAP_STYLES/,
+  'Google Maps provider must apply a local dark roadmap style');
+assert.match(googleProviderJs, /disableDefaultUI: true/,
+  'Google Maps native controls should be disabled to avoid collisions with custom drawing UI');
+assert.match(googleProviderJs, /AdvancedMarkerCtor/,
+  'Google Maps provider should prefer AdvancedMarkerElement when available');
+assert.match(googleProviderJs, /mapOptions\.mapId = this\.mapId/,
+  'Google Maps provider must initialize maps with mapId when configured');
+assert.match(googleProviderJs, /this\.mapId && typeof AdvancedMarkerCtor === 'function'/,
+  'AdvancedMarkerElement must only be used when a mapId is configured');
+assert.match(appJs, /getGoogleMapsMapId/,
+  'app.js must read Google Maps mapId from provider config');
+assert.match(mapProviderConfigJs, /VITE_GOOGLE_MAPS_MAP_ID/,
+  'map provider config must read VITE_GOOGLE_MAPS_MAP_ID');
+assert.match(buildStaticJs, /VITE_GOOGLE_MAPS_MAP_ID/,
+  'static build must write Google Maps mapId to runtime config when provided');
+assert.match(runtimeConfigGeneratorJs, /VITE_GOOGLE_MAPS_MAP_ID/,
+  'runtime config generator must support Google Maps mapId');
 assert.match(googleProviderJs, /importLibrary\("maps"\) transient failure/,
   'Transient importLibrary failures should be logged and retried instead of forcing immediate fallback');
 assert.match(appJs, /Harita sağlayıcısı step 2\/3'e girildiğinde lazy-load edilir/,
@@ -70,6 +94,14 @@ assert.doesNotMatch(appJs, /try \{ initMap\(\); \} catch/,
   'Map must not initialize during first page load');
 assert.doesNotMatch(indexHtml, /maps\.googleapis\.com\/maps\/api\/js/,
   'Google Maps script must be lazy-loaded by the provider, not loaded from index.html');
+assert.match(indexHtml, /Google harita çizim rehberi/,
+  'Step 3 guide must describe the current Google Maps drawing flow');
+assert.match(indexHtml, /Geri al: Son eklenen köşe noktasını kaldırın/,
+  'Step 3 guide must document the undo vertex action');
+assert.match(redesignCss, /\.roof-tool-legend \{\s*position: absolute;[\s\S]*left: 16px;/,
+  'Step 3 guide should occupy the top-left safe zone');
+assert.match(redesignCss, /\.roof-map-compass \{\s*position: absolute;[\s\S]*right: 16px;/,
+  'Step 3 compass should occupy the bottom-right safe zone');
 assert.doesNotMatch(googleProviderJs, /libraries=places/,
   'Google Maps provider must not request Places library');
 assert.doesNotMatch(googleProviderJs, /Geocoding|Directions|Routes|Solar API|places/i,
