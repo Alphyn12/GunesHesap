@@ -3,7 +3,9 @@ import { describe, it } from 'node:test';
 import {
   GoogleMapAdapter,
   buildGoogleMapsScriptUrl,
+  buildGoogleMapOptions,
   createCircleMarkerIcon,
+  DEFAULT_GOOGLE_MAP_TYPE_ID,
   GOOGLE_DARK_MAP_STYLES,
   getGhiMarkerColor,
   loadGoogleMaps,
@@ -253,7 +255,31 @@ describe('GoogleMapAdapter', () => {
     assert.match(createCircleMarkerIcon('#22C55E').url, /%2322C55E/);
   });
 
-  it('uses dark roadmap options and disables native Google controls that collide with custom tools', () => {
+  it('builds Google map options without local styles when mapId is present', () => {
+    const options = buildGoogleMapOptions({
+      center: { lat: 39, lng: 35 },
+      zoom: 7,
+      mapId: 'test-map-id',
+      mapTypeId: 'hybrid'
+    });
+    assert.equal(options.mapId, 'test-map-id');
+    assert.equal(options.mapTypeId, 'hybrid');
+    assert.equal(options.styles, undefined);
+    assert.equal(options.disableDefaultUI, true);
+  });
+
+  it('keeps local dark roadmap styles only for the no-mapId fallback', () => {
+    const options = buildGoogleMapOptions({
+      mapTypeId: 'roadmap',
+      mapId: '',
+      theme: 'dark'
+    });
+    assert.equal(options.mapId, undefined);
+    assert.equal(options.mapTypeId, 'roadmap');
+    assert.equal(options.styles, GOOGLE_DARK_MAP_STYLES);
+  });
+
+  it('uses hybrid by default and disables native Google controls that collide with custom tools', () => {
     let mapOptions = null;
     class MapCtor {
       constructor(_container, options) { mapOptions = options; this.zoom = options.zoom; this.type = options.mapTypeId; }
@@ -266,14 +292,15 @@ describe('GoogleMapAdapter', () => {
       getMapTypeId() { return this.type; }
     }
     const adapter = new GoogleMapAdapter({ container: {}, MapCtor, mapId: 'test-map-id' });
-    assert.equal(mapOptions.mapTypeId, 'roadmap');
+    assert.equal(DEFAULT_GOOGLE_MAP_TYPE_ID, 'hybrid');
+    assert.equal(mapOptions.mapTypeId, 'hybrid');
     assert.equal(mapOptions.mapId, 'test-map-id');
     assert.equal(mapOptions.disableDefaultUI, true);
     assert.equal(mapOptions.fullscreenControl, false);
     assert.equal(mapOptions.streetViewControl, false);
     assert.equal(mapOptions.mapTypeControl, false);
     assert.equal(mapOptions.zoomControl, false);
-    assert.equal(mapOptions.styles, GOOGLE_DARK_MAP_STYLES);
+    assert.equal(mapOptions.styles, undefined);
     adapter.setMapType('hybrid');
     assert.equal(adapter.getMapType(), 'hybrid');
     adapter.setMapType('roadmap');
@@ -361,6 +388,60 @@ describe('GoogleMapAdapter', () => {
     assert.equal(advancedUsed, false);
     assert.equal(legacyUsed, true);
     assert.ok(adapter.marker);
+    globalThis.document = previousDocument;
+  });
+
+  it('renders simplified roof drawing tools without an edit button', () => {
+    const previousDocument = globalThis.document;
+    class FakeElement {
+      constructor() {
+        this.children = [];
+        this.dataset = {};
+        this.className = '';
+        this.classList = { add() {}, remove() {}, toggle() {} };
+      }
+      set innerHTML(value) {
+        this._innerHTML = value;
+        this.children = [...value.matchAll(/data-google-roof-action="([^"]+)"/g)]
+          .map(match => {
+            const child = new FakeElement();
+            child.dataset.googleRoofAction = match[1];
+            child.disabled = false;
+            return child;
+          });
+      }
+      get innerHTML() { return this._innerHTML || ''; }
+      appendChild(child) { this.children.push(child); child.parent = this; }
+      addEventListener() {}
+      querySelector(selector) {
+        if (selector === '.google-roof-tools') return this.children.find(child => child.className === 'google-roof-tools') || null;
+        if (selector === '[data-google-roof-action]') return this.children.find(child => child.dataset.googleRoofAction) || null;
+        return null;
+      }
+      querySelectorAll(selector) {
+        if (selector === '[data-google-roof-action]') return this.children.filter(child => child.dataset.googleRoofAction);
+        return [];
+      }
+    }
+    globalThis.document = {
+      createElement() { return new FakeElement(); }
+    };
+    const container = new FakeElement();
+    class MapCtor {
+      constructor() { this.zoom = 6; }
+      addListener() {}
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'hybrid'; }
+    }
+    new GoogleMapAdapter({ container, MapCtor });
+    const tools = container.querySelector('.google-roof-tools');
+    const actions = tools.querySelectorAll('[data-google-roof-action]').map(button => button.dataset.googleRoofAction);
+    assert.deepEqual(actions, ['draw', 'rectangle', 'finish', 'undo', 'clear']);
+    assert.equal(actions.includes('edit'), false);
     globalThis.document = previousDocument;
   });
 

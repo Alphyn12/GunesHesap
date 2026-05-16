@@ -791,7 +791,7 @@ async function initGoogleMap() {
   window.map = map;
   window.marker = marker;
   window._mapProvider = 'google';
-  window._activeTileLayer = 'google-roadmap';
+  window._activeTileLayer = 'google-satellite';
   applyGoogleMapSuccessState(container);
   console.debug?.('[map-provider] Google map instance created');
   syncMapLayerButton();
@@ -3270,8 +3270,7 @@ function buildCompass() {
     path.setAttribute('stroke', dir.azimuth === 180 ? '#F59E0B' : '#52525B');
     path.setAttribute('stroke-width', '1');
     path.setAttribute('data-az', dir.azimuth);
-    path.style.cursor = 'pointer';
-    path.style.transition = 'fill 0.2s';
+    path.classList.add('compass-dir-segment');
     path.addEventListener('click', () => selectDirection(dir));
     path.addEventListener('mouseenter', () => { if (window.state.azimuth !== dir.azimuth) path.setAttribute('fill', 'rgba(245,158,11,0.15)'); });
     path.addEventListener('mouseleave', () => syncRoofOrientationUI());
@@ -3315,12 +3314,15 @@ function syncRoofOrientationUI({ azimuth, coeff, name } = {}) {
   if (dirCoeffEl) dirCoeffEl.textContent = safeCoeff.toFixed(2);
 
   const badge = document.querySelector('.optimal-badge');
-  if (badge) badge.style.display = activeDir.azimuth === 180 ? 'inline-flex' : 'none';
+  if (badge) badge.classList.toggle('is-hidden', activeDir.azimuth !== 180);
 
   const mapArrow = document.getElementById('roof-map-compass-arrow');
   const mapLabel = document.getElementById('roof-map-compass-label');
   const mapDegree = document.getElementById('roof-map-compass-degree');
-  if (mapArrow) mapArrow.style.transform = `rotate(${safeAzimuth}deg)`;
+  if (mapArrow) {
+    mapArrow.classList.remove(...COMPASS_DIRS.map(dir => `compass-az-${dir.azimuth}`));
+    mapArrow.classList.add(`compass-az-${activeDir.azimuth}`);
+  }
   if (mapLabel) mapLabel.textContent = `Panel yönü: ${safeName}`;
   if (mapDegree) mapDegree.textContent = `${Math.round(safeAzimuth)}°`;
 }
@@ -3336,13 +3338,13 @@ function selectDirection(dir) {
 function closeRoofToolLegend() {
   document.getElementById('roof-tool-legend')?.classList.add('is-hidden');
   const toggle = document.getElementById('roof-tool-legend-toggle');
-  if (toggle) toggle.style.display = 'inline-flex';
+  if (toggle) toggle.classList.remove('is-hidden');
 }
 
 function openRoofToolLegend() {
   document.getElementById('roof-tool-legend')?.classList.remove('is-hidden');
   const toggle = document.getElementById('roof-tool-legend-toggle');
-  if (toggle) toggle.style.display = 'none';
+  if (toggle) toggle.classList.add('is-hidden');
 }
 
 // ═══════════════════════════════════════════════════════════

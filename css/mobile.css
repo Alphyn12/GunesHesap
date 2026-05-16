@@ -854,20 +854,22 @@ textarea {
 
   .roof-tool-legend {
     top: 10px;
-    left: auto;
-    right: 10px;
+    left: 10px;
+    right: auto;
     width: min(320px, calc(100% - 20px));
     padding: 10px 12px;
   }
 
   .roof-tool-legend-toggle {
     top: 10px;
-    right: 10px;
+    left: 10px;
+    right: auto;
   }
 
   .roof-map-compass {
-    bottom: 10px;
-    left: 10px;
+    bottom: 72px;
+    right: 10px;
+    left: auto;
     grid-template-columns: 40px auto;
     padding: 8px 10px;
   }
@@ -1220,20 +1222,22 @@ textarea {
 
   .roof-tool-legend {
     top: 8px;
-    left: auto;
-    right: 8px;
+    left: 8px;
+    right: auto;
     width: min(300px, calc(100% - 16px));
     padding: 9px 10px;
   }
 
   .roof-tool-legend-toggle {
     top: 8px;
-    right: 8px;
+    left: 8px;
+    right: auto;
   }
 
   .roof-map-compass {
-    bottom: 8px;
-    left: 8px;
+    bottom: 76px;
+    right: 8px;
+    left: auto;
     max-width: calc(100% - 16px);
   }
 

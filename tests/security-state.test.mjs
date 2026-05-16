@@ -63,12 +63,18 @@ assert.match(googleProviderJs, /currentGoogleObj\.maps\.importLibrary\('maps'\)/
 assert.match(googleProviderJs, /importLibrary\('marker'\)/,
   'Google Maps provider should load the marker library for AdvancedMarkerElement instead of default deprecated markers');
 assert.match(googleProviderJs, /GOOGLE_DARK_MAP_STYLES/,
-  'Google Maps provider must apply a local dark roadmap style');
+  'Google Maps provider should keep a local dark roadmap fallback for no-mapId environments');
+assert.match(googleProviderJs, /function buildGoogleMapOptions/,
+  'Google Maps provider must centralize Google map option construction');
+assert.match(googleProviderJs, /if \(normalizedMapId\) \{\s*options\.mapId = normalizedMapId;\s*\} else if/s,
+  'Google Maps provider must avoid local styles when a mapId is configured');
+assert.match(googleProviderJs, /mapTypeId: normalizedType/,
+  'Google Maps provider must set the selected map type through centralized options');
 assert.match(googleProviderJs, /disableDefaultUI: true/,
   'Google Maps native controls should be disabled to avoid collisions with custom drawing UI');
 assert.match(googleProviderJs, /AdvancedMarkerCtor/,
   'Google Maps provider should prefer AdvancedMarkerElement when available');
-assert.match(googleProviderJs, /mapOptions\.mapId = this\.mapId/,
+assert.match(googleProviderJs, /mapId: this\.mapId/,
   'Google Maps provider must initialize maps with mapId when configured');
 assert.match(googleProviderJs, /this\.mapId && typeof AdvancedMarkerCtor === 'function'/,
   'AdvancedMarkerElement must only be used when a mapId is configured');
@@ -94,10 +100,12 @@ assert.doesNotMatch(appJs, /try \{ initMap\(\); \} catch/,
   'Map must not initialize during first page load');
 assert.doesNotMatch(indexHtml, /maps\.googleapis\.com\/maps\/api\/js/,
   'Google Maps script must be lazy-loaded by the provider, not loaded from index.html');
-assert.match(indexHtml, /Google harita çizim rehberi/,
+assert.match(indexHtml, /Kurulum alanını haritada çizin/,
   'Step 3 guide must describe the current Google Maps drawing flow');
-assert.match(indexHtml, /Geri al: Son eklenen köşe noktasını kaldırın/,
+assert.match(indexHtml, /Geri al: Yanlış eklenen son noktayı kaldırın/,
   'Step 3 guide must document the undo vertex action');
+assert.doesNotMatch(indexHtml, /drawGuideEdit|Düzenle: Turuncu noktaları/,
+  'Step 3 guide must not document the removed edit button');
 assert.match(redesignCss, /\.roof-tool-legend \{\s*position: absolute;[\s\S]*left: 16px;/,
   'Step 3 guide should occupy the top-left safe zone');
 assert.match(redesignCss, /\.roof-map-compass \{\s*position: absolute;[\s\S]*right: 16px;/,

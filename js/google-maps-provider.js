@@ -229,6 +229,40 @@ export function createAdvancedMarkerContent({ bucketClass = '', selected = false
   return root;
 }
 
+export const DEFAULT_GOOGLE_MAP_TYPE_ID = 'hybrid';
+
+export function buildGoogleMapOptions({
+  center = { lat: 39, lng: 35 },
+  zoom = 6,
+  mapId = '',
+  mapTypeId = DEFAULT_GOOGLE_MAP_TYPE_ID,
+  theme = 'dark'
+} = {}) {
+  const normalizedMapId = String(mapId || '').trim();
+  const normalizedType = mapTypeId === 'roadmap' ? 'roadmap' : 'hybrid';
+  const options = {
+    center,
+    zoom,
+    mapTypeId: normalizedType,
+    clickableIcons: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    mapTypeControl: false,
+    zoomControl: false,
+    rotateControl: false,
+    scaleControl: false,
+    cameraControl: false,
+    disableDefaultUI: true,
+    gestureHandling: 'greedy'
+  };
+  if (normalizedMapId) {
+    options.mapId = normalizedMapId;
+  } else if (theme === 'dark' && normalizedType === 'roadmap') {
+    options.styles = GOOGLE_DARK_MAP_STYLES;
+  }
+  return options;
+}
+
 export class GoogleMapAdapter {
   constructor({
     container,
@@ -267,23 +301,12 @@ export class GoogleMapAdapter {
     this.isRoofDrawing = false;
     this.isRoofComplete = false;
     this.selectedPosition = center;
-    const mapOptions = {
+    const mapOptions = buildGoogleMapOptions({
       center,
       zoom,
-      mapTypeId: 'roadmap',
-      styles: GOOGLE_DARK_MAP_STYLES,
-      clickableIcons: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      mapTypeControl: false,
-      zoomControl: false,
-      rotateControl: false,
-      scaleControl: false,
-      cameraControl: false,
-      disableDefaultUI: true,
-      gestureHandling: 'greedy'
-    };
-    if (this.mapId) mapOptions.mapId = this.mapId;
+      mapId: this.mapId,
+      mapTypeId: DEFAULT_GOOGLE_MAP_TYPE_ID
+    });
     this.map = new MapCtor(container, mapOptions);
     this.marker = this.createMarker({
       position: center,
@@ -390,7 +413,6 @@ export class GoogleMapAdapter {
       <button type="button" class="google-roof-tool-btn" data-google-roof-action="rectangle">Dikdörtgen</button>
       <button type="button" class="google-roof-tool-btn" data-google-roof-action="finish">Bitir</button>
       <button type="button" class="google-roof-tool-btn" data-google-roof-action="undo">Geri al</button>
-      <button type="button" class="google-roof-tool-btn" data-google-roof-action="edit">Düzenle</button>
       <button type="button" class="google-roof-tool-btn danger" data-google-roof-action="clear">Sil</button>
     `;
     tools.addEventListener('click', event => {
@@ -401,10 +423,10 @@ export class GoogleMapAdapter {
       if (action === 'rectangle') this.startRoofDrawing('rectangle');
       if (action === 'finish') this.finishRoofDrawing();
       if (action === 'undo') this.undoRoofVertex();
-      if (action === 'edit') this.enableRoofEditing();
       if (action === 'clear') this.clearRoofDrawing();
     });
     this.container.appendChild(tools);
+    this.updateRoofToolState();
   }
 
   startRoofDrawing(mode = 'polygon') {
@@ -420,6 +442,7 @@ export class GoogleMapAdapter {
     globalThis._drawingMode = true;
     this.container.classList?.add?.('google-roof-drawing-active');
     this.setDrawHintVisible(true);
+    this.updateRoofToolState();
   }
 
   addRoofVertex(latLng) {
@@ -432,6 +455,7 @@ export class GoogleMapAdapter {
     this.drawingPoints.push(point);
     this.addVertexMarker(point, this.drawingPoints.length - 1);
     this.renderRoofShape();
+    this.updateRoofToolState();
   }
 
   addRectangleVertex(point) {
@@ -439,6 +463,7 @@ export class GoogleMapAdapter {
       this.rectangleStart = point;
       this.drawingPoints = [point];
       this.addVertexMarker(point, 0);
+      this.updateRoofToolState();
       return;
     }
     const a = this.rectangleStart;
@@ -518,6 +543,7 @@ export class GoogleMapAdapter {
     }
     this.renderRoofShape();
     this.notifyRoofPolygons('complete');
+    this.updateRoofToolState();
   }
 
   enableRoofEditing() {
@@ -528,6 +554,7 @@ export class GoogleMapAdapter {
     this.container.classList?.remove?.('google-roof-drawing-active');
     this.setDrawHintVisible(false);
     this.renderRoofShape();
+    this.updateRoofToolState();
   }
 
   undoRoofVertex() {
@@ -538,6 +565,7 @@ export class GoogleMapAdapter {
     this.isRoofComplete = this.drawingPoints.length >= 3 && this.isRoofComplete;
     this.renderRoofShape();
     if (this.isRoofComplete) this.notifyRoofPolygons('edit');
+    this.updateRoofToolState();
   }
 
   clearRoofDrawing({ notify = true } = {}) {
@@ -554,6 +582,7 @@ export class GoogleMapAdapter {
     this.roofDraftLine = null;
     this.roofPolygon = null;
     if (notify) this.onRoofPolygonsChange?.([], 'clear');
+    this.updateRoofToolState();
   }
 
   loadRoofGeometry(summary) {
@@ -565,6 +594,7 @@ export class GoogleMapAdapter {
     this.drawingPoints.forEach((point, index) => this.addVertexMarker(point, index));
     this.isRoofComplete = this.drawingPoints.length >= 3;
     this.renderRoofShape();
+    this.updateRoofToolState();
   }
 
   notifyRoofPolygons(reason) {
@@ -575,6 +605,23 @@ export class GoogleMapAdapter {
   setDrawHintVisible(visible) {
     if (typeof document === 'undefined') return;
     document.getElementById('map-draw-hint')?.classList.toggle('is-visible', !!visible);
+  }
+
+  updateRoofToolState() {
+    const tools = this.container?.querySelector?.('.google-roof-tools');
+    if (!tools) return;
+    const hasPoints = this.drawingPoints.length > 0;
+    const canFinish = this.isRoofDrawing && this.drawingPoints.length >= 3;
+    const hasShape = hasPoints || !!this.roofPolygon;
+    tools.querySelectorAll?.('[data-google-roof-action]')?.forEach(button => {
+      const action = button.dataset.googleRoofAction;
+      const isActive = (action === 'draw' && this.isRoofDrawing && this.roofDrawMode === 'polygon')
+        || (action === 'rectangle' && this.isRoofDrawing && this.roofDrawMode === 'rectangle');
+      button.classList?.toggle?.('active', isActive);
+      button.disabled = (action === 'finish' && !canFinish)
+        || (action === 'undo' && !hasPoints)
+        || (action === 'clear' && !hasShape);
+    });
   }
 
   setView(latLng, zoom = this.map.getZoom()) {
