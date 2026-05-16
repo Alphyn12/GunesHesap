@@ -3,7 +3,8 @@ import { describe, it } from 'node:test';
 import {
   GoogleMapAdapter,
   buildGoogleMapsScriptUrl,
-  loadGoogleMaps
+  loadGoogleMaps,
+  resolveGoogleMapsClasses
 } from '../js/google-maps-provider.js';
 import {
   MAP_PROVIDER_CONFIG,
@@ -75,33 +76,87 @@ describe('Google Maps script loader', () => {
 describe('GoogleMapAdapter', () => {
   it('passes clicked lat/lon to the location update callback', () => {
     let clickHandler = null;
-    const maps = {
-      SymbolPath: { CIRCLE: 'circle' },
-      Map: class {
-        constructor() { this.zoom = 6; }
-        addListener(event, handler) { if (event === 'click') clickHandler = handler; }
-        setCenter(center) { this.center = center; }
-        setZoom(zoom) { this.zoom = zoom; }
-        getZoom() { return this.zoom; }
-        getCenter() { return this.center || { lat: 39, lng: 35 }; }
-        setMapTypeId(type) { this.type = type; }
-        getMapTypeId() { return this.type || 'roadmap'; }
-      },
-      Marker: class {
-        constructor(options) { this.options = options; this.position = options.position; }
-        addListener() {}
-        setPosition(position) { this.position = position; }
-        getPosition() { return { lat: () => this.position.lat, lng: () => this.position.lng }; }
-      },
-      event: { trigger() {} }
-    };
+    class MapCtor {
+      constructor() { this.zoom = 6; }
+      addListener(event, handler) { if (event === 'click') clickHandler = handler; }
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    class MarkerCtor {
+      constructor(options) { this.options = options; this.position = options.position; }
+      addListener() {}
+      setPosition(position) { this.position = position; }
+      getPosition() { return { lat: () => this.position.lat, lng: () => this.position.lng }; }
+    }
     let selected = null;
     new GoogleMapAdapter({
-      maps,
       container: {},
+      MapCtor,
+      MarkerCtor,
+      SymbolPath: { CIRCLE: 'circle' },
+      eventApi: { trigger() {} },
       onLocationSelect: (lat, lng, checkBounds) => { selected = { lat, lng, checkBounds }; }
     });
     clickHandler({ latLng: { lat: () => 39.95, lng: () => 32.85 } });
     assert.deepEqual(selected, { lat: 39.95, lng: 32.85, checkBounds: true });
+  });
+
+  it('creates a map with injected MapCtor and does not depend on maps.Map', () => {
+    let constructed = false;
+    class MapCtor {
+      constructor() { constructed = true; this.zoom = 6; }
+      addListener() {}
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    const adapter = new GoogleMapAdapter({ container: {}, MapCtor, MarkerCtor: undefined });
+    assert.equal(constructed, true);
+    assert.ok(adapter.map);
+    adapter.setMarkerPosition([40, 30]);
+    assert.deepEqual(adapter.selectedPosition, { lat: 40, lng: 30 });
+  });
+
+  it('resolves MapCtor from importLibrary("maps") when google.maps.Map is not ready', async () => {
+    class ImportedMapCtor {}
+    const resolved = await resolveGoogleMapsClasses({
+      maps: {
+        importLibrary(name) {
+          assert.equal(name, 'maps');
+          return Promise.resolve({ Map: ImportedMapCtor });
+        }
+      }
+    });
+    assert.equal(resolved.MapCtor, ImportedMapCtor);
+    assert.equal(resolved.MarkerCtor, null);
+  });
+
+  it('keeps MarkerCtor optional so missing markers do not block map init', () => {
+    class MapCtor {
+      constructor() { this.zoom = 6; }
+      addListener() {}
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    const adapter = new GoogleMapAdapter({
+      container: {},
+      MapCtor,
+      MarkerCtor: null,
+      cities: [{ name: 'Ankara', lat: 39.93, lon: 32.85, ghi: 1620 }]
+    });
+    assert.ok(adapter.map);
+    assert.equal(adapter.marker, null);
+    assert.deepEqual(adapter.cityMarkers, []);
   });
 });

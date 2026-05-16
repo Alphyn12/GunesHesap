@@ -73,20 +73,53 @@ export function loadGoogleMaps(apiKey, doc = globalThis.document) {
   return googleMapsLoadPromise;
 }
 
+export async function resolveGoogleMapsClasses(googleObj = globalThis.google) {
+  if (!googleObj?.maps) throw new Error('google-maps-namespace-unavailable');
+
+  let MapCtor = googleObj.maps.Map;
+  if (typeof MapCtor !== 'function' && typeof googleObj.maps.importLibrary === 'function') {
+    const mapsLibrary = await googleObj.maps.importLibrary('maps');
+    MapCtor = mapsLibrary?.Map;
+  }
+  if (typeof MapCtor !== 'function') throw new Error('google-maps-map-constructor-unavailable');
+
+  return {
+    googleObj,
+    MapCtor,
+    MarkerCtor: typeof googleObj.maps.Marker === 'function' ? googleObj.maps.Marker : null,
+    SymbolPath: googleObj.maps.SymbolPath || null,
+    eventApi: googleObj.maps.event || null
+  };
+}
+
 function normalizeLatLng(value) {
   if (Array.isArray(value)) return { lat: Number(value[0]), lng: Number(value[1]) };
   return { lat: Number(value?.lat), lng: Number(value?.lng ?? value?.lon) };
 }
 
 export class GoogleMapAdapter {
-  constructor({ maps, container, center = { lat: 39, lng: 35 }, zoom = 6, onLocationSelect, cities = [], getGhiColor }) {
-    if (!maps) throw new Error('google-maps-unavailable');
+  constructor({
+    container,
+    MapCtor,
+    MarkerCtor = null,
+    SymbolPath = null,
+    eventApi = null,
+    center = { lat: 39, lng: 35 },
+    zoom = 6,
+    onLocationSelect,
+    cities = [],
+    getGhiColor
+  }) {
     if (!container) throw new Error('map-container-missing');
-    this.maps = maps;
+    if (typeof MapCtor !== 'function') throw new Error('google-maps-map-constructor-unavailable');
     this.container = container;
+    this.MarkerCtor = typeof MarkerCtor === 'function' ? MarkerCtor : null;
+    this.SymbolPath = SymbolPath;
+    this.eventApi = eventApi;
     this.onLocationSelect = onLocationSelect;
     this.cityMarkers = [];
-    this.map = new maps.Map(container, {
+    this.selectedPosition = center;
+    this.map = new MapCtor(container, {
       center,
       zoom,
       mapTypeId: 'roadmap',
@@ -95,16 +128,15 @@ export class GoogleMapAdapter {
       fullscreenControl: true,
       mapTypeControl: false
     });
-    this.marker = new maps.Marker({
-      map: this.map,
+    this.marker = this.createMarker({
       position: center,
       draggable: true,
-      title: 'Seçili konum'
-    });
-    this.marker.addListener('dragend', event => {
-      const latLng = event.latLng;
-      if (!latLng) return;
-      this.onLocationSelect?.(latLng.lat(), latLng.lng(), true);
+      title: 'Seçili konum',
+      onDragEnd: event => {
+        const latLng = event.latLng;
+        if (!latLng) return;
+        this.onLocationSelect?.(latLng.lat(), latLng.lng(), true);
+      }
     });
     this.map.addListener('click', event => {
       if (globalThis._drawingMode || globalThis._glarePickMode) return;
@@ -112,24 +144,44 @@ export class GoogleMapAdapter {
       if (!latLng) return;
       this.onLocationSelect?.(latLng.lat(), latLng.lng(), true);
     });
+    if (!this.MarkerCtor) return;
     cities.forEach(city => {
       const color = typeof getGhiColor === 'function' ? getGhiColor(city.ghi) : '#F59E0B';
-      const marker = new maps.Marker({
-        map: this.map,
+      const icon = this.SymbolPath?.CIRCLE ? {
+        path: this.SymbolPath.CIRCLE,
+        scale: 5,
+        fillColor: color,
+        fillOpacity: 0.78,
+        strokeColor: '#ffffff',
+        strokeWeight: 1
+      } : undefined;
+      const marker = this.createMarker({
         position: { lat: city.lat, lng: city.lon },
         title: `${city.name} - GHI: ${city.ghi} kWh/m2/yil`,
-        icon: {
-          path: maps.SymbolPath.CIRCLE,
-          scale: 5,
-          fillColor: color,
-          fillOpacity: 0.78,
-          strokeColor: '#ffffff',
-          strokeWeight: 1
-        },
+        icon,
         clickable: false
       });
-      this.cityMarkers.push(marker);
+      if (marker) this.cityMarkers.push(marker);
     });
+  }
+
+  createMarker({ onDragEnd, ...options }) {
+    if (!this.MarkerCtor) return null;
+    try {
+      const marker = new this.MarkerCtor({ map: this.map, ...options });
+      if (typeof onDragEnd === 'function' && marker?.addListener) marker.addListener('dragend', onDragEnd);
+      return marker;
+    } catch (err) {
+      globalThis.console?.warn?.('[map-provider] Google marker unavailable:', err);
+      return null;
+    }
+  }
+
+  setMarkerPosition(position) {
+    const next = normalizeLatLng(position);
+    if (!Number.isFinite(next.lat) || !Number.isFinite(next.lng)) return;
+    this.selectedPosition = next;
+    this.marker?.setPosition?.(next);
   }
 
   setView(latLng, zoom = this.map.getZoom()) {
@@ -141,7 +193,7 @@ export class GoogleMapAdapter {
 
   invalidateSize() {
     const center = this.map.getCenter();
-    this.maps.event.trigger(this.map, 'resize');
+    this.eventApi?.trigger?.(this.map, 'resize');
     if (center) this.map.setCenter(center);
   }
 
@@ -157,13 +209,11 @@ export class GoogleMapAdapter {
 export function createGoogleMarkerFacade(adapter) {
   return {
     setLatLng(latLng) {
-      const next = normalizeLatLng(latLng);
-      if (!Number.isFinite(next.lat) || !Number.isFinite(next.lng)) return;
-      adapter.marker.setPosition(next);
+      adapter.setMarkerPosition(latLng);
     },
     getLatLng() {
-      const position = adapter.marker.getPosition();
-      return position ? { lat: position.lat(), lng: position.lng() } : null;
+      const position = adapter.marker?.getPosition?.();
+      return position ? { lat: position.lat(), lng: position.lng() } : adapter.selectedPosition || null;
     }
   };
 }

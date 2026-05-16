@@ -60,7 +60,7 @@ import { buildHourlyProfileEvidence, validateHourlyProfile8760 } from './consump
 import { initStorageCrypto, isEncryptionAvailable } from './storage-crypto.js';
 import { preloadEncryptedState } from './storage.js';
 import { getDefaultMapProvider, getGoogleMapsApiKey, MAP_PROVIDER_CONFIG } from './map-provider-config.js';
-import { GoogleMapAdapter, createGoogleMarkerFacade, loadGoogleMaps } from './google-maps-provider.js';
+import { GoogleMapAdapter, createGoogleMarkerFacade, loadGoogleMaps, resolveGoogleMapsClasses } from './google-maps-provider.js';
 import {
   DEFAULT_COST_PROFILE,
   DEFAULT_FINANCIAL_PROFILE,
@@ -748,6 +748,7 @@ async function initGoogleMap() {
   console.debug?.('[map-provider] loading Google Maps script');
   const maps = await loadGoogleMaps(apiKey);
   if (!maps) throw new Error('google-maps-unavailable');
+  const { MapCtor, MarkerCtor, SymbolPath, eventApi } = await resolveGoogleMapsClasses(window.google);
   console.debug?.('[map-provider] Google script loaded');
   console.debug?.('[map-provider] Google map container found');
 
@@ -757,8 +758,11 @@ async function initGoogleMap() {
   const zoom = window.state?.lat && window.state?.lon ? 9 : 6;
   const safeGetGhiColor = typeof getGHIColor === 'function' ? getGHIColor : fallbackGHIColor;
   const adapter = new GoogleMapAdapter({
-    maps,
     container,
+    MapCtor,
+    MarkerCtor,
+    SymbolPath,
+    eventApi,
     center,
     zoom,
     cities: TURKISH_CITIES,
