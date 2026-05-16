@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 import {
   GoogleMapAdapter,
   buildGoogleMapsScriptUrl,
+  createCircleMarkerIcon,
+  getGhiMarkerColor,
   loadGoogleMaps,
   resolveGoogleMapsClasses,
   waitForGoogleMapConstructor
@@ -203,5 +205,86 @@ describe('GoogleMapAdapter', () => {
     assert.ok(adapter.map);
     assert.equal(adapter.marker, null);
     assert.deepEqual(adapter.cityMarkers, []);
+  });
+
+  it('renders city GHI markers as custom circular data-svg icons instead of default pins', () => {
+    const markerOptions = [];
+    class MapCtor {
+      constructor() { this.zoom = 6; }
+      addListener() {}
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    class MarkerCtor {
+      constructor(options) { markerOptions.push(options); this.position = options.position; }
+      addListener() {}
+      setPosition(position) { this.position = position; }
+      getPosition() { return { lat: () => this.position.lat, lng: () => this.position.lng }; }
+    }
+    new GoogleMapAdapter({
+      container: {},
+      MapCtor,
+      MarkerCtor,
+      cities: [{ name: 'Tekirdag', lat: 40.98, lon: 27.51, ghi: 1490 }]
+    });
+    const cityMarker = markerOptions.find(options => options.title?.includes('Tekirdag'));
+    assert.ok(cityMarker?.icon?.url?.startsWith('data:image/svg+xml'), 'city marker must use custom SVG circle icon');
+    assert.match(cityMarker.icon.url, /circle/);
+    assert.notEqual(cityMarker.icon, undefined);
+    assert.equal(getGhiMarkerColor(1490), '#22C55E');
+    assert.match(createCircleMarkerIcon('#22C55E').url, /%2322C55E/);
+  });
+
+  it('creates, completes, edits, and clears Google roof polygons', () => {
+    const listeners = {};
+    class MapCtor {
+      constructor() { this.zoom = 6; }
+      addListener(event, handler) { listeners[event] = handler; }
+      setCenter(center) { this.center = center; }
+      setZoom(zoom) { this.zoom = zoom; }
+      getZoom() { return this.zoom; }
+      getCenter() { return this.center || { lat: 39, lng: 35 }; }
+      setMapTypeId(type) { this.type = type; }
+      getMapTypeId() { return this.type || 'roadmap'; }
+    }
+    class MarkerCtor {
+      constructor(options) { this.options = options; this.position = options.position; }
+      addListener(event, handler) { this.dragHandler = handler; }
+      setPosition(position) { this.position = position; }
+      setMap(map) { this.map = map; }
+      getPosition() { return { lat: () => this.position.lat, lng: () => this.position.lng }; }
+    }
+    class PolylineCtor {
+      constructor(options) { this.options = options; }
+      setMap(map) { this.map = map; }
+    }
+    class PolygonCtor {
+      constructor(options) { this.options = options; }
+      setMap(map) { this.map = map; }
+    }
+    const events = [];
+    const adapter = new GoogleMapAdapter({
+      container: {},
+      MapCtor,
+      MarkerCtor,
+      PolylineCtor,
+      PolygonCtor,
+      onRoofPolygonsChange: (polygons, reason) => events.push({ polygons, reason })
+    });
+    adapter.startRoofDrawing();
+    listeners.click({ latLng: { lat: () => 41, lng: () => 29 } });
+    listeners.click({ latLng: { lat: () => 41, lng: () => 29.001 } });
+    listeners.click({ latLng: { lat: () => 41.001, lng: () => 29.001 } });
+    adapter.finishRoofDrawing();
+    assert.equal(events.at(-1).reason, 'complete');
+    assert.equal(events.at(-1).polygons[0].length, 3);
+    adapter.vertexMarkers[0].dragHandler({ latLng: { lat: () => 41.0005, lng: () => 29.0005 } });
+    assert.equal(events.at(-1).reason, 'edit');
+    adapter.clearRoofDrawing();
+    assert.deepEqual(events.at(-1), { polygons: [], reason: 'clear' });
   });
 });

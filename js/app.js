@@ -37,7 +37,7 @@ import { openQuoteModal, closeQuoteModal, openLegalModal, closeLegalModal, submi
 import { saveCurrentCalculation, openDashboard, closeDashboard, updateDashboard, compareDashboardSelected, deleteSavedRecord, clearAllSaved } from './dashboard.js';
 import { showHeatmapCard, toggleHeatmapAnimation, setHeatmapMonth } from './heatmap.js';
 import { i18n, switchLanguage } from './i18n.js';
-import { initRoofDrawing } from './roof-geometry.js';
+import { initRoofDrawing, syncRoofPolygonsToState } from './roof-geometry.js';
 import { toggleOSMShadow, refreshOSMShadowAnalysis } from './osm-shadow.js';
 import { initExchangeRateService, refreshExchangeRate, setManualUsdTryRate, convertTry } from './exchange-rate.js';
 import { appendAuditEntry } from './audit-log.js';
@@ -60,7 +60,7 @@ import { buildHourlyProfileEvidence, validateHourlyProfile8760 } from './consump
 import { initStorageCrypto, isEncryptionAvailable } from './storage-crypto.js';
 import { preloadEncryptedState } from './storage.js';
 import { getDefaultMapProvider, getGoogleMapsApiKey, MAP_PROVIDER_CONFIG } from './map-provider-config.js';
-import { GoogleMapAdapter, createGoogleMarkerFacade, loadGoogleMaps, resolveGoogleMapsClasses } from './google-maps-provider.js';
+import { GoogleMapAdapter, createGoogleMarkerFacade, getGhiMarkerColor, loadGoogleMaps, resolveGoogleMapsClasses } from './google-maps-provider.js';
 import {
   DEFAULT_COST_PROFILE,
   DEFAULT_FINANCIAL_PROFILE,
@@ -748,7 +748,7 @@ async function initGoogleMap() {
   console.debug?.('[map-provider] loading Google Maps script');
   const maps = await loadGoogleMaps(apiKey);
   if (!maps) throw new Error('google-maps-unavailable');
-  const { MapCtor, MarkerCtor, SymbolPath, eventApi } = await resolveGoogleMapsClasses(window.google);
+  const { MapCtor, MarkerCtor, PolygonCtor, PolylineCtor, SymbolPath, eventApi } = await resolveGoogleMapsClasses(window.google);
   console.debug?.('[map-provider] Google script loaded');
   console.debug?.('[map-provider] Google map container found');
 
@@ -761,12 +761,24 @@ async function initGoogleMap() {
     container,
     MapCtor,
     MarkerCtor,
+    PolygonCtor,
+    PolylineCtor,
     SymbolPath,
     eventApi,
     center,
     zoom,
     cities: TURKISH_CITIES,
     getGhiColor: safeGetGhiColor,
+    onRoofPolygonsChange: (polygons, reason) => {
+      const summary = syncRoofPolygonsToState(polygons);
+      if (summary && reason === 'complete') {
+        showToast(`Kurulum alanı çizildi: ${summary.areaM2.toFixed(1)} m² · ${summary.azimuthName} (${Math.round(summary.azimuth)}°)`, 'success');
+      } else if (summary && reason === 'edit') {
+        showToast('Kurulum alanı düzenlendi, alan güncellendi.', 'info');
+      } else if (!summary && reason === 'clear') {
+        showToast('Kurulum alanı çizimleri temizlendi.', 'info');
+      }
+    },
     onLocationSelect: (lat, lng, checkBounds) => selectLocationFromLatLon(lat, lng, checkBounds)
   });
 
@@ -781,6 +793,7 @@ async function initGoogleMap() {
   console.debug?.('[map-provider] Google map instance created');
   syncMapLayerButton();
   if (window.state?.lat && window.state?.lon) marker.setLatLng([window.state.lat, window.state.lon]);
+  if (window.state?.roofGeometry) adapter.loadRoofGeometry(window.state.roofGeometry);
   setTimeout(() => map.invalidateSize(), 100);
   setTimeout(() => map.invalidateSize(), 600);
   return adapter;
@@ -1015,12 +1028,7 @@ function syncMapLayerButton() {
 window.syncMapLayerButton = syncMapLayerButton;
 
 function getGHIColor(ghi) {
-  if (ghi < 1300) return '#6B7280';
-  if (ghi < 1450) return '#3B82F6';
-  if (ghi < 1600) return '#22C55E';
-  if (ghi < 1700) return '#EAB308';
-  if (ghi < 1800) return '#F97316';
-  return '#EF4444';
+  return getGhiMarkerColor(ghi);
 }
 
 function fallbackGHIColor(ghi) {
@@ -3942,7 +3950,7 @@ function ensureMapForStep(n) {
     if (n === 3 && window._mapProvider === 'google') {
       const out = document.getElementById('roof-geometry-summary');
       if (out && !window.state?.roofGeometry) {
-        out.textContent = 'Google Maps modunda koordinat seçimi aktiftir. Detaylı çatı poligonu için alanı manuel girin veya basit harita/fallback modunu kullanın.';
+        out.textContent = 'Poligon aracıyla kurulum alanı sınırlarını çizin. Bitir düğmesi veya çift tık alanı hesaplar.';
       }
     }
   }).catch(err => {
@@ -5041,6 +5049,14 @@ window.useGeolocation = useGeolocation;
 window.applyManualCoordinates = applyManualCoordinates;
 window.isInTurkey = isInTurkey;
 window.clearRoofDrawing = function() {
+  if (window._mapProvider === 'google' && window._googleMapAdapter?.clearRoofDrawing) {
+    window._googleMapAdapter.clearRoofDrawing();
+    const roofAreaInput = document.getElementById('roof-area');
+    if (roofAreaInput) roofAreaInput.value = '';
+    const startHint = document.getElementById('roof-draw-start-hint');
+    if (startHint) startHint.classList.remove('is-hidden');
+    return;
+  }
   if (window.roofDrawnItems) {
     window.roofDrawnItems.clearLayers();
     if (window.syncRoofLayers) window.syncRoofLayers(window.roofDrawnItems);

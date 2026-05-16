@@ -225,6 +225,28 @@ function updateUiAndState(summary) {
   persist(summary);
 }
 
+export function syncRoofPolygonsToState(polygons) {
+  const summary = summarizeRoofGeometry(polygons);
+  if (!summary.features.length) {
+    window.state.roofGeometry = null;
+    window.state.roofArea = 0;
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    const out = document.getElementById('roof-geometry-summary');
+    if (out) out.textContent = 'Haritada bir veya daha fazla kurulum alanı poligonu çizin.';
+    const roofArea = document.getElementById('roof-area');
+    if (roofArea) roofArea.value = '';
+    const badge = document.getElementById('roof-area-badge');
+    if (badge) badge.style.display = 'none';
+    const clearBtn = document.getElementById('clear-roof-btn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    window.updatePanelPreview?.();
+    return null;
+  }
+  updateUiAndState(summary);
+  window.refreshOSMShadowAnalysis?.();
+  return summary;
+}
+
 export function initRoofDrawing(map) {
   const out = document.getElementById('roof-geometry-summary');
   if (!map || !window.L) return;
@@ -378,26 +400,12 @@ export function syncRoofLayers(drawn) {
     const points = layerToPoints(layer);
     if (points.length >= 3) polygons.push(points);
   });
-  const summary = summarizeRoofGeometry(polygons);
-  if (!summary.features.length) {
-    window.state.roofGeometry = null;
-    window.state.roofArea = 0;
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-    const out = document.getElementById('roof-geometry-summary');
-    if (out) out.textContent = 'Haritada bir veya daha fazla kurulum alanı poligonu çizin.';
-    const badge = document.getElementById('roof-area-badge');
-    if (badge) badge.style.display = 'none';
-    const clearBtn = document.getElementById('clear-roof-btn');
-    if (clearBtn) clearBtn.style.display = 'none';
-    return null;
-  }
-  updateUiAndState(summary);
-  window.refreshOSMShadowAnalysis?.();
-  return summary;
+  return syncRoofPolygonsToState(polygons);
 }
 
 if (typeof window !== 'undefined') {
   window.initRoofDrawing = initRoofDrawing;
   window.syncRoofLayers = syncRoofLayers;
+  window.syncRoofPolygonsToState = syncRoofPolygonsToState;
   window.roofGeometryMath = { calculatePolygonAreaM2, calculateCentroid, estimateDominantAzimuth };
 }

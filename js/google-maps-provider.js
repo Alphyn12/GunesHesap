@@ -102,7 +102,7 @@ export async function waitForGoogleMapConstructor({
       if (!importLibraryPromise) {
         importLibraryPromise = Promise.resolve(currentGoogleObj.maps.importLibrary('maps'))
           .catch(err => {
-            globalThis.console?.debug?.('[map-provider] importLibrary("maps") transient failure:', err);
+            globalThis.console?.debug?.('[map-provider] importLibrary("maps") transient failure:', String(err?.message || err));
             return null;
           })
           .finally(() => { importLibraryPromise = null; });
@@ -132,6 +132,8 @@ export async function resolveGoogleMapsClasses(googleObj = globalThis.google, op
     googleObj: resolvedGoogleObj,
     MapCtor,
     MarkerCtor: typeof resolvedGoogleObj.maps.Marker === 'function' ? resolvedGoogleObj.maps.Marker : null,
+    PolygonCtor: typeof resolvedGoogleObj.maps.Polygon === 'function' ? resolvedGoogleObj.maps.Polygon : null,
+    PolylineCtor: typeof resolvedGoogleObj.maps.Polyline === 'function' ? resolvedGoogleObj.maps.Polyline : null,
     SymbolPath: resolvedGoogleObj.maps.SymbolPath || null,
     eventApi: resolvedGoogleObj.maps.event || null
   };
@@ -142,16 +144,55 @@ function normalizeLatLng(value) {
   return { lat: Number(value?.lat), lng: Number(value?.lng ?? value?.lon) };
 }
 
+export const GHI_MARKER_COLORS = Object.freeze({
+  lt1300: '#6B7280',
+  gte1450: '#3B82F6',
+  gte1600: '#22C55E',
+  gte1700: '#EAB308',
+  gte1800: '#F97316',
+  gt1800: '#EF4444'
+});
+
+export function getGhiMarkerColor(ghi) {
+  const value = Number(ghi);
+  if (!Number.isFinite(value)) return GHI_MARKER_COLORS.gte1700;
+  if (value < 1300) return GHI_MARKER_COLORS.lt1300;
+  if (value < 1450) return GHI_MARKER_COLORS.gte1450;
+  if (value < 1600) return GHI_MARKER_COLORS.gte1600;
+  if (value < 1700) return GHI_MARKER_COLORS.gte1700;
+  if (value < 1800) return GHI_MARKER_COLORS.gte1800;
+  return GHI_MARKER_COLORS.gt1800;
+}
+
+function svgDataUrl(svg) {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+export function createCircleMarkerIcon(fillColor, { size = 16, strokeColor = '#F8FAFC', strokeWidth = 3, glow = false } = {}) {
+  const radius = Math.max(2, (size - strokeWidth * 2) / 2);
+  const center = size / 2;
+  const shadow = glow ? `<circle cx="${center}" cy="${center}" r="${Math.max(radius + 3, radius)}" fill="${fillColor}" opacity="0.22"/>` : '';
+  return {
+    url: svgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      ${shadow}
+      <circle cx="${center}" cy="${center}" r="${radius}" fill="${fillColor}" fill-opacity="0.96" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>
+    </svg>`)
+  };
+}
+
 export class GoogleMapAdapter {
   constructor({
     container,
     MapCtor,
     MarkerCtor = null,
+    PolygonCtor = null,
+    PolylineCtor = null,
     SymbolPath = null,
     eventApi = null,
     center = { lat: 39, lng: 35 },
     zoom = 6,
     onLocationSelect,
+    onRoofPolygonsChange,
     cities = [],
     getGhiColor
   }) {
@@ -159,10 +200,17 @@ export class GoogleMapAdapter {
     if (typeof MapCtor !== 'function') throw new Error('google-maps-map-constructor-unavailable');
     this.container = container;
     this.MarkerCtor = typeof MarkerCtor === 'function' ? MarkerCtor : null;
+    this.PolygonCtor = typeof PolygonCtor === 'function' ? PolygonCtor : null;
+    this.PolylineCtor = typeof PolylineCtor === 'function' ? PolylineCtor : null;
     this.SymbolPath = SymbolPath;
     this.eventApi = eventApi;
     this.onLocationSelect = onLocationSelect;
+    this.onRoofPolygonsChange = onRoofPolygonsChange;
     this.cityMarkers = [];
+    this.vertexMarkers = [];
+    this.drawingPoints = [];
+    this.isRoofDrawing = false;
+    this.isRoofComplete = false;
     this.selectedPosition = center;
     this.map = new MapCtor(container, {
       center,
@@ -177,6 +225,7 @@ export class GoogleMapAdapter {
       position: center,
       draggable: true,
       title: 'Seçili konum',
+      icon: createCircleMarkerIcon('#F59E0B', { size: 20, strokeColor: '#FFFFFF', strokeWidth: 4, glow: true }),
       onDragEnd: event => {
         const latLng = event.latLng;
         if (!latLng) return;
@@ -184,30 +233,31 @@ export class GoogleMapAdapter {
       }
     });
     this.map.addListener('click', event => {
-      if (globalThis._drawingMode || globalThis._glarePickMode) return;
       const latLng = event.latLng;
       if (!latLng) return;
+      if (this.isRoofDrawing) {
+        this.addRoofVertex({ lat: latLng.lat(), lng: latLng.lng() });
+        return;
+      }
+      if (globalThis._drawingMode || globalThis._glarePickMode) return;
       this.onLocationSelect?.(latLng.lat(), latLng.lng(), true);
     });
-    if (!this.MarkerCtor) return;
-    cities.forEach(city => {
-      const color = typeof getGhiColor === 'function' ? getGhiColor(city.ghi) : '#F59E0B';
-      const icon = this.SymbolPath?.CIRCLE ? {
-        path: this.SymbolPath.CIRCLE,
-        scale: 5,
-        fillColor: color,
-        fillOpacity: 0.78,
-        strokeColor: '#ffffff',
-        strokeWeight: 1
-      } : undefined;
-      const marker = this.createMarker({
-        position: { lat: city.lat, lng: city.lon },
-        title: `${city.name} - GHI: ${city.ghi} kWh/m2/yil`,
-        icon,
-        clickable: false
-      });
-      if (marker) this.cityMarkers.push(marker);
+    this.map.addListener('dblclick', () => {
+      if (this.isRoofDrawing) this.finishRoofDrawing();
     });
+    if (this.MarkerCtor) {
+      cities.forEach(city => {
+        const color = typeof getGhiColor === 'function' ? getGhiColor(city.ghi) : getGhiMarkerColor(city.ghi);
+        const marker = this.createMarker({
+          position: { lat: city.lat, lng: city.lon },
+          title: `${city.name} - GHI: ${city.ghi} kWh/m2/yil`,
+          icon: createCircleMarkerIcon(color, { size: 15, strokeColor: '#F8FAFC', strokeWidth: 3 }),
+          clickable: false
+        });
+        if (marker) this.cityMarkers.push(marker);
+      });
+    }
+    this.installRoofDrawingControls();
   }
 
   createMarker({ onDragEnd, ...options }) {
@@ -227,6 +277,169 @@ export class GoogleMapAdapter {
     if (!Number.isFinite(next.lat) || !Number.isFinite(next.lng)) return;
     this.selectedPosition = next;
     this.marker?.setPosition?.(next);
+  }
+
+  installRoofDrawingControls() {
+    if (!this.container?.querySelector || !this.container?.appendChild || typeof document === 'undefined') return;
+    if (this.container.querySelector('.google-roof-tools')) return;
+    const tools = document.createElement('div');
+    tools.className = 'google-roof-tools';
+    tools.innerHTML = `
+      <button type="button" class="google-roof-tool-btn" data-google-roof-action="draw">Poligon</button>
+      <button type="button" class="google-roof-tool-btn" data-google-roof-action="finish">Bitir</button>
+      <button type="button" class="google-roof-tool-btn" data-google-roof-action="undo">Geri al</button>
+      <button type="button" class="google-roof-tool-btn" data-google-roof-action="edit">Düzenle</button>
+      <button type="button" class="google-roof-tool-btn danger" data-google-roof-action="clear">Sil</button>
+    `;
+    tools.addEventListener('click', event => {
+      const button = event.target.closest('[data-google-roof-action]');
+      if (!button) return;
+      const action = button.dataset.googleRoofAction;
+      if (action === 'draw') this.startRoofDrawing();
+      if (action === 'finish') this.finishRoofDrawing();
+      if (action === 'undo') this.undoRoofVertex();
+      if (action === 'edit') this.enableRoofEditing();
+      if (action === 'clear') this.clearRoofDrawing();
+    });
+    this.container.appendChild(tools);
+  }
+
+  startRoofDrawing() {
+    if (!this.PolygonCtor || !this.PolylineCtor) {
+      globalThis.console?.warn?.('[map-provider] Google polygon drawing unavailable');
+      return;
+    }
+    this.clearRoofDrawing({ notify: false });
+    this.isRoofDrawing = true;
+    this.isRoofComplete = false;
+    globalThis._drawingMode = true;
+    this.container.classList?.add?.('google-roof-drawing-active');
+    this.setDrawHintVisible(true);
+  }
+
+  addRoofVertex(latLng) {
+    const point = normalizeLatLng(latLng);
+    if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng)) return;
+    this.drawingPoints.push(point);
+    this.addVertexMarker(point, this.drawingPoints.length - 1);
+    this.renderRoofShape();
+  }
+
+  addVertexMarker(point, index) {
+    if (!this.MarkerCtor) return;
+    const marker = this.createMarker({
+      position: point,
+      draggable: true,
+      title: `Poligon noktası ${index + 1}`,
+      icon: createCircleMarkerIcon('#F59E0B', { size: 18, strokeColor: '#FFFFFF', strokeWidth: 4, glow: true }),
+      onDragEnd: event => {
+        const latLng = event.latLng;
+        if (!latLng) return;
+        this.drawingPoints[index] = { lat: latLng.lat(), lng: latLng.lng() };
+        this.renderRoofShape();
+        if (this.isRoofComplete) this.notifyRoofPolygons('edit');
+      }
+    });
+    if (marker) this.vertexMarkers.push(marker);
+  }
+
+  renderRoofShape() {
+    if (!this.PolygonCtor || !this.PolylineCtor) return;
+    if (this.roofDraftLine) this.roofDraftLine.setMap(null);
+    if (this.roofPolygon) this.roofPolygon.setMap(null);
+    if (this.drawingPoints.length >= 2 && !this.isRoofComplete) {
+      this.roofDraftLine = new this.PolylineCtor({
+        map: this.map,
+        path: this.drawingPoints,
+        strokeColor: '#F59E0B',
+        strokeOpacity: 0.95,
+        strokeWeight: 3
+      });
+    }
+    if (this.drawingPoints.length >= 3) {
+      this.roofPolygon = new this.PolygonCtor({
+        map: this.map,
+        paths: this.drawingPoints,
+        strokeColor: '#F59E0B',
+        strokeOpacity: 0.95,
+        strokeWeight: 3,
+        fillColor: '#F59E0B',
+        fillOpacity: 0.18,
+        clickable: false
+      });
+    }
+  }
+
+  finishRoofDrawing() {
+    if (this.drawingPoints.length < 3) return;
+    this.isRoofDrawing = false;
+    this.isRoofComplete = true;
+    globalThis._drawingMode = false;
+    this.container.classList?.remove?.('google-roof-drawing-active');
+    this.setDrawHintVisible(false);
+    if (this.roofDraftLine) {
+      this.roofDraftLine.setMap(null);
+      this.roofDraftLine = null;
+    }
+    this.renderRoofShape();
+    this.notifyRoofPolygons('complete');
+  }
+
+  enableRoofEditing() {
+    if (!this.drawingPoints.length) return;
+    this.isRoofDrawing = false;
+    this.isRoofComplete = this.drawingPoints.length >= 3;
+    globalThis._drawingMode = false;
+    this.container.classList?.remove?.('google-roof-drawing-active');
+    this.setDrawHintVisible(false);
+    this.renderRoofShape();
+  }
+
+  undoRoofVertex() {
+    if (!this.drawingPoints.length) return;
+    this.drawingPoints.pop();
+    const marker = this.vertexMarkers.pop();
+    marker?.setMap?.(null);
+    this.isRoofComplete = this.drawingPoints.length >= 3 && this.isRoofComplete;
+    this.renderRoofShape();
+    if (this.isRoofComplete) this.notifyRoofPolygons('edit');
+  }
+
+  clearRoofDrawing({ notify = true } = {}) {
+    this.isRoofDrawing = false;
+    this.isRoofComplete = false;
+    globalThis._drawingMode = false;
+    this.container.classList?.remove?.('google-roof-drawing-active');
+    this.setDrawHintVisible(false);
+    this.drawingPoints = [];
+    this.vertexMarkers.forEach(marker => marker?.setMap?.(null));
+    this.vertexMarkers = [];
+    if (this.roofDraftLine) this.roofDraftLine.setMap(null);
+    if (this.roofPolygon) this.roofPolygon.setMap(null);
+    this.roofDraftLine = null;
+    this.roofPolygon = null;
+    if (notify) this.onRoofPolygonsChange?.([], 'clear');
+  }
+
+  loadRoofGeometry(summary) {
+    const points = summary?.features?.[0]?.points;
+    if (!Array.isArray(points) || points.length < 3) return;
+    this.clearRoofDrawing({ notify: false });
+    this.drawingPoints = points.map(p => ({ lat: Number(p.lat), lng: Number(p.lng) }))
+      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    this.drawingPoints.forEach((point, index) => this.addVertexMarker(point, index));
+    this.isRoofComplete = this.drawingPoints.length >= 3;
+    this.renderRoofShape();
+  }
+
+  notifyRoofPolygons(reason) {
+    if (!this.isRoofComplete || this.drawingPoints.length < 3) return;
+    this.onRoofPolygonsChange?.([this.drawingPoints.map(p => ({ ...p }))], reason);
+  }
+
+  setDrawHintVisible(visible) {
+    if (typeof document === 'undefined') return;
+    document.getElementById('map-draw-hint')?.classList.toggle('is-visible', !!visible);
   }
 
   setView(latLng, zoom = this.map.getZoom()) {
