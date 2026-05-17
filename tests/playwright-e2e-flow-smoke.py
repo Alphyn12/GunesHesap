@@ -120,6 +120,17 @@ def run_click_flow_to_results(
     tariff_source_type="manual",
     export_tariff="0",
 ):
+    def set_hidden_select(selector, value):
+        page.evaluate(
+            """([selector, value]) => {
+                const el = document.querySelector(selector);
+                if (!el) throw new Error(`${selector} not found`);
+                el.value = value;
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }""",
+            arg=[selector, value],
+        )
+
     page.click('.scenario-choice-card[data-scenario-key="on-grid"]')
     page.click("#step1-continue-btn")
     page.wait_for_function("window.state.step === 2")
@@ -156,7 +167,10 @@ def run_click_flow_to_results(
     assert page.evaluate("window.state.tariffInputMode") == "net-plus-fee"
     page.fill("#on-grid-usable-roof-ratio", usable_roof_ratio)
     page.fill("#distribution-fee-input", "0.50")
-    page.select_option("#tariff-source-type", tariff_source_type)
+    # This field is intentionally kept in a hidden metadata block in the current
+    # Step 5 UI. Set it programmatically so the smoke test validates the same
+    # state path without requiring a visible legacy control.
+    set_hidden_select("#tariff-source-type", tariff_source_type)
     page.fill("#export-tariff-input", export_tariff)
     if settlement_date is not None:
         page.fill("#settlement-date", settlement_date)

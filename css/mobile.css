@@ -1043,6 +1043,28 @@ textarea {
     display: block;
   }
 
+  .proposal-section {
+    padding: 16px;
+  }
+
+  .proposal-summary-grid,
+  .proposal-projection-summary,
+  .proposal-warning-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .proposal-table {
+    min-width: 860px;
+  }
+
+  .proposal-accordion-summary {
+    padding: 16px;
+  }
+
+  .proposal-accordion > :not(summary) {
+    margin: 0 16px 16px;
+  }
+
   #offgrid-device-table-wrap,
   #comparison-result-table {
     overflow-x: auto;

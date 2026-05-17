@@ -21,6 +21,7 @@ import {
 } from './calc-core.js';
 import { buildQuoteReadiness } from './turkey-regulation.js';
 import { buildProposalGovernance } from './proposal-governance.js';
+import { buildProposalResult } from './proposal-engine.js';
 import {
   buildEvidenceRegistry,
   buildOffgridFieldAcceptanceGate,
@@ -1762,6 +1763,7 @@ export async function runCalculation() {
     factors: results.proposalGovernance?.confidence?.factors || confidence.blockers || []
   };
   state.proposalRevisions = [results.proposalGovernance.revision, ...(state.proposalRevisions || [])].slice(0, 20);
+  results.proposalResult = buildProposalResult(state, results);
   window.state.results = results;
   window.persistProposalState?.();
 

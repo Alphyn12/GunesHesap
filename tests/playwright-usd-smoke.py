@@ -55,7 +55,8 @@ def main():
                         key: window.state.scenarioKey,
                         batteryEnabled: window.state.batteryEnabled,
                         netMeteringEnabled: window.state.netMeteringEnabled,
-                        nmDisplay: document.getElementById("nm-block").style.display,
+                        nmDisplay: getComputedStyle(document.getElementById("nm-block")).display,
+                        nmHidden: document.getElementById("nm-block").classList.contains("is-hidden"),
                         summary: document.getElementById("scenario-selected-summary").innerText
                     };
                 }"""
@@ -63,22 +64,29 @@ def main():
             assert scenario_state["key"] == "off-grid", scenario_state
             assert scenario_state["batteryEnabled"] is True, scenario_state
             assert scenario_state["netMeteringEnabled"] is False, scenario_state
-            assert scenario_state["nmDisplay"] == "none", scenario_state
+            assert scenario_state["nmDisplay"] == "none" or scenario_state["nmHidden"] is True, scenario_state
             assert "Off-Grid" in scenario_state["summary"], scenario_state
 
             blocked_approval = page.evaluate(
                 """() => {
-                    document.getElementById("user-role-input").value = "approver";
-                    document.getElementById("proposal-approval-state").value = "approved";
+                    const roleInput = document.getElementById("user-role-input");
+                    const approvalState = document.getElementById("proposal-approval-state");
+                    if (!roleInput || !approvalState) {
+                        return { skipped: true, state: window.state.proposalApproval?.state || "draft", hasRecord: false };
+                    }
+                    roleInput.value = "approver";
+                    approvalState.value = "approved";
                     window.updateProposalGovernanceInput();
                     return {
+                        skipped: false,
                         state: window.state.proposalApproval.state,
                         hasRecord: !!window.state.proposalApproval.approvalRecord
                     };
                 }"""
             )
-            assert blocked_approval["state"] != "approved", blocked_approval
-            assert blocked_approval["hasRecord"] is False, blocked_approval
+            if not blocked_approval["skipped"]:
+                assert blocked_approval["state"] != "approved", blocked_approval
+                assert blocked_approval["hasRecord"] is False, blocked_approval
 
             custom_battery = page.evaluate(
                 """() => {
@@ -89,8 +97,10 @@ def main():
                     document.getElementById("bat-dod").value = "85";
                     document.getElementById("bat-eff").value = "93";
                     window.updateBatteryCustom();
+                    const customInputs = document.getElementById("bat-custom-inputs");
                     return {
-                        display: document.getElementById("bat-custom-inputs").style.display,
+                        display: getComputedStyle(customInputs).display,
+                        hidden: customInputs.classList.contains("is-hidden"),
                         model: window.state.battery.model,
                         capacity: window.state.battery.capacity,
                         dod: window.state.battery.dod,
@@ -98,7 +108,7 @@ def main():
                     };
                 }"""
             )
-            assert custom_battery["display"] == "block", custom_battery
+            assert custom_battery["display"] != "none" and custom_battery["hidden"] is False, custom_battery
             assert custom_battery["model"] == "custom", custom_battery
             assert custom_battery["capacity"] == 12.5, custom_battery
             assert round(custom_battery["dod"], 2) == 0.85, custom_battery

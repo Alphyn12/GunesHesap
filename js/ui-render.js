@@ -11,6 +11,9 @@ import { buildStructuredProposalExport } from './evidence-governance.js';
 import { buildCrmLeadExport } from './crm-export.js';
 import { resolvePanelSpec } from './calc-core.js';
 import { COST_ASSUMPTIONS, FINANCIAL_ASSUMPTIONS } from './assumptions/index.js';
+import { buildProposalResult } from './proposal-engine.js';
+import { displayValue, formatCurrency, formatKwh, formatKwp, formatPercent, formatYears, safeNumber } from './proposal-formatters.js';
+import { PDF_FONT_FAMILY, addSolarRotaLogo, registerPdfFonts } from './pdf-fonts.js';
 
 let monthlyChart = null;
 
@@ -226,6 +229,345 @@ function criticalLoadUndefinedText() {
   return i18n.t('offgridL2.criticalLoadNotDefinedShort');
 }
 
+function finiteOrNull(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function proposalMoney(value, fallback = 'Hesaplanamadı') {
+  return finiteOrNull(value) === null ? fallback : money(value);
+}
+
+function proposalUsdHint(value, state = window.state || {}) {
+  const numeric = finiteOrNull(value);
+  const rate = Math.max(0.0001, Number(state.usdToTry) || 0);
+  if (numeric === null || rate <= 0 || state.displayCurrency === 'USD') return '';
+  return `≈ ${formatCurrency(numeric / rate, 'USD', { locale: 'en-US' })}`;
+}
+
+function proposalRate(value, fallback = 'Hesaplanamadı') {
+  const numeric = finiteOrNull(value);
+  return numeric === null ? fallback : moneyRate(numeric, 'kWh');
+}
+
+function proposalNumber(value, opts = {}) {
+  const numeric = finiteOrNull(value);
+  if (numeric === null) return opts.fallback || 'Hesaplanamadı';
+  return numeric.toLocaleString(localeTag(), {
+    maximumFractionDigits: opts.digits ?? 0,
+    minimumFractionDigits: opts.minDigits ?? 0
+  });
+}
+
+function proposalText(value, fallback = 'Hesaplanamadı') {
+  return escapeHtml(displayValue(value, fallback));
+}
+
+function proposalSummaryCard({ label, value, note = '', tone = 'neutral' }) {
+  return `
+    <article class="proposal-summary-card proposal-summary-card--${escapeHtml(tone)}">
+      <span class="proposal-summary-label">${escapeHtml(label)}</span>
+      <strong class="proposal-summary-value">${escapeHtml(displayValue(value))}</strong>
+      ${note ? `<span class="proposal-summary-note">${escapeHtml(note)}</span>` : ''}
+    </article>
+  `;
+}
+
+function proposalSection(title, helper, body, { extraClass = '' } = {}) {
+  return `
+    <section class="proposal-section ${escapeHtml(extraClass)}">
+      <div class="proposal-section-head">
+        <div>
+          <h3>${escapeHtml(title)}</h3>
+          ${helper ? `<p>${escapeHtml(helper)}</p>` : ''}
+        </div>
+      </div>
+      ${body}
+    </section>
+  `;
+}
+
+function proposalAccordion(title, helper, summaryHtml, bodyHtml) {
+  return `
+    <details class="proposal-section proposal-accordion">
+      <summary class="proposal-accordion-summary">
+        <span>
+          <strong>${escapeHtml(title)}</strong>
+          ${helper ? `<em>${escapeHtml(helper)}</em>` : ''}
+        </span>
+        <span class="proposal-accordion-indicator">+</span>
+      </summary>
+      ${summaryHtml}
+      ${bodyHtml}
+    </details>
+  `;
+}
+
+function renderProposalSummaryCards(proposal, state) {
+  const summary = proposal.summary || {};
+  const investmentNote = proposalUsdHint(summary.totalInvestment, state);
+  return `
+    <div class="proposal-summary-grid">
+      ${proposalSummaryCard({ label: 'Önerilen sistem gücü', value: formatKwp(summary.systemSizeKwp), tone: 'accent' })}
+      ${proposalSummaryCard({ label: 'Panel sayısı', value: `${proposalNumber(summary.panelCount)} adet`, tone: 'neutral' })}
+      ${proposalSummaryCard({ label: 'İnverter gücü', value: summary.inverterKw ? `${proposalNumber(summary.inverterKw, { digits: 1 })} kW` : 'Hesaplanamadı', tone: 'neutral' })}
+      ${proposalSummaryCard({ label: 'Tahmini yıllık üretim', value: formatKwh(summary.annualProductionKwh, 'kWh/yıl'), tone: 'accent' })}
+      ${proposalSummaryCard({ label: 'Tahmini aylık ortalama üretim', value: formatKwh(summary.monthlyAverageProductionKwh, 'kWh/ay'), tone: 'neutral' })}
+      ${proposalSummaryCard({ label: 'Toplam yatırım maliyeti', value: proposalMoney(summary.totalInvestment), note: investmentNote, tone: 'strong' })}
+      ${proposalSummaryCard({ label: 'İlk yıl tahmini tasarruf', value: proposalMoney(summary.firstYearSavings), tone: 'good' })}
+      ${proposalSummaryCard({ label: 'Geri ödeme süresi', value: formatYears(summary.paybackYears), tone: 'accent' })}
+      ${proposalSummaryCard({ label: '25 yıllık net ekonomik katkı', value: proposalMoney(summary.netBenefit25Years), tone: safeNumber(summary.netBenefit25Years, 0) >= 0 ? 'good' : 'warn' })}
+      ${proposalSummaryCard({ label: 'CO azaltımı', value: summary.co2ReductionTonPerYear ? `${proposalNumber(summary.co2ReductionTonPerYear, { digits: 2 })} ton/yıl` : 'Hesaplanamadı', note: summary.co2ReductionTon25Years ? `${proposalNumber(summary.co2ReductionTon25Years, { digits: 1 })} ton / 25 yıl` : '', tone: 'good' })}
+    </div>
+  `;
+}
+
+function renderProposalScenarios(proposal) {
+  const rows = (proposal.scenarios || []).map(sc => `
+    <tr class="${sc.recommended ? 'proposal-row-recommended' : ''}">
+      <td><strong>${proposalText(sc.name)}</strong>${sc.recommended ? '<span class="proposal-pill">Önerilen</span>' : ''}<small>${proposalText(sc.description, '')}</small></td>
+      <td>${sc.systemSizeKwp ? `${proposalNumber(sc.systemSizeKwp, { digits: 2 })} kWp` : 'Hesaplanamadı'}</td>
+      <td>${sc.panelCount ? `${proposalNumber(sc.panelCount)} adet` : 'Hesaplanamadı'}</td>
+      <td>${sc.inverterKw ? `${proposalNumber(sc.inverterKw, { digits: 1 })} kW` : 'Hesaplanamadı'}</td>
+      <td>${sc.batteryIncluded ? 'Dahil' : 'Yok'}</td>
+      <td>${proposalMoney(sc.totalCost)}</td>
+      <td>${proposalMoney(sc.firstYearSavings)}</td>
+      <td>${formatYears(sc.paybackYears)}</td>
+      <td>${proposalMoney(sc.netBenefit25Years)}</td>
+      <td>${proposalText(sc.suitabilityNote, 'Veri gerekli')}</td>
+    </tr>
+  `).join('');
+  return proposalSection(
+    'Ekonomik / Dengeli / Premium Paket Karşılaştırması',
+    'Paketler mevcut hesap sonucundan türetilmiş sunum senaryolarıdır; nihai ekipman seçimi tedarikçi teklifiyle netleşir.',
+    `<div class="proposal-table-wrap"><table class="proposal-table">
+      <thead><tr><th>Paket</th><th>Sistem gücü</th><th>Panel</th><th>İnverter</th><th>Batarya</th><th>Toplam yatırım</th><th>İlk yıl tasarruf</th><th>Geri ödeme</th><th>25 yıl net katkı</th><th>Uygunluk notu</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`
+  );
+}
+
+function renderProposalCostBreakdown(proposal) {
+  const rows = (proposal.costBreakdown?.items || []).map(item => `
+    <tr>
+      <td><strong>${proposalText(item.name)}</strong><small>${proposalText(item.category, '')}</small></td>
+      <td>${proposalText(item.description, '')}${item.note ? `<small>${proposalText(item.note, '')}</small>` : ''}</td>
+      <td>${proposalNumber(item.quantity, { digits: 2 })}</td>
+      <td>${proposalText(item.unit, '')}</td>
+      <td>${proposalMoney(item.unitPrice)}</td>
+      <td>${proposalMoney(item.subtotal)}</td>
+      <td>${item.vatRate ? `${formatPercent(item.vatRate * 100, 0)} · ${proposalMoney(item.vatAmount)}` : 'Ayrı veri yok'}</td>
+      <td>${proposalMoney(item.total)}</td>
+    </tr>
+  `).join('');
+  const cb = proposal.costBreakdown || {};
+  const diffNote = cb.legacyTotalDifferenceAbs > 100
+    ? `<div class="proposal-inline-warning">Legacy toplam ile kalem bazlı toplam arasında ${proposalMoney(cb.legacyTotalDifferenceAbs)} fark var. Mevcut hesaplama akışı korunmuştur.</div>`
+    : '';
+  return proposalSection(
+    'Kalem Kalem Sistem Maliyeti',
+    'Toplamlar müşteri teklifine uygun costItems listesi üzerinden hesaplanır; legacy toplamlar değiştirilmez.',
+    `<div class="proposal-table-wrap"><table class="proposal-table">
+      <thead><tr><th>Kalem</th><th>Açıklama</th><th>Miktar</th><th>Birim</th><th>Birim fiyat</th><th>Ara toplam</th><th>KDV</th><th>Toplam</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr><td colspan="5">Ara toplam</td><td colspan="3">${proposalMoney(cb.subtotal)}</td></tr>
+        <tr><td colspan="5">KDV toplamı</td><td colspan="3">${proposalMoney(cb.vatTotal)}</td></tr>
+        <tr><td colspan="5">Ek modüller toplamı</td><td colspan="3">${proposalMoney(cb.addonTotal)}</td></tr>
+        <tr><td colspan="5">İndirim</td><td colspan="3">${proposalMoney(cb.discountTotal)}</td></tr>
+        <tr><td colspan="5"><strong>Genel toplam yatırım maliyeti</strong></td><td colspan="3"><strong>${proposalMoney(cb.grandTotal)}</strong></td></tr>
+      </tfoot>
+    </table></div>${diffNote}`
+  );
+}
+
+function renderProposalAddons(proposal) {
+  const capital = proposal.addons?.capitalCostItems || [];
+  const consumption = proposal.addons?.consumptionItems || [];
+  const capitalRows = capital.length ? capital.map(item => `
+    <tr><td>${proposalText(item.name)}</td><td>${proposalMoney(item.total)}</td><td>0 kWh/ay</td><td>0 kWh/yıl</td><td>Yatırım maliyetine eklenir</td><td>${proposalText(item.note || item.description || 'Seçili opsiyon')}</td></tr>
+  `).join('') : '<tr><td colspan="6">Yatırım maliyetine eklenen seçili opsiyon yok.</td></tr>';
+  const consumptionRows = consumption.length ? consumption.map(item => `
+    <tr><td>${proposalText(item.name)}</td><td>Yok</td><td>${formatKwh(item.monthlyKwh, 'kWh/ay')}</td><td>${formatKwh(item.annualKwh, 'kWh/yıl')}</td><td>${proposalMoney(item.annualBillImpact)} / yıl</td><td>${formatKwh(item.sizingImpactKwh, 'kWh/yıl')}</td></tr>
+  `).join('') : '<tr><td colspan="6">Tüketimi etkileyen seçili ek modül yok.</td></tr>';
+  return proposalSection(
+    'Ek Modüller ve Tüketim Etkileri',
+    'Yatırım maliyeti artıran opsiyonlar ile tüketimi artıran modüller ayrı değerlendirilir.',
+    `<div class="proposal-addon-grid">
+      <div>
+        <h4>Yatırım maliyetine eklenen opsiyonlar</h4>
+        <div class="proposal-table-wrap"><table class="proposal-table"><thead><tr><th>Ek özellik</th><th>Yatırım etkisi</th><th>Aylık tüketim</th><th>Yıllık tüketim</th><th>Faturaya etkisi</th><th>Not</th></tr></thead><tbody>${capitalRows}</tbody></table></div>
+      </div>
+      <div>
+        <h4>Tüketimi etkileyen modüller</h4>
+        <div class="proposal-table-wrap"><table class="proposal-table"><thead><tr><th>Ek özellik</th><th>Yatırım etkisi</th><th>Aylık tüketim</th><th>Yıllık tüketim</th><th>Faturaya etkisi</th><th>GES boyutlandırma etkisi</th></tr></thead><tbody>${consumptionRows}</tbody></table></div>
+      </div>
+    </div>`
+  );
+}
+
+function renderConsumptionAnalysis(proposal) {
+  const c = proposal.consumptionAnalysis || {};
+  const rows = [
+    ['Mevcut aylık tüketim', formatKwh(c.baseMonthlyKwh, 'kWh/ay')],
+    ['Mevcut yıllık tüketim', formatKwh(c.baseAnnualKwh, 'kWh/yıl')],
+    ['Mevcut aylık fatura', proposalMoney(c.baseMonthlyBill)],
+    ['Mevcut yıllık fatura', proposalMoney(c.baseAnnualBill)],
+    ['Ek modüllerden gelen aylık tüketim', formatKwh(c.addonMonthlyKwh, 'kWh/ay')],
+    ['Ek modüllerden gelen yıllık tüketim', formatKwh(c.addonAnnualKwh, 'kWh/yıl')],
+    ['Yeni toplam yıllık tüketim', formatKwh(c.totalAnnualKwh, 'kWh/yıl')],
+    ['GES sonrası tahmini yıllık şebeke tüketimi', formatKwh(c.estimatedGridConsumptionAfterSolarKwh, 'kWh/yıl')],
+    ['GES sonrası tahmini fatura', proposalMoney(c.billAfterSolar)],
+    ['İlk yıl tahmini tasarruf', proposalMoney(c.firstYearSavings)]
+  ].map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`).join('');
+  const sourceNote = c.baseSource === 'estimated-from-monthly-bill'
+    ? 'kWh verisi eksik olduğu için tüketim, girilen aylık fatura ve tarife üzerinden tahmin edilmiştir.'
+    : c.baseSource === 'derived-from-total-load-minus-addons'
+      ? 'Baz tüketim toplam yükten ek modüller düşülerek türetilmiştir.'
+      : 'Tüketim hesabı kullanıcı girdileri ve mevcut hesaplama sonucundan alınmıştır.';
+  return proposalSection(
+    'Tüketim ve Fatura Analizi',
+    sourceNote,
+    `<div class="proposal-table-wrap proposal-table-wrap--narrow"><table class="proposal-table"><tbody>${rows}</tbody></table></div>`
+  );
+}
+
+function renderBillProjection(proposal) {
+  const rows = (proposal.billProjection25Years || []).map(row => `
+    <tr>
+      <td>${row.year}</td>
+      <td>${formatKwh(row.annualProductionKwh, 'kWh')}</td>
+      <td>${formatKwh(row.annualConsumptionKwh, 'kWh')}</td>
+      <td>${proposalRate(row.unitRate)}</td>
+      <td>${proposalMoney(row.billWithoutSolar)}</td>
+      <td>${proposalMoney(row.billAfterSolar)}</td>
+      <td>${proposalMoney(row.annualSavings)}</td>
+      <td>${proposalMoney(row.maintenanceCost)}</td>
+      <td>${proposalMoney(row.inverterReplacementCost)}</td>
+      <td>${proposalMoney(row.netAnnualGain)}</td>
+      <td>${proposalMoney(row.cumulativeNetGain)}</td>
+    </tr>
+  `).join('');
+  const f = proposal.financialSummary || {};
+  const billRows = proposal.billProjection25Years || [];
+  const summary = `
+    <div class="proposal-projection-summary">
+      ${proposalSummaryCard({ label: '25 yılda GES olmadan fatura', value: proposalMoney(billRows.reduce((s, r) => s + safeNumber(r.billWithoutSolar, 0), 0)), tone: 'neutral' })}
+      ${proposalSummaryCard({ label: '25 yılda GES sonrası fatura', value: proposalMoney(billRows.reduce((s, r) => s + safeNumber(r.billAfterSolar, 0), 0)), tone: 'neutral' })}
+      ${proposalSummaryCard({ label: '25 yılda brüt tasarruf', value: proposalMoney(f.grossSavings25Years), tone: 'good' })}
+      ${proposalSummaryCard({ label: '25 yılda bakım gideri', value: proposalMoney(f.maintenanceCost25Years), tone: 'warn' })}
+      ${proposalSummaryCard({ label: 'İnverter değişim gideri', value: proposalMoney(f.inverterReplacementCost25Years), tone: 'warn' })}
+      ${proposalSummaryCard({ label: '25 yılda net ekonomik katkı', value: proposalMoney(f.netBenefit25Years), tone: safeNumber(f.netBenefit25Years, 0) >= 0 ? 'good' : 'warn' })}
+    </div>
+  `;
+  return proposalAccordion(
+    '25 Yıllık Elektrik Faturası ve Tasarruf Projeksiyonu',
+    'Kapalı görünümde özet, açıldığında yıllık detay gösterilir.',
+    summary,
+    `<div class="proposal-table-wrap"><table class="proposal-table">
+      <thead><tr><th>Yıl</th><th>Yıllık üretim</th><th>Yıllık tüketim</th><th>Elektrik birim fiyatı</th><th>GES olmadan fatura</th><th>GES sonrası fatura</th><th>Yıllık tasarruf</th><th>Bakım gideri</th><th>İnverter değişim</th><th>Net yıllık kazanç</th><th>Kümülatif net kazanç</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`
+  );
+}
+
+function renderNetMeteringContribution(proposal) {
+  const n = proposal.netMetering || {};
+  const passive = !n.enabled;
+  const rows = [
+    ['Yıllık üretim', formatKwh(n.annualProductionKwh, 'kWh/yıl')],
+    ['Yıllık tüketim', formatKwh(n.annualConsumptionKwh, 'kWh/yıl')],
+    ['Öz tüketim oranı', formatPercent(n.selfConsumptionRate || 0, 1)],
+    ['Şebekeye verilen enerji', formatKwh(n.exportedKwh, 'kWh/yıl')],
+    ['Şebekeden çekilen enerji', formatKwh(n.importedKwh, 'kWh/yıl')],
+    ['Net mahsuplaşma', formatKwh(n.netKwh, 'kWh/yıl')],
+    ['Birim ekonomik değer', proposalRate(n.unitValue)],
+    ['Yıllık ekonomik katkı', passive ? 'Mahsuplaşma aktif değil' : proposalMoney(n.annualEconomicContribution)]
+  ].map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`).join('');
+  return proposalSection(
+    'Mahsuplaşma Kaynaklı Ekonomik Katkı',
+    n.note || 'Mahsuplaşma bu senaryoda aktif değilse ek ekonomik katkı gösterilmez.',
+    `<div class="${passive ? 'proposal-muted-panel' : ''}">
+      <div class="proposal-table-wrap proposal-table-wrap--narrow"><table class="proposal-table"><tbody>${rows}</tbody></table></div>
+    </div>`
+  );
+}
+
+function renderFinancialSummary(proposal) {
+  const f = proposal.financialSummary || {};
+  const rows = [
+    ['Toplam yatırım maliyeti', proposalMoney(f.totalInvestment)],
+    ['İlk yıl brüt tasarruf', proposalMoney(f.firstYearGrossSavings)],
+    ['İlk yıl net tasarruf', proposalMoney(f.firstYearNetSavings)],
+    ['Basit geri ödeme süresi', formatYears(f.paybackYears)],
+    ['25 yıllık brüt tasarruf', proposalMoney(f.grossSavings25Years)],
+    ['25 yıllık bakım gideri', proposalMoney(f.maintenanceCost25Years)],
+    ['25 yıllık inverter değişim gideri', proposalMoney(f.inverterReplacementCost25Years)],
+    ['25 yıllık net ekonomik katkı', proposalMoney(f.netBenefit25Years)],
+    ['ROI / yatırım getirisi', formatPercent(f.roiPercent || 0, 1)],
+    ['Başabaş yılı', f.breakEvenYear ? `${f.breakEvenYear}. yıl` : '25 yıl içinde geri ödeme oluşmuyor']
+  ].map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`).join('');
+  return proposalSection(
+    'Finansal Özet',
+    'Karar verdiren finansal metrikler tek tabloda özetlenir.',
+    `<div class="proposal-table-wrap proposal-table-wrap--narrow"><table class="proposal-table"><tbody>${rows}</tbody></table></div>`
+  );
+}
+
+function renderWarningsAndAssumptions(proposal) {
+  const warnings = proposal.warnings || [];
+  const assumptions = proposal.assumptions || {};
+  const warningHtml = warnings.length ? warnings.map(w => `
+    <article class="proposal-warning proposal-warning--${escapeHtml(w.level || 'info')}">
+      <strong>${proposalText(w.title, 'Not')}</strong>
+      <span>${proposalText(w.message, '')}</span>
+    </article>
+  `).join('') : '<div class="proposal-muted-panel">Teknik uyarı bulunmuyor.</div>';
+  const assumptionRows = [
+    ['Analiz süresi', `${assumptions.analysisYears || 25} yıl`],
+    ['Yıllık elektrik fiyat artışı', formatPercent((assumptions.annualElectricityIncreaseRate || 0) * 100, 1)],
+    ['Yıllık tüketim artışı', formatPercent((assumptions.annualConsumptionIncreaseRate || 0) * 100, 1)],
+    ['Panel degradasyonu', formatPercent((assumptions.panelDegradationRate || 0) * 100, 2)],
+    ['Bakım oranı', formatPercent((assumptions.maintenanceRate || 0) * 100, 2)],
+    ['İnverter değişim yılı', `${assumptions.inverterReplacementYear || 12}. yıl`],
+    ['KDV oranı', formatPercent((assumptions.vatRate || 0) * 100, 1)],
+    ['USD/TL kuru', proposalNumber(assumptions.exchangeRate, { digits: 2 })],
+    ['Maliyet varsayımı', assumptions.costAssumptionVersion || 'Veri gerekli'],
+    ['Finans varsayımı', assumptions.financialAssumptionVersion || 'Veri gerekli']
+  ].map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`).join('');
+  const notes = (assumptions.notes || []).slice(0, 6).map(note => `<li>${proposalText(note)}</li>`).join('');
+  return proposalSection(
+    'Teknik Uyarılar ve Hesaplama Notları',
+    'Bu bölüm varsayımları, veri eksiklerini ve teklif öncesi kontrol notlarını gösterir.',
+    `<div class="proposal-warning-grid">${warningHtml}</div>
+     <div class="proposal-table-wrap proposal-table-wrap--narrow"><table class="proposal-table"><tbody>${assumptionRows}</tbody></table></div>
+     ${notes ? `<ul class="proposal-assumption-notes">${notes}</ul>` : ''}`
+  );
+}
+
+function renderProposalResultPanel(state, r) {
+  let root = document.getElementById('proposal-results-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'proposal-results-root';
+    root.className = 'proposal-results-root';
+    document.getElementById('kpi-grid')?.insertAdjacentElement('beforebegin', root);
+  }
+  const proposal = r.proposalResult || buildProposalResult(state, r);
+  r.proposalResult = proposal;
+  root.innerHTML = `
+    ${proposalSection('Profesyonel Teklif Özeti', 'Müşteri görüşmesinde ilk bakışta okunacak ana fizibilite göstergeleri.', renderProposalSummaryCards(proposal, state), { extraClass: 'proposal-section--summary' })}
+    ${renderProposalScenarios(proposal)}
+    ${renderProposalCostBreakdown(proposal)}
+    ${renderProposalAddons(proposal)}
+    ${renderConsumptionAnalysis(proposal)}
+    ${renderBillProjection(proposal)}
+    ${renderNetMeteringContribution(proposal)}
+    ${renderFinancialSummary(proposal)}
+    ${renderWarningsAndAssumptions(proposal)}
+  `;
+}
+
 function offgridCoverageInterpretationMeta(L = {}) {
   if (!hasDefinedCriticalLoad(L)) {
     return {
@@ -368,6 +710,7 @@ export function renderResults() {
     }
     resultAlertStack.innerHTML = alertCards.join('');
   }
+  renderProposalResultPanel(state, r);
 
   const savingsUnit = document.querySelector('#step-7 .kpi-card:nth-child(2) .kpi-unit');
   if (savingsUnit) {
@@ -1862,11 +2205,13 @@ function normalizeTR(str) {
     .replace(/ü/g,'u').replace(/Ü/g,'U');
 }
 
+let pdfUnicodeTextEnabled = false;
+
 function pdfSafeText(value) {
   const text = String(value ?? '');
-  // jsPDF's built-in Helvetica path is not reliably Unicode-complete for
-  // Turkish glyphs. Preserve normal Latin text, and transliterate only glyphs
-  // known to render poorly until a bundled Unicode font is added.
+  if (pdfUnicodeTextEnabled) return text;
+  // Fallback path for environments where the embedded Unicode font cannot be
+  // registered, such as minimal PDF test doubles or blocked font assets.
   return /[şŞıİğĞçÇöÖüÜ]/.test(text) ? normalizeTR(text) : text;
 }
 
@@ -1879,151 +2224,449 @@ export function downloadPDF() {
     return;
   }
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const previousPdfUnicodeTextEnabled = pdfUnicodeTextEnabled;
+  const unicodeFontReady = registerPdfFonts(doc);
+  pdfUnicodeTextEnabled = unicodeFontReady;
+  const pdfFontFamily = unicodeFontReady ? PDF_FONT_FAMILY : 'helvetica';
+  const setPdfFont = (style = 'normal') => doc.setFont(pdfFontFamily, style);
   const r = state.results;
-  const p = PANEL_TYPES[state.panelType];
+  const proposal = r.proposalResult || buildProposalResult(state, r);
+  r.proposalResult = proposal;
+  const p = resolvePanelSpec(state, state.panelType) || PANEL_TYPES[state.panelType] || {};
   const dateLocale = localeTag();
-  const yearUnit = i18n.t('units.year');
-  const prDisplayText = r.usedFallback ? i18n.t('onGridResult.prUnavailableShort') : `${r.pr}%`;
+  const summary = proposal.summary || {};
+  const costBreakdown = proposal.costBreakdown || {};
+  const addons = proposal.addons || {};
+  const consumption = proposal.consumptionAnalysis || {};
+  const financial = proposal.financialSummary || {};
+  const netMetering = proposal.netMetering || {};
+  const assumptions = proposal.assumptions || {};
+  const billRows = Array.isArray(proposal.billProjection25Years) ? proposal.billProjection25Years : [];
+  const reportTitle = i18n.t('report.proposalTitle') || 'GES Teklif ve Fizibilite Raporu';
+  const safeFallback = pdfSafeText('Hesaplanamadı');
+  let pageNo = 1;
+  let y = 0;
 
-  // Kapak Sayfası
+  const safeLabel = value => pdfSafeText(displayValue(value, 'Belirtilmedi'));
+  const safePlain = (value, fallback = 'Belirtilmedi') => pdfSafeText(displayValue(value, fallback));
+  const shortText = (value, max = 46, fallback = 'Belirtilmedi') => {
+    const text = safePlain(value, fallback).replace(/\s+/g, ' ').trim();
+    return text.length > max ? `${text.slice(0, Math.max(0, max - 1))}.` : text;
+  };
+  const fmtMoney = (value, fallback = safeFallback) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? pdfSafeText(formatCurrency(numeric, proposal.meta?.currency || 'TRY')) : fallback;
+  };
+  const fmtRate = (value, fallback = safeFallback) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return pdfSafeText(`${formatCurrency(numeric, proposal.meta?.currency || 'TRY', { digits: 2 })}/kWh`);
+  };
+  const fmtKwh = (value, suffix = 'kWh', fallback = safeFallback) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? pdfSafeText(formatKwh(numeric, suffix)) : fallback;
+  };
+  const fmtKwp = (value, fallback = safeFallback) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? pdfSafeText(formatKwp(numeric)) : fallback;
+  };
+  const fmtKw = (value, fallback = safeFallback) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? pdfSafeText(`${numeric.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} kW`) : fallback;
+  };
+  const fmtNumber = (value, suffix = '', fallback = safeFallback, digits = 0) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return pdfSafeText(`${numeric.toLocaleString('tr-TR', { maximumFractionDigits: digits })}${suffix ? ` ${suffix}` : ''}`);
+  };
+  const fmtYearsValue = (value, fallback = pdfSafeText('25 yıl içinde oluşmuyor')) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && numeric > 0 ? pdfSafeText(formatYears(numeric)) : fallback;
+  };
+  const fmtPercentValue = (value, digits = 1, fallback = safeFallback) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? pdfSafeText(formatPercent(numeric, digits)) : fallback;
+  };
+  const addFooter = () => {
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.1);
+    doc.line(16, 283, 194, 283);
+    setPdfFont('normal');
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text(pdfSafeText(`${proposal.company?.name || 'Solar Rota'} | Sayfa ${pageNo}`), 16, 289);
+  };
+  const headerPage = title => {
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, 210, 297, 'F');
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, 210, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    const headerLogoAdded = addSolarRotaLogo(doc, { x: 16, y: 4.5, width: 11, height: 9 });
+    setPdfFont('bold');
+    doc.setFontSize(10);
+    doc.text(pdfSafeText(proposal.company?.name || 'Solar Rota'), headerLogoAdded ? 30 : 16, 9);
+    setPdfFont('normal');
+    doc.setFontSize(7);
+    doc.text(pdfSafeText(reportTitle), headerLogoAdded ? 30 : 16, 15);
+    doc.setTextColor(15, 23, 42);
+    setPdfFont('bold');
+    doc.setFontSize(13);
+    doc.text(pdfSafeText(title), 16, 32);
+    doc.setDrawColor(245, 158, 11);
+    doc.setLineWidth(0.45);
+    doc.line(16, 36, 194, 36);
+    addFooter();
+    y = 46;
+  };
+  const addPage = title => {
+    doc.addPage();
+    pageNo += 1;
+    headerPage(title);
+  };
+  const ensureSpace = (height, title = '') => {
+    if (y + height <= 274) return;
+    addPage(title || 'GES Teklif ve Fizibilite Raporu');
+  };
+  const sectionTitle = title => {
+    ensureSpace(12, title);
+    setPdfFont('bold');
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text(pdfSafeText(title), 16, y);
+    y += 7;
+  };
+  const note = text => {
+    const lines = doc.splitTextToSize
+      ? doc.splitTextToSize(pdfSafeText(text), 174)
+      : [shortText(text, 120)];
+    ensureSpace(lines.length * 4 + 3);
+    setPdfFont('normal');
+    doc.setFontSize(7);
+    doc.setTextColor(71, 85, 105);
+    lines.forEach(line => {
+      doc.text(pdfSafeText(line), 18, y);
+      y += 4;
+    });
+    y += 2;
+  };
+  const labelRows = (rows, options = {}) => {
+    const labelX = options.labelX || 18;
+    const valueX = options.valueX || 91;
+    const lineHeight = options.lineHeight || 6;
+    doc.setFontSize(options.fontSize || 8);
+    rows.forEach(([label, value]) => {
+      ensureSpace(lineHeight + 2, options.pageTitle);
+      setPdfFont('normal');
+      doc.setTextColor(100, 116, 139);
+      doc.text(shortText(label, 44), labelX, y);
+      setPdfFont('bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text(shortText(value, 58, safeFallback), valueX, y);
+      y += lineHeight;
+    });
+    y += 3;
+  };
+  const drawTable = (headers, rows, widths, options = {}) => {
+    const startX = options.x || 16;
+    const rowHeight = options.rowHeight || 6;
+    const fontSize = options.fontSize || 6.3;
+    const title = options.pageTitle || 'GES Teklif ve Fizibilite Raporu';
+    const renderHeader = () => {
+      ensureSpace(rowHeight + 4, title);
+      doc.setFillColor(241, 245, 249);
+      doc.rect(startX, y - 4, widths.reduce((sumValue, w) => sumValue + w, 0), rowHeight, 'F');
+      setPdfFont('bold');
+      doc.setFontSize(fontSize);
+      doc.setTextColor(51, 65, 85);
+      let x = startX + 1.5;
+      headers.forEach((header, index) => {
+        doc.text(shortText(header, Math.max(7, Math.round(widths[index] * 0.9))), x, y);
+        x += widths[index];
+      });
+      y += rowHeight;
+    };
+    renderHeader();
+    setPdfFont('normal');
+    doc.setFontSize(fontSize);
+    rows.forEach((rowValues, rowIndex) => {
+      if (y + rowHeight > 274) {
+        addPage(title);
+        renderHeader();
+      }
+      if (rowIndex % 2 === 1) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(startX, y - 4, widths.reduce((sumValue, w) => sumValue + w, 0), rowHeight, 'F');
+      }
+      doc.setTextColor(15, 23, 42);
+      let x = startX + 1.5;
+      rowValues.forEach((value, index) => {
+        const maxChars = Math.max(6, Math.floor(widths[index] * 1.45));
+        doc.text(shortText(value, maxChars, '-'), x, y);
+        x += widths[index];
+      });
+      y += rowHeight;
+    });
+    y += 4;
+  };
+
+  // 1. Kapak Sayfası
   doc.setFillColor(15, 23, 42);
   doc.rect(0, 0, 210, 297, 'F');
   doc.setTextColor(245, 158, 11);
-  doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-  doc.text(pdfSafeText('Solar Rota'), 20, 25);
-  doc.setFontSize(12); doc.setFont('helvetica', 'normal');
-  doc.setTextColor(148, 163, 184);
-  doc.text(pdfSafeText(i18n.t('report.proposalTitle')), 20, 33);
-  doc.setFontSize(10);
-  doc.text(`${pdfSafeText(state.cityName || '—')} — ${new Date().toLocaleDateString(dateLocale)}`, 20, 41);
-  doc.setFontSize(8); doc.setTextColor(245, 158, 11);
-  doc.text(pdfSafeText(`${i18n.t('report.methodology')}: ${r.methodologyVersion || '—'} | ${i18n.t('report.calculationMode')}: ${r.calculationMode || '—'} | ${i18n.t('report.sourceDate')}: ${r.tariffModel?.sourceDate || '—'}`), 20, 48);
-  doc.setTextColor(148, 163, 184);
-  doc.text(pdfSafeText(i18n.t('report.preFeasibilityDisclaimer')), 20, 53);
-  doc.text(pdfSafeText(i18n.t('report.pdfFontNote')), 20, 57);
-
-  // Ayırıcı çizgi
-  doc.setDrawColor(245, 158, 11); doc.setLineWidth(0.5);
-  doc.line(20, 62, 190, 62);
-
-  // KPI özet
-  doc.setTextColor(241, 245, 249); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  const kpis = [
-    [pdfSafeText(i18n.t('report.annualProduction')), r.annualEnergy.toLocaleString(dateLocale) + ' kWh'],
-    [pdfSafeText(i18n.t('report.annualSavings')), money(r.annualSavings)],
-    [pdfSafeText(i18n.t('onGridResult.firstYearNetCashFlow')), money(r.firstYearNetCashFlow ?? 0)],
-    [pdfSafeText(i18n.t('report.systemPower')), r.systemPower.toFixed(2) + ' kWp'],
-    [pdfSafeText(i18n.t('report.totalCost')), money(r.totalCost)],
-    [pdfSafeText(i18n.t('finance.grossSimplePayback')), formatPaybackYears(r.grossSimplePaybackYear, yearUnit)],
-    [pdfSafeText(i18n.t('report.discountedPayback')), formatPaybackYears(r.discountedPaybackYear, yearUnit)],
-    [pdfSafeText(`NPV (25 ${yearUnit})`), money(r.npvTotal)],
-    [pdfSafeText(i18n.t('onGridResult.averageAnnualReturn')), r.irr + '%'],
-    [pdfSafeText(i18n.t(r.compensatedLcoe ? 'onGridResult.compensatedLcoeLabel' : 'onGridResult.lcoeLabel')), moneyRate(r.compensatedLcoe || r.lcoe, 'kWh')],
-    [pdfSafeText(i18n.t('onGridResult.roiLabel')), `${r.nominalTotalReturnPct ?? r.roi}%`],
-    [pdfSafeText(i18n.t('report.co2Savings')), r.co2Savings + ` ${i18n.t('units.tonsCo2PerYear')}`],
-  ];
-  if (state.scenarioKey === 'off-grid' && r.offgridL2Results) {
-    const L = r.offgridL2Results;
-    kpis.push(
-      [pdfSafeText(i18n.t('offgridL2.pvBessCoverageLabel')), formatOffgridCoverageValue(L.pvBatteryLoadCoverage ?? L.totalLoadCoverage, L)],
-      [pdfSafeText(i18n.t('offgridL2.totalCoverageWithGeneratorLabel')), formatOffgridCoverageValue(L.totalLoadCoverage, L)],
-      [pdfSafeText(i18n.t('offgridL2.accuracyScoreLabel')), `${L.accuracyScore ?? '—'} / 100${L.expectedUncertaintyPct ? ` (${Number(L.expectedUncertaintyPct.lowPct || 0).toFixed(0)}-${Number(L.expectedUncertaintyPct.highPct || 0).toFixed(0)}%)` : ''}`],
-      [pdfSafeText(i18n.t('offgridL2.resultAutonomousDays')), `${L.autonomousDays ?? '—'} ${yearUnit}`],
-      ...(L.generatorEnabled ? [[pdfSafeText(i18n.t('offgridL2.resultAutonomousDaysWithGenerator')), `${L.autonomousDaysWithGenerator ?? '—'} ${yearUnit}`]] : []),
-      [pdfSafeText(i18n.t('offgridL2.generatorLabel')), `${Math.round(L.generatorEnergyKwh || L.generatorKwh || 0).toLocaleString(dateLocale)} kWh`],
-      [pdfSafeText(i18n.t('offgridL2.unmetLabel')), `${Math.round(L.unmetLoadKwh || 0).toLocaleString(dateLocale)} kWh`]
-    );
-  } else {
-    kpis.push([pdfSafeText(i18n.t('onGridResult.settlementBasisLabel')), pdfSafeText(r.settlementProvisional ? i18n.t('onGridResult.settlementProvisional') : (r.tariffModel?.exportCompensationPolicy?.assumptionBasis || '—'))]);
-  }
-
-  let y = 72;
+  doc.setFontSize(22);
+  setPdfFont('bold');
+  const coverLogoAdded = addSolarRotaLogo(doc, { x: 20, y: 18, width: 30, height: 24 });
+  doc.text(pdfSafeText(proposal.company?.name || 'Solar Rota'), coverLogoAdded ? 58 : 20, 28);
+  doc.setTextColor(241, 245, 249);
+  doc.setFontSize(17);
+  doc.text(pdfSafeText(reportTitle), coverLogoAdded ? 58 : 20, 43);
+  doc.setFontSize(12);
+  doc.text(pdfSafeText('GES Teklif ve Fizibilite Raporu'), coverLogoAdded ? 58 : 20, 54);
+  doc.setDrawColor(245, 158, 11);
+  doc.setLineWidth(0.6);
+  doc.line(20, 63, 190, 63);
+  y = 82;
   doc.setFontSize(9);
-  kpis.forEach(([lbl, val]) => {
-    doc.setTextColor(148, 163, 184); doc.setFont('helvetica', 'normal');
-    doc.text(lbl, 25, y);
-    doc.setTextColor(241, 245, 249); doc.setFont('helvetica', 'bold');
-    doc.text(val, 100, y);
+  const coverRows = [
+    ['Müşteri', proposal.customer?.name || 'Belirtilmedi'],
+    ['Proje konumu', proposal.customer?.location || state.cityName || 'Belirtilmedi'],
+    ['Teklif tarihi', proposal.meta?.createdAt ? new Date(proposal.meta.createdAt).toLocaleDateString(dateLocale) : new Date().toLocaleDateString(dateLocale)],
+    ['Teklif numarası', proposal.meta?.proposalNo || 'Belirtilmedi'],
+    ['Teklif geçerlilik', proposal.meta?.validUntil || 'Belirtilmedi'],
+    ['Firma telefon', proposal.company?.phone || 'Belirtilmedi'],
+    ['Firma e-posta', proposal.company?.email || 'Belirtilmedi']
+  ];
+  coverRows.forEach(([label, value]) => {
+    setPdfFont('normal');
+    doc.setTextColor(148, 163, 184);
+    doc.text(pdfSafeText(label), 24, y);
+    setPdfFont('bold');
+    doc.setTextColor(241, 245, 249);
+    doc.text(shortText(value, 70), 78, y);
     y += 8;
   });
-
-  // Sayfa 2 — Sistem Tasarımı
-  doc.addPage();
-  doc.setFillColor(15, 23, 42); doc.rect(0, 0, 210, 297, 'F');
-  doc.setTextColor(245, 158, 11); doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-  doc.text(pdfSafeText(i18n.t('report.systemDesign')), 20, 20);
-  doc.setTextColor(241, 245, 249); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-
-  const techRows = [
-    [i18n.t('report.panelType'), p.name], [i18n.t('report.panelCount'), r.panelCount + ` ${i18n.t('report.panelCountUnit')}`],
-    [i18n.t('report.systemPower'), r.systemPower.toFixed(2) + ' kWp'],
-    [i18n.t('report.roofTilt'), state.tilt + '°'],
-    [i18n.t('report.roofAzimuth'), state.azimuthName],
-    ['PR', prDisplayText], ['PSH', r.psh + ` ${i18n.t('report.hoursPerDay')}`],
-    [i18n.t('report.specificYield'), r.ysp + ' kWh/kWp'],
-  ];
-  y = 35;
-  techRows.forEach(([k, v]) => {
-    doc.setTextColor(148, 163, 184); doc.text(pdfSafeText(k), 25, y);
-    doc.setTextColor(241, 245, 249); doc.text(pdfSafeText(v), 100, y);
-    y += 7;
-  });
-
-  // Maliyet kırılımı
+  y += 10;
+  setPdfFont('normal');
+  doc.setFontSize(8);
+  doc.setTextColor(203, 213, 225);
+  doc.text(pdfSafeText(i18n.t('report.preFeasibilityDisclaimer')), 20, y);
   y += 5;
-  doc.setTextColor(245, 158, 11); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text(pdfSafeText(i18n.t('report.costBreakdown')), 20, y); y += 8;
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-  const cb = r.costBreakdown;
-  const costDenominator = cb.totalWithBatteryAndGenerator || cb.totalWithBattery || cb.total || 1;
-  const costRows = [
-    ['Panel', cb.panel], ['Inverter', cb.inverter],
-    [i18n.t('report.mounting'), cb.mounting], ['DC Cable', cb.dcCable],
-    ['AC Electrical', cb.acElec], [i18n.t('report.labor'), cb.labor],
-    ['TEDAŞ + Permit', cb.permits], [`VAT/KDV (%${Math.round((cb.kdvRate ?? 0.20) * 100)})`, cb.kdv],
-    ...(cb.battery ? [[i18n.t('offgridL2.batteryLabel'), cb.battery]] : []),
-    ...(cb.generatorCapex ? [[i18n.t('offgridL2.generatorCapex'), cb.generatorCapex]] : []),
-    [i18n.t('report.grandTotal'), costDenominator]
+  doc.text(pdfSafeText(i18n.t('report.pdfFontNote')), 20, y);
+  addFooter();
+
+  // 2. Yönetici özeti
+  addPage('Yönetici Özeti');
+  const summaryRows = [
+    ['Önerilen sistem gücü', fmtKwp(summary.systemSizeKwp)],
+    ['Panel sayısı', fmtNumber(summary.panelCount, 'adet')],
+    ['İnverter gücü', fmtKw(summary.inverterKw)],
+    ['Tahmini yıllık üretim', fmtKwh(summary.annualProductionKwh, 'kWh/yıl')],
+    ['Toplam yatırım maliyeti', fmtMoney(summary.totalInvestment)],
+    ['İlk yıl tahmini tasarruf', fmtMoney(summary.firstYearSavings)],
+    ['Geri ödeme süresi', fmtYearsValue(summary.paybackYears)],
+    ['25 yıllık net ekonomik katkı', fmtMoney(summary.netBenefit25Years)],
+    ['CO azaltımı', summary.co2ReductionTonPerYear ? fmtNumber(summary.co2ReductionTonPerYear, 'ton/yıl', safeFallback, 2) : safeFallback]
   ];
-  costRows.forEach(([lbl, val]) => {
-    doc.setTextColor(148, 163, 184);
-    doc.text(pdfSafeText(lbl), 25, y);
-    const w = 40;
-    const barW = Math.min((val / costDenominator) * w, w);
-    doc.setFillColor(245, 158, 11); doc.rect(75, y - 3, barW * 1.2, 4, 'F');
-    doc.setTextColor(241, 245, 249);
-    doc.text(money(Math.round(val)), 165, y);
-    y += 7;
-  });
+  labelRows(summaryRows, { lineHeight: 7, fontSize: 8.6, pageTitle: 'Yönetici Özeti' });
+  note('Bu sayfadaki değerler ön fizibilite amaçlı karar özetidir; nihai teklif yerinde keşif, proje onayı ve güncel tedarik fiyatlarıyla kesinleşir.');
 
-  // Sayfa 3 — 25 Yıl Tablo
-  doc.addPage();
-  doc.setFillColor(15, 23, 42); doc.rect(0, 0, 210, 297, 'F');
-  doc.setTextColor(245, 158, 11); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text(pdfSafeText(i18n.t('report.yearProjection')), 20, 15);
+  // 3. Teknik sistem özeti
+  sectionTitle(`${i18n.t('report.systemDesign')} / Teknik Sistem Özeti`);
+  const roofUseArea = Number(r.panelAreaTotal || r.roofUseArea || 0);
+  const techRows = [
+    ['Sistem gücü', fmtKwp(summary.systemSizeKwp)],
+    ['Panel sayısı', fmtNumber(summary.panelCount, 'adet')],
+    ['Panel gücü', p.wattPeak ? fmtNumber(p.wattPeak, 'Wp') : 'Veri gerekli'],
+    ['Panel tipi', p.name || p.catalogDisplayName || 'Belirtilmedi'],
+    ['İnverter gücü', fmtKw(summary.inverterKw)],
+    ['Yıllık üretim', fmtKwh(summary.annualProductionKwh, 'kWh/yıl')],
+    ['Aylık ortalama üretim', fmtKwh(summary.monthlyAverageProductionKwh, 'kWh/ay')],
+    ['Kullanılan/gerekli alan', roofUseArea > 0 ? fmtNumber(roofUseArea, 'm2', safeFallback, 1) : 'Veri gerekli'],
+    ['Sistem tipi', state.scenarioContext?.label || state.scenarioKey || 'Belirtilmedi'],
+    ['Batarya durumu', addons.capitalCostItems?.some(item => item.id === 'battery') ? 'Dahil' : 'Dahil değil'],
+    ['Mahsuplaşma durumu', netMetering.enabled ? 'Aktif' : 'Aktif değil']
+  ];
+  labelRows(techRows, { pageTitle: 'Teknik Sistem Özeti' });
 
-  doc.setFontSize(7); doc.setFont('helvetica', 'bold');
-  doc.setTextColor(148, 163, 184);
-  const headers7 = [i18n.t('report.year'), i18n.t('report.production'), i18n.t('report.tariff'), i18n.t('report.savings'), i18n.t('report.expenses'), 'Net', i18n.t('report.cumulative')];
-  const xCols = [15, 30, 55, 75, 100, 125, 150, 178];
-  headers7.forEach((h, i) => doc.text(pdfSafeText(h), xCols[i], 25));
-  doc.setLineWidth(0.2); doc.setDrawColor(71, 85, 105);
-  doc.line(15, 27, 195, 27);
+  // 4. Kalem kalem sistem maliyeti
+  addPage('Kalem Kalem Sistem Maliyeti');
+  const visibleCostItems = (costBreakdown.items || []).filter(item => item && item.visibleToCustomer !== false);
+  if (visibleCostItems.length) {
+    drawTable(
+      ['Kalem', 'Açıklama', 'Miktar', 'Birim fiyat', 'Ara toplam', 'KDV', 'Toplam'],
+      visibleCostItems.map(item => [
+        item.name,
+        item.description,
+        `${fmtNumber(item.quantity, '', safeFallback, 2)} ${item.unit || ''}`.trim(),
+        fmtMoney(item.unitPrice),
+        fmtMoney(item.subtotal),
+        item.vatRate ? `${fmtPercentValue(safeNumber(item.vatRate) * 100, 0)} / ${fmtMoney(item.vatAmount)}` : 'Ayrılmadı',
+        fmtMoney(item.total)
+      ]),
+      [27, 45, 20, 24, 24, 25, 28],
+      { pageTitle: 'Kalem Kalem Sistem Maliyeti', rowHeight: 6.5, fontSize: 5.8 }
+    );
+  } else {
+    note('Kalem bazlı maliyet verisi bu senaryoda üretilemedi.');
+  }
+  labelRows([
+    ['Ara toplam', fmtMoney(costBreakdown.subtotal)],
+    ['KDV toplamı', fmtMoney(costBreakdown.vatTotal)],
+    ['Ek modüller toplamı', fmtMoney(costBreakdown.addonTotal)],
+    ['İndirim', costBreakdown.discountTotal ? fmtMoney(costBreakdown.discountTotal) : 'Yok'],
+    ['Genel toplam yatırım maliyeti', fmtMoney(costBreakdown.grandTotal)]
+  ], { pageTitle: 'Kalem Kalem Sistem Maliyeti' });
 
-  let row = 32;
-  doc.setFont('helvetica', 'normal');
-  r.yearlyTable.slice(0, 25).forEach(yr => {
-    if (row > 275) { doc.addPage(); doc.setFillColor(15,23,42); doc.rect(0,0,210,297,'F'); row = 15; }
-    if (yr.year === Math.round(Number(r.grossSimplePaybackYear || r.paybackYear))) { doc.setFillColor(16,185,129,50); doc.rect(13, row-4, 182, 6, 'F'); }
-    doc.setTextColor(241, 245, 249);
-    const vals = [yr.year+'', yr.energy.toLocaleString(dateLocale), moneyRate(yr.effectiveImportRate || yr.rate, 'kWh'),
-      money(yr.savings), money(yr.expenses),
-      money(yr.netCashFlow), money(yr.cumulative)];
-    vals.forEach((v, i) => doc.text(v, xCols[i], row));
-    row += 6;
-  });
+  // 5. Ek modüller
+  sectionTitle('Ek Modüller ve Tüketim Etkileri');
+  const capitalItems = Array.isArray(addons.capitalCostItems) ? addons.capitalCostItems : [];
+  const consumptionItems = Array.isArray(addons.consumptionItems) ? addons.consumptionItems : [];
+  if (!capitalItems.length && !consumptionItems.length) {
+    note('Bu senaryoda ek modül seçilmemiştir.');
+  } else {
+    if (capitalItems.length) {
+      setPdfFont('bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text(pdfSafeText('Yatırım maliyetine eklenen opsiyonlar'), 16, y);
+      y += 5;
+      drawTable(
+        ['Modül', 'Tür', 'Aylık tüketim', 'Yıllık tüketim', 'Yatırım etkisi', 'Not'],
+        capitalItems.map(item => [item.name, 'Yatırım maliyeti', '-', '-', fmtMoney(item.total), item.note || item.description || '']),
+        [31, 29, 24, 24, 30, 55],
+        { pageTitle: 'Ek Modüller ve Tüketim Etkileri', rowHeight: 6.5, fontSize: 5.8 }
+      );
+    }
+    if (consumptionItems.length) {
+      setPdfFont('bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text(pdfSafeText('Tüketimi etkileyen modüller'), 16, y);
+      y += 5;
+      drawTable(
+        ['Modül', 'Tür', 'Aylık tüketim', 'Yıllık tüketim', 'Yatırım etkisi', 'Not'],
+        consumptionItems.map(item => [item.name, 'Tüketim', fmtKwh(item.monthlyKwh, 'kWh/ay'), fmtKwh(item.annualKwh, 'kWh/yıl'), 'Yok', item.note || '']),
+        [31, 29, 24, 24, 30, 55],
+        { pageTitle: 'Ek Modüller ve Tüketim Etkileri', rowHeight: 6.5, fontSize: 5.8 }
+      );
+    }
+  }
 
-  doc.save(`solar-rota-${pdfSafeText(state.cityName || 'rapor')}-${new Date().getFullYear()}.pdf`);
+  // 6. Tüketim ve fatura + 25 yıllık projeksiyon
+  addPage('Tüketim ve Fatura Analizi');
+  labelRows([
+    ['Mevcut aylık tüketim', fmtKwh(consumption.baseMonthlyKwh, 'kWh/ay')],
+    ['Mevcut yıllık tüketim', fmtKwh(consumption.baseAnnualKwh, 'kWh/yıl')],
+    ['Mevcut aylık fatura', fmtMoney(consumption.baseMonthlyBill)],
+    ['Mevcut yıllık fatura', fmtMoney(consumption.baseAnnualBill)],
+    ['Ek modüller aylık tüketim', fmtKwh(consumption.addonMonthlyKwh, 'kWh/ay')],
+    ['Ek modüller yıllık tüketim', fmtKwh(consumption.addonAnnualKwh, 'kWh/yıl')],
+    ['Yeni toplam yıllık tüketim', fmtKwh(consumption.totalAnnualKwh, 'kWh/yıl')],
+    ['GES sonrası tahmini şebekeden çekiş', fmtKwh(consumption.estimatedGridConsumptionAfterSolarKwh, 'kWh/yıl')],
+    ['GES sonrası tahmini fatura', fmtMoney(consumption.billAfterSolar)],
+    ['İlk yıl tahmini tasarruf', fmtMoney(consumption.firstYearSavings)]
+  ], { pageTitle: 'Tüketim ve Fatura Analizi' });
+
+  sectionTitle('25 Yıllık Finansal Projeksiyon Özeti');
+  const totalBillWithoutSolar = billRows.reduce((sumValue, row) => sumValue + safeNumber(row.billWithoutSolar, 0), 0);
+  const totalBillAfterSolar = billRows.reduce((sumValue, row) => sumValue + safeNumber(row.billAfterSolar, 0), 0);
+  labelRows([
+    ['25 yılda GES olmadan tahmini fatura', fmtMoney(totalBillWithoutSolar)],
+    ['25 yılda GES sonrası tahmini fatura', fmtMoney(totalBillAfterSolar)],
+    ['25 yılda toplam brüt tasarruf', fmtMoney(financial.grossSavings25Years)],
+    ['25 yılda bakım gideri', fmtMoney(financial.maintenanceCost25Years)],
+    ['İnverter değişim gideri', fmtMoney(financial.inverterReplacementCost25Years)],
+    ['25 yılda net ekonomik katkı', fmtMoney(financial.netBenefit25Years)],
+    ['Başabaş yılı', financial.breakEvenYear ? fmtNumber(financial.breakEvenYear, 'yıl') : '25 yıl içinde oluşmuyor'],
+    ['ROI', fmtPercentValue(financial.roiPercent)]
+  ], { pageTitle: '25 Yıllık Finansal Projeksiyon Özeti' });
+  if (billRows.length) {
+    drawTable(
+      ['Yıl', 'Üretim', 'GES yok fatura', 'GES sonrası', 'Net kazanç', 'Kümülatif'],
+      billRows.slice(0, 25).map(row => [
+        row.year,
+        fmtKwh(row.annualProductionKwh, 'kWh'),
+        fmtMoney(row.billWithoutSolar),
+        fmtMoney(row.billAfterSolar),
+        fmtMoney(row.netAnnualGain),
+        fmtMoney(row.cumulativeNetGain)
+      ]),
+      [16, 31, 36, 36, 35, 39],
+      { pageTitle: '25 Yıllık Finansal Projeksiyon Tablosu', rowHeight: 6, fontSize: 5.9 }
+    );
+  } else {
+    note('25 yıllık projeksiyon tablosu için veri gerekli.');
+  }
+
+  // 7. Mahsuplaşma
+  addPage('Mahsuplaşma Kaynaklı Ekonomik Katkı');
+  if (netMetering.enabled) {
+    labelRows([
+      ['Yıllık üretim', fmtKwh(netMetering.annualProductionKwh, 'kWh/yıl')],
+      ['Yıllık tüketim', fmtKwh(netMetering.annualConsumptionKwh, 'kWh/yıl')],
+      ['Öz tüketim oranı', fmtPercentValue(netMetering.selfConsumptionRate)],
+      ['Şebekeye verilen enerji', fmtKwh(netMetering.exportedKwh, 'kWh/yıl')],
+      ['Şebekeden çekilen enerji', fmtKwh(netMetering.importedKwh, 'kWh/yıl')],
+      ['Net mahsuplaşma', fmtKwh(netMetering.netKwh, 'kWh/yıl')],
+      ['Birim ekonomik değer', fmtRate(netMetering.unitValue)],
+      ['Yıllık ekonomik katkı', fmtMoney(netMetering.annualEconomicContribution)]
+    ], { pageTitle: 'Mahsuplaşma Kaynaklı Ekonomik Katkı' });
+    note(netMetering.note || 'Mahsuplaşma ekonomik katkısı abone tipi, mevzuat, dağıtım şirketi uygulaması ve güncel tarife koşullarına göre değişebilir.');
+  } else {
+    note('Bu senaryoda mahsuplaşma aktif değildir; ek ekonomik katkı hesaplanmamıştır.');
+  }
+
+  // 8. Finansal sonuçlar
+  sectionTitle('Finansal Sonuçlar');
+  labelRows([
+    ['Toplam yatırım maliyeti', fmtMoney(financial.totalInvestment)],
+    ['İlk yıl brüt tasarruf', fmtMoney(financial.firstYearGrossSavings)],
+    ['İlk yıl net tasarruf', fmtMoney(financial.firstYearNetSavings)],
+    ['Basit geri ödeme süresi', fmtYearsValue(financial.paybackYears)],
+    ['25 yıllık brüt tasarruf', fmtMoney(financial.grossSavings25Years)],
+    ['25 yıllık bakım gideri', fmtMoney(financial.maintenanceCost25Years)],
+    ['İnverter değişim gideri', fmtMoney(financial.inverterReplacementCost25Years)],
+    ['25 yıllık net ekonomik katkı', fmtMoney(financial.netBenefit25Years)],
+    ['Başabaş yılı', financial.breakEvenYear ? fmtNumber(financial.breakEvenYear, 'yıl') : '25 yıl içinde oluşmuyor'],
+    ['ROI', fmtPercentValue(financial.roiPercent)]
+  ], { pageTitle: 'Finansal Sonuçlar' });
+
+  // 9-10. Uyarılar, varsayımlar, teklif notu
+  addPage('Teknik Uyarılar ve Varsayımlar');
+  const warningRows = (Array.isArray(proposal.warnings) ? proposal.warnings : []).map(item => [
+    String(item.level || 'info').toUpperCase(),
+    item.title || 'Not',
+    item.message || ''
+  ]);
+  if (warningRows.length) {
+    drawTable(['Seviye', 'Başlık', 'Açıklama'], warningRows, [22, 42, 129], {
+      pageTitle: 'Teknik Uyarılar ve Varsayımlar',
+      rowHeight: 6.8,
+      fontSize: 5.9
+    });
+  }
+  sectionTitle('Hesaplama Varsayımları');
+  labelRows([
+    ['Analiz süresi', fmtNumber(assumptions.analysisYears, 'yıl')],
+    ['Yıllık elektrik fiyat artışı', fmtPercentValue(safeNumber(assumptions.annualElectricityIncreaseRate) * 100)],
+    ['Yıllık tüketim artışı', fmtPercentValue(safeNumber(assumptions.annualConsumptionIncreaseRate) * 100)],
+    ['Panel degradasyonu', fmtPercentValue(safeNumber(assumptions.panelDegradationRate) * 100, 2)],
+    ['Bakım oranı', fmtPercentValue(safeNumber(assumptions.maintenanceRate) * 100, 2)],
+    ['İnverter değişim yılı', fmtNumber(assumptions.inverterReplacementYear, 'yıl')],
+    ['KDV oranı', fmtPercentValue(safeNumber(assumptions.vatRate) * 100)],
+    ['USD/TL kuru', fmtNumber(assumptions.exchangeRate, 'TL', safeFallback, 2)],
+    ['Sistem kayıp oranı', fmtPercentValue(safeNumber(assumptions.systemLossRate), 2)]
+  ], { pageTitle: 'Teknik Uyarılar ve Varsayımlar' });
+  (Array.isArray(assumptions.notes) ? assumptions.notes.slice(0, 6) : []).forEach(text => note(text));
+  note('Bu rapor ön fizibilite amaçlıdır. Nihai teklif, yerinde keşif ve proje onayı sonrası değişebilir.');
+  note('Mahsuplaşma değeri abone tipi, güncel tarife, mevzuat ve dağıtım şirketi uygulamalarına göre değişebilir.');
+  note('Panel üretim değerleri konum, yön, eğim, gölgelenme ve sistem kayıplarına göre değişebilir.');
+  note('25 yıllık projeksiyon kullanılan elektrik artışı, panel degradasyonu ve bakım varsayımlarına göre hesaplanmıştır.');
+
+  const safeCity = pdfSafeText(String(state.cityName || 'rapor').replace(/[^a-z0-9_-]+/gi, '-'));
+  doc.save(`solar-rota-teklif-${safeCity}-${new Date().getFullYear()}.pdf`);
+  pdfUnicodeTextEnabled = previousPdfUnicodeTextEnabled;
   window.showToast(i18n.t('report.pdfDownloaded'), 'success');
 }
 

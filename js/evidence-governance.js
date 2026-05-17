@@ -1220,6 +1220,7 @@ export function buildStructuredProposalExport(state = {}, results = {}) {
       maintenance: gov.maintenance || null,
       bomCommercials: gov.bomCommercials || null
     },
+    proposalResult: results.proposalResult || null,
     onGridFlow: state.scenarioKey === 'on-grid' ? {
       subscriberType: state.subscriberType || null,
       connectionType: state.connectionType || null,

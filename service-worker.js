@@ -1,5 +1,5 @@
-// v61: bypass cross-origin requests so Google Maps CSP probes are not SW-handled.
-const CACHE_NAME = 'solarRota-v61';
+// v63: add PDF Unicode font support assets to the offline precache.
+const CACHE_NAME = 'solarRota-v63';
 // Sadece local dosyaları pre-cache et — CDN dosyaları runtime'da cache'lenir
 const STATIC_ASSETS = [
   '/',
@@ -53,6 +53,9 @@ const STATIC_ASSETS = [
   '/js/pv-engine-contracts.js',
   '/js/pvlib-bridge.js',
   '/js/proposal-governance.js',
+  '/js/proposal-engine.js',
+  '/js/proposal-formatters.js',
+  '/js/pdf-fonts.js',
   '/js/quote-modal.js',
   '/js/roof-geometry.js',
   '/js/satellite-enhance.js',
@@ -81,6 +84,8 @@ const STATIC_ASSETS = [
   '/assets/fonts/Inter-500.woff2',
   '/assets/fonts/Inter-600.woff2',
   '/assets/fonts/Inter-700.woff2',
+  '/assets/fonts/LiberationSans-Regular.ttf',
+  '/assets/fonts/LiberationSans-Bold.ttf',
   '/assets/fonts/SpaceGrotesk-400.woff2',
   '/assets/fonts/SpaceGrotesk-500.woff2',
   '/assets/fonts/SpaceGrotesk-600.woff2',
